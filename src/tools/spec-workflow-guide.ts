@@ -256,14 +256,15 @@ flowchart TD
 2. If UI changes are declared with prototype required:
    - Execute tasks 0.1–0.3 from tasks.md (these are the prototype gate tasks)
    - Task 0.1: Create visual mockup via \`ui-mockup\` skill (Stitch) or \`frontend-design\` skill
-   - Task 0.2: Build interactive prototype via \`playground\` skill
+   - Task 0.2: Build interactive prototype via \`playground\` skill — **save to \`.spec-workflow/specs/{spec-name}/artifacts/playground.html\`**
    - Task 0.3: Present to user, collect explicit visual approval
 3. If a reference HTML/mockup file path is listed in design.md, the prototype MUST use it as the baseline — do not ignore provided prototypes
-4. Update design.md \`Prototype Artifacts\` section with Stitch IDs and playground path
-5. **BLOCKING**: No task tagged \`ui:true\` may begin until visual approval is recorded
-6. Proceed to Phase 4
+4. **Save all visual artifacts** (playground HTML, mockup screenshots, Stitch exports) to the spec's \`artifacts/\` folder
+5. Update design.md \`Prototype Artifacts\` section with paths pointing to the \`artifacts/\` folder
+6. **BLOCKING**: No task tagged \`ui:true\` may begin until visual approval is recorded
+7. Proceed to Phase 4
 
-**CRITICAL**: If a spec has a prototype HTML file referenced in design.md or requirements.md and the implementer ignores it, that is a spec compliance failure. The prototype is the source of truth for visual design — not the implementer's interpretation of the text description.
+**CRITICAL — Prototype is Source of Truth**: The approved prototype in the \`artifacts/\` folder defines the visual design for implementation. Implementers MUST source their DOM structure, class names, spacing, and layout from the prototype — not from their own interpretation of the text requirements or earlier spec documents. The spec compliance reviewer will compare implementation against the prototype file. Ignoring an approved prototype is a spec compliance failure.
 
 ### Phase 3.9: Implementation Readiness Gate
 **Purpose**: Cross-validate all spec documents for internal consistency before any code is written.
@@ -352,7 +353,9 @@ flowchart TD
      - Read design.md \`UI Impact Assessment\` section
      - If \`Prototype Required: Yes\`, confirm tasks 0.1–0.3 are marked \`[x]\` and \`Prototype Artifacts\` in design.md are populated
      - If prototype gate is incomplete, STOP — complete Phase 3.5 first
-     - Include the playground file path and/or Stitch screen IDs in the subagent prompt so the implementer has the approved visual reference
+     - **MANDATORY**: Include the playground file path (e.g., \`.spec-workflow/specs/{spec-name}/artifacts/playground.html\`) in the subagent prompt so the implementer has the approved visual reference
+     - Tell the implementer explicitly: "Source your visual design from the prototype file. Do NOT re-read earlier spec documents and reinvent the design. The prototype IS the approved design."
+     - The spec compliance reviewer (Stage 1) will compare implementation against the prototype — visual deviations are a FAIL
    - Edit tasks.md: Change \`[ ]\` to \`[-]\` for the task you're starting
    - **CRITICAL: BEFORE implementing, search existing implementation logs**:
      - Implementation logs are in: \`.spec-workflow/specs/{issue-id}-{kebab-title}/Implementation Logs/\`
@@ -496,6 +499,7 @@ Only dispatch AFTER Stage 1 passes. Verify the code is well-built and production
 - CRITICAL: Every completed spec MUST have all linked Linear AND GitHub issues closed — a spec with open issues is NOT done
 - CRITICAL: Specs with UI changes MUST complete Phase 3.5 (visual prototype gate) before any UI implementation task begins
 - CRITICAL: If design.md references a prototype HTML file, implementers MUST source their visual design from it — ignoring a provided prototype is a spec compliance failure
+- CRITICAL: All visual artifacts (playground HTML, screenshots, mockups) MUST be saved to the spec's \`artifacts/\` folder — not to project root or playground/ directories. The artifacts/ folder is the single source of visual truth for the spec
 - CRITICAL: Phase 3.9 (Implementation Readiness Gate) fires on EVERY spec before Phase 4 — generates readiness-report.md, submits to dashboard for review. Three dashboard actions: Approve (proceed), Concerns (proceed with logged risks), Reject (fix and re-run). Verbal approval NOT accepted.
 - CRITICAL: Verbal approval is NEVER accepted - dashboard or VS Code extension only
 - NEVER proceed on user saying "approved" - check system status only
@@ -517,6 +521,9 @@ Only dispatch AFTER Stage 1 passes. Verify the code is well-built and production
 │       ├── design.md
 │       ├── tasks.md
 │       ├── readiness-report.md      # Phase 3.9 — NOT tasks.md
+│       ├── artifacts/               # Visual source of truth for UI specs
+│       │   ├── playground.html      # Approved interactive prototype (Phase 3.5)
+│       │   └── *.png                # Mockup screenshots / Stitch exports
 │       └── Implementation Logs/     # Created automatically
 │           ├── task-1_timestamp_id.md
 │           ├── task-2_timestamp_id.md
