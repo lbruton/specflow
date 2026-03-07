@@ -128,18 +128,29 @@ flowchart TD
     P4_Log --> P4_Complete[Edit tasks.md:<br/>Change [-] to [x]<br/>for completed]
     P4_Complete --> P4_More{More tasks?}
     P4_More -->|Yes| P4_Task
-    P4_More -->|No| P5_Start[Phase 5:<br/>Wiki + E2E]
+    P4_More -->|No| P5_Start[Phase 5.1:<br/>Wiki + E2E]
     P5_Start --> P5_Wiki[/wiki-update:<br/>Update wiki pages]
     P5_Wiki --> P5_E2E[/bb-test:<br/>Browserbase/Stagehand E2E<br/>against PR preview URL]
     P5_E2E --> P5_Check{Tests pass?}
-    P5_Check -->|fail| P5_Fix[File Linear bug<br/>fix in new patch]
-    P5_Check -->|pass| P5_Linear[Close Linear issues<br/>Move to Done]
-    P5_Linear --> Done([Spec Complete])
+    P5_Check -->|fail| P5_Fix[Fix failing tests<br/>before QA]
+    P5_Fix --> P5_E2E
+    P5_Check -->|pass| P5_QA[Phase 5.2:<br/>User QA Session]
+    P5_QA --> P5_QA_Present[Present preview URL<br/>Wait for user]
+    P5_QA_Present --> P5_QA_Check{User reports<br/>issues?}
+    P5_QA_Check -->|Yes| P5_QA_Fix[Fix issue<br/>commit + push<br/>wait for rebuild]
+    P5_QA_Fix --> P5_QA_Present
+    P5_QA_Check -->|QA complete| P5_Final[Phase 5.3:<br/>PR Finalization]
+    P5_Final --> P5_Linear[Close Linear issues<br/>Move to Done]
+    P5_Linear --> P5_Ready[Mark PR<br/>ready for review]
+    P5_Ready --> Done([Spec Complete:<br/>Hand off to /pr-resolve])
 
     style Start fill:#e1f5e1
     style Done fill:#e1f5e1
     style P5_Start fill:#e3f2fd
     style P5_Check fill:#fff4e6
+    style P5_QA fill:#e8f5e9
+    style P5_QA_Check fill:#fff4e6
+    style P5_Final fill:#e3f2fd
     style P1_Check fill:#ffe6e6
     style P2_Check fill:#ffe6e6
     style P3_Check fill:#ffe6e6
@@ -447,17 +458,16 @@ Only dispatch AFTER Stage 1 passes. Verify the code is well-built and production
 | Track progress (task list) | Search codebase |
 | Approve/reject agent work | Generate new files |
 
-### Phase 5: Post-Implementation (Wiki + E2E)
-**Purpose**: Update documentation and verify the feature end-to-end before closing the spec.
+### Phase 5: Post-Implementation (Wiki + E2E + QA + PR Finalization)
+**Purpose**: Update documentation, verify the feature, QA with the user, and finalize the PR.
 
-**File Operations**:
-- Read spec files and tasks.md to identify affected source files
-- Wiki pages updated in-place via \`/wiki-update\` skill
+Phase 5 has three stages. The spec is NOT complete until all three are done.
+
+#### Phase 5.1: Wiki + Automated E2E
 
 **Tools**:
 - Skill \`wiki-update\`: Detects affected wiki pages via YAML frontmatter \`sourceFiles\` and rewrites them from current source
 - Skill \`bb-test\`: Browserbase/Stagehand cloud E2E tests — **primary E2E tool for all specs**
-- \`mcp__claude_ai_Linear__save_issue\`: Close linked Linear issues
 
 **⚠️ Do NOT use browserless or /smoke-test for spec E2E** — browserless is unreliable. All E2E testing uses Browserbase/Stagehand.
 
@@ -468,18 +478,51 @@ Only dispatch AFTER Stage 1 passes. Verify the code is well-built and production
    # Get Cloudflare Pages preview URL from the draft PR
    gh pr checks <PR_NUMBER> --json name,state,targetUrl \\
      | python3 -c "import sys,json; checks=json.load(sys.stdin); [print(c['targetUrl']) for c in checks if 'pages.dev' in c.get('targetUrl','')]"
-   # Or: gh pr view <PR_NUMBER> --json statusCheckRollup \\
-   #   --jq '[.statusCheckRollup[] | select(.targetUrl | test("pages.dev"))] | .[0].targetUrl'
    \`\`\`
    Wait for the Cloudflare Pages check to complete (green) before proceeding.
-3. Run \`/bb-test\` with the preview URL — Browserbase/Stagehand against the PR preview deployment. Session has a **10-minute hard timeout**: if any individual test step has not returned a result within 10 minutes, skip it, log a warning, and move on. Do not block spec closure on a timed-out step.
-4. If E2E tests fail: file a Linear bug issue and fix in a new patch — do not block spec closure for failures unrelated to this spec's changes.
-5. **MANDATORY — Close all linked issues:**
+3. Run \`/bb-test\` with the preview URL — Browserbase/Stagehand against the PR preview deployment. Session has a **10-minute hard timeout**: if any individual test step has not returned a result within 10 minutes, skip it, log a warning, and move on.
+4. If E2E tests fail: fix the failures before proceeding to QA. Do not skip to 5.2 with known test failures.
+
+#### Phase 5.2: User QA Session
+
+**Purpose**: The user manually tests the feature on the preview deployment. This is where spec gaps, visual polish issues, and edge cases get caught. Automated tests passing does NOT mean the feature is done — user QA is the final quality gate before the PR leaves draft.
+
+**CRITICAL behavioral rules for the agent during QA:**
+- **Present the preview URL and wait.** Do not suggest merging, do not suggest the work is done.
+- **The agent is in service mode during QA** — the user drives, the agent fixes. This is collaborative, not adversarial.
+- **Do not push back on QA findings.** If the user reports an issue, fix it. Do not argue that it "works as specced" or "passes tests." The user is the final arbiter of quality.
+- **After each fix:** commit, push, wait for the preview to rebuild, then tell the user it's ready to re-check.
+- **Do not ask "anything else?" after every fix** — just report what you fixed and wait. The user will tell you when they're done.
+- **Exit condition:** The user explicitly says QA is complete (e.g., "QA complete", "looks good", "ready to go"). No other signal ends this phase.
+- **For trivial non-UI patches** (config, typo, docs-only): the user may say "skip QA" to proceed directly to 5.3.
+
+**Process**:
+1. Present the preview URL: "Preview is live at {URL}. Ready for your QA pass — take your time, I'll fix anything you find."
+2. Wait for user input. Do not proceed unprompted.
+3. For each issue the user reports:
+   a. Acknowledge the issue
+   b. Fix it in code
+   c. Commit and push
+   d. Wait for preview rebuild (check Cloudflare Pages deploy status)
+   e. Report: "Fixed — {brief description}. Preview should rebuild in ~1 min."
+4. Repeat until the user signals QA is complete.
+5. Only then proceed to Phase 5.3.
+
+#### Phase 5.3: PR Finalization
+
+**Purpose**: Close linked issues, mark PR ready for review, and hand off to the \`/pr-resolve\` workflow.
+
+**Process**:
+1. **Close all linked issues:**
    - **Linear**: Use \`mcp__plugin_linear_linear__save_issue\` to move each linked issue's state to "Done"
    - **GitHub**: Run \`gh issue close <number>\` for each linked GitHub issue
    - Verify closure: \`gh issue view <number> --json state\` should show "CLOSED"
    - A spec with open issues is NOT complete — this is the most commonly forgotten step
-6. **The spec is NOT complete until wiki is updated AND E2E tests have been run AND all linked issues are closed.**
+2. **Mark the PR ready for review:**
+   \`\`\`bash
+   gh pr ready <PR_NUMBER>
+   \`\`\`
+3. **Spec is complete.** The finish line is the PR being marked ready for review. What happens next (\`/pr-resolve\`, Copilot review, merge to dev) is a separate workflow — typically in a new session.
 
 ## Workflow Rules
 
@@ -488,8 +531,10 @@ Only dispatch AFTER Stage 1 passes. Verify the code is well-built and production
 - Follow exact template structures
 - Get explicit user approval between phases (using approvals tool with action:'request')
 - Complete phases in sequence (no skipping)
-- Phase 5 (wiki + E2E) is mandatory — do not declare spec complete until wiki is updated and E2E tests have been run
+- Phase 5 has three stages: 5.1 (wiki + E2E), 5.2 (user QA session), 5.3 (PR finalization) — all three are mandatory
 - Phase 5 E2E always uses Browserbase/Stagehand (/bb-test) against the PR preview URL — never browserless/smoke-test
+- CRITICAL: During Phase 5.2 (User QA), the agent MUST NOT suggest merging, declare the work done, or push back on findings. The user drives QA, the agent fixes. QA ends ONLY when the user says so
+- CRITICAL: The spec finish line is marking the PR ready for review (Phase 5.3), NOT passing automated tests. Automated tests passing = ready for QA, not ready to merge
 - One spec at a time
 - Spec names use Linear issue prefix: {ISSUE-ID}-{kebab-title}
 - Approval requests: provide filePath only, never content
