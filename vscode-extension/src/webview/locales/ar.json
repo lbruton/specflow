@@ -69,7 +69,8 @@
     "response": {
       "approved": "موافق",
       "rejected": "مرفوض",
-      "needsRevision": "يحتاج مراجعة"
+      "needsRevision": "يحتاج مراجعة",
+      "concerns": "مع تحفظات"
     },
     "processing": "جاري المعالجة...",
     "approve": "موافق",
@@ -103,11 +104,11 @@
       "undoApproved": "تمت الموافقة على {{count}} عناصر",
       "undoRejected": "تم رفض {{count}} عناصر",
       "undoRevision": "تم طلب مراجعة {{count}} عناصر"
-    }
+    },
+    "concerns": "تحفظات"
   },
   "common": {
-    "dismiss": "إغلاق",
-    "scrollToTop": "التمرير إلى الأعلى"
+    "scrollToTop": "التمرير للأعلى"
   },
   "specs": {
     "active": "نشط",
@@ -185,9 +186,6 @@
       "coverage": "Coverage:",
       "userStories": "User Stories:"
     }
-  },
-  "common": {
-    "scrollToTop": "التمرير للأعلى"
   },
   "commentModal": {
     "title": {

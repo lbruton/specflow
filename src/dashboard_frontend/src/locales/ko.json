@@ -70,9 +70,16 @@
     }
   },
   "specViewer": {
-    "header": { "title": "스펙 문서" },
-    "tooltips": { "viewRendered": "렌더된 문서 보기", "viewSource": "소스 마크다운 보기" },
-    "empty": { "docNotCreated": "이 {{doc}} 문서는 아직 생성되지 않았습니다." }
+    "header": {
+      "title": "스펙 문서"
+    },
+    "tooltips": {
+      "viewRendered": "렌더된 문서 보기",
+      "viewSource": "소스 마크다운 보기"
+    },
+    "empty": {
+      "docNotCreated": "이 {{doc}} 문서는 아직 생성되지 않았습니다."
+    }
   },
   "language": {
     "select": "언어 선택"
@@ -166,9 +173,15 @@
       "task": "태스크",
       "groupBadge": "태스크 그룹"
     },
-    "files": { "label": "파일:" },
-    "implementation": { "label": "구현:" },
-    "labels": { "spec": "스펙:" },
+    "files": {
+      "label": "파일:"
+    },
+    "implementation": {
+      "label": "구현:"
+    },
+    "labels": {
+      "spec": "스펙:"
+    },
     "noSpecsFound": {
       "title": "스펙을 찾을 수 없음",
       "noMatch": "\"{{query}}\"와 일치하는 스펙이 없습니다",
@@ -287,7 +300,8 @@
       "pending": "대기 중",
       "needsRevision": "수정 필요",
       "approved": "승인됨",
-      "rejected": "거부됨"
+      "rejected": "거부됨",
+      "concerns": "우려 있음"
     },
     "annotator": {
       "instructions": {
@@ -377,7 +391,10 @@
       "reject": "거부",
       "requestRevisions": "수정 요청",
       "revisions": "수정",
-      "useBatchActions": "여러 항목에는 일괄 작업 사용"
+      "useBatchActions": "여러 항목에는 일괄 작업 사용",
+      "concerns": "우려 사항",
+      "concernsShort": "우려",
+      "concernsTooltip": "인정된 우려 사항과 함께 진행"
     },
     "tooltips": {
       "goToAnnotations": "주석으로 이동",
@@ -440,7 +457,14 @@
       "rejected": "\"{{title}}\"이(가) 거부되었습니다",
       "rejectFailed": "\"{{title}}\" 거부에 실패했습니다",
       "revisionRequested": "\"{{title}}\"에 대한 수정이 요청되었습니다",
-      "revisionFailed": "\"{{title}}\" 수정 요청에 실패했습니다"
+      "revisionFailed": "\"{{title}}\" 수정 요청에 실패했습니다",
+      "concerns": "\"{{title}}\"이(가) 우려 사항과 함께 승인되었습니다",
+      "concernsFailed": "\"{{title}}\"에 대한 우려 사항 표시 실패"
+    },
+    "concerns": {
+      "title": "우려 사항 기록",
+      "placeholder": "우려 사항을 설명하세요. 에이전트는 계속 진행하지만 인정된 위험으로 기록합니다...",
+      "submit": "우려 사항과 함께 진행"
     }
   },
   "logsPage": {

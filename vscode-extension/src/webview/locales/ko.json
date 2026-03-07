@@ -69,7 +69,8 @@
     "response": {
       "approved": "승인됨",
       "rejected": "거부됨",
-      "needsRevision": "수정 필요"
+      "needsRevision": "수정 필요",
+      "concerns": "우려 있음"
     },
     "processing": "처리 중...",
     "approve": "승인",
@@ -103,11 +104,11 @@
       "undoApproved": "{{count}}개 항목 승인됨",
       "undoRejected": "{{count}}개 항목 거부됨",
       "undoRevision": "{{count}}개 항목 수정 요청됨"
-    }
+    },
+    "concerns": "우려"
   },
   "common": {
-    "dismiss": "닫기",
-    "scrollToTop": "맨 위로"
+    "scrollToTop": "맨 위로 스크롤"
   },
   "specs": {
     "active": "활성",
@@ -185,9 +186,6 @@
       "coverage": "Coverage:",
       "userStories": "User Stories:"
     }
-  },
-  "common": {
-    "scrollToTop": "맨 위로 스크롤"
   },
   "commentModal": {
     "title": {

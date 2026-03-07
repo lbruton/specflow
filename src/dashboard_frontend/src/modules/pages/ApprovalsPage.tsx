@@ -35,6 +35,7 @@ function ApprovalItem({ a, selectionMode, isSelected, selectedCount, onToggleSel
   const [comments, setComments] = useState<ApprovalComment[]>([]);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [rejectModalOpen, setRejectModalOpen] = useState<boolean>(false);
+  const [concernsModalOpen, setConcernsModalOpen] = useState<boolean>(false);
   const [approvalWarningModalOpen, setApprovalWarningModalOpen] = useState<boolean>(false);
   const [revisionWarningModalOpen, setRevisionWarningModalOpen] = useState<boolean>(false);
 
@@ -187,6 +188,30 @@ function ApprovalItem({ a, selectionMode, isSelected, selectedCount, onToggleSel
     }
   };
 
+  const handleConcerns = async () => {
+    setConcernsModalOpen(true);
+  };
+
+  const handleConcernsWithFeedback = async (feedback: string) => {
+    setActionLoading('concerns');
+    try {
+      const result = await approvalsAction(a.id, 'concerns', { response: feedback });
+      if (result.ok) {
+        showNotification(t('approvalsPage.notifications.concerns', { title: a.title }), 'success');
+        setOpen(false);
+        await reloadAll();
+      } else {
+        showNotification(t('approvalsPage.notifications.concernsFailed', { title: a.title }), 'error');
+        console.error('Concerns action failed with status:', result.status);
+      }
+    } catch (error) {
+      showNotification(t('approvalsPage.notifications.concernsFailed', { title: a.title }), 'error');
+      console.error('Failed to mark concerns:', error);
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   const handleRevision = async () => {
     if (comments.length === 0) {
       setRevisionWarningModalOpen(true);
@@ -287,6 +312,8 @@ function ApprovalItem({ a, selectionMode, isSelected, selectedCount, onToggleSel
                   ? 'bg-[var(--status-warning-muted)] text-[var(--status-warning)]'
                   : a.status === 'approved'
                   ? 'bg-[var(--status-success-muted)] text-[var(--status-success)]'
+                  : a.status === 'concerns'
+                  ? 'bg-amber-900/30 text-amber-400'
                   : 'bg-[var(--status-error-muted)] text-[var(--status-error)]'
               }`}>
                 <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -298,6 +325,9 @@ function ApprovalItem({ a, selectionMode, isSelected, selectedCount, onToggleSel
                   )}
                   {a.status === 'approved' && (
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  )}
+                  {a.status === 'concerns' && (
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4.5c-.77-.833-2.194-.833-2.964 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
                   )}
                   {a.status === 'rejected' && (
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -349,6 +379,26 @@ function ApprovalItem({ a, selectionMode, isSelected, selectedCount, onToggleSel
                 )}
                 <span className="hidden sm:inline">{t('approvalsPage.actions.quickApprove')}</span>
                 <span className="sm:hidden">{t('approvalsPage.actions.approve')}</span>
+              </button>
+
+              <button
+                onClick={handleConcerns}
+                disabled={!!actionLoading || selectedCount > 1}
+                title={selectedCount > 1 ? t('approvalsPage.actions.useBatchActions') : t('approvalsPage.actions.concernsTooltip')}
+                className="btn bg-amber-600 hover:bg-amber-700 focus:ring-amber-500 text-xs sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1 min-w-0 touch-manipulation"
+              >
+                {actionLoading === 'concerns' ? (
+                  <svg className="animate-spin w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                ) : (
+                  <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4.5c-.77-.833-2.194-.833-2.964 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                  </svg>
+                )}
+                <span className="hidden sm:inline">{t('approvalsPage.actions.concerns')}</span>
+                <span className="sm:hidden">{t('approvalsPage.actions.concernsShort')}</span>
               </button>
 
               <button
@@ -618,6 +668,17 @@ function ApprovalItem({ a, selectionMode, isSelected, selectedCount, onToggleSel
         title={t('approvalsPage.reject.title')}
         placeholder={t('approvalsPage.reject.placeholder')}
         submitText={t('approvalsPage.reject.submit')}
+        multiline={true}
+      />
+
+      {/* Concerns Feedback Modal */}
+      <TextInputModal
+        isOpen={concernsModalOpen}
+        onClose={() => setConcernsModalOpen(false)}
+        onSubmit={handleConcernsWithFeedback}
+        title={t('approvalsPage.concerns.title')}
+        placeholder={t('approvalsPage.concerns.placeholder')}
+        submitText={t('approvalsPage.concerns.submit')}
         multiline={true}
       />
 

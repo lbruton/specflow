@@ -69,7 +69,8 @@
     "response": {
       "approved": "Approved",
       "rejected": "Rejected",
-      "needsRevision": "Needs revision"
+      "needsRevision": "Needs revision",
+      "concerns": "Concerns"
     },
     "processing": "Processing...",
     "approve": "Approve",
@@ -103,10 +104,10 @@
       "undoApproved": "Approved {{count}} items",
       "undoRejected": "Rejected {{count}} items",
       "undoRevision": "Requested revision for {{count}} items"
-    }
+    },
+    "concerns": "Concerns"
   },
   "common": {
-    "dismiss": "Dismiss",
     "scrollToTop": "Scroll to top"
   },
   "specs": {
@@ -185,9 +186,6 @@
       "coverage": "Coverage:",
       "userStories": "User Stories:"
     }
-  },
-  "common": {
-    "scrollToTop": "Scroll to top"
   },
   "commentModal": {
     "title": {

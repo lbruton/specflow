@@ -72,9 +72,16 @@
     }
   },
   "specViewer": {
-    "header": { "title": "Документы спецификации" },
-    "tooltips": { "viewRendered": "Просмотреть отрендеренный документ", "viewSource": "Просмотреть исходный markdown" },
-    "empty": { "docNotCreated": "Этот документ {{doc}} еще не создан." }
+    "header": {
+      "title": "Документы спецификации"
+    },
+    "tooltips": {
+      "viewRendered": "Просмотреть отрендеренный документ",
+      "viewSource": "Просмотреть исходный markdown"
+    },
+    "empty": {
+      "docNotCreated": "Этот документ {{doc}} еще не создан."
+    }
   },
   "language": {
     "select": "Выберите язык"
@@ -168,9 +175,15 @@
       "task": "Задача",
       "groupBadge": "Группа задач"
     },
-    "files": { "label": "Файлы:" },
-    "implementation": { "label": "Реализация:" },
-    "labels": { "spec": "Спецификация:" },
+    "files": {
+      "label": "Файлы:"
+    },
+    "implementation": {
+      "label": "Реализация:"
+    },
+    "labels": {
+      "spec": "Спецификация:"
+    },
     "noSpecsFound": {
       "title": "Спецификации не найдены",
       "noMatch": "Нет спецификаций соответствующих \"{{query}}\"",
@@ -202,8 +215,7 @@
       "progress": "Прогресс",
       "progressDesc": "Завершено"
     }
-  }
-  ,
+  },
   "specsPage": {
     "header": {
       "title": "Спецификации",
@@ -290,7 +302,8 @@
       "pending": "ожидает",
       "needsRevision": "требует доработки",
       "approved": "одобрено",
-      "rejected": "отклонено"
+      "rejected": "отклонено",
+      "concerns": "с замечаниями"
     },
     "annotator": {
       "instructions": {
@@ -382,7 +395,10 @@
       "reject": "Отклонить",
       "requestRevisions": "Запросить доработки",
       "revisions": "Доработки",
-      "useBatchActions": "Используйте пакетные действия для нескольких элементов"
+      "useBatchActions": "Используйте пакетные действия для нескольких элементов",
+      "concerns": "Замечания",
+      "concernsShort": "Замечания",
+      "concernsTooltip": "Продолжить с учётом замечаний"
     },
     "tooltips": {
       "goToAnnotations": "Перейти к аннотациям",
@@ -449,7 +465,14 @@
       "rejected": "\"{{title}}\" отклонён",
       "rejectFailed": "Не удалось отклонить \"{{title}}\"",
       "revisionRequested": "Запрошены исправления для \"{{title}}\"",
-      "revisionFailed": "Не удалось запросить исправления для \"{{title}}\""
+      "revisionFailed": "Не удалось запросить исправления для \"{{title}}\"",
+      "concerns": "\"{{title}}\" одобрено с замечаниями",
+      "concernsFailed": "Не удалось отметить замечания для \"{{title}}\""
+    },
+    "concerns": {
+      "title": "Отметить замечания",
+      "placeholder": "Опишите ваши замечания. Агент продолжит работу, но зафиксирует их как признанные риски...",
+      "submit": "Продолжить с замечаниями"
     }
   },
   "logsPage": {

@@ -70,9 +70,16 @@
     }
   },
   "specViewer": {
-    "header": { "title": "Documenti Spec" },
-    "tooltips": { "viewRendered": "Visualizza documento renderizzato", "viewSource": "Visualizza markdown sorgente" },
-    "empty": { "docNotCreated": "Questo documento {{doc}} non è stato ancora creato." }
+    "header": {
+      "title": "Documenti Spec"
+    },
+    "tooltips": {
+      "viewRendered": "Visualizza documento renderizzato",
+      "viewSource": "Visualizza markdown sorgente"
+    },
+    "empty": {
+      "docNotCreated": "Questo documento {{doc}} non è stato ancora creato."
+    }
   },
   "language": {
     "select": "Seleziona lingua"
@@ -166,9 +173,15 @@
       "task": "Task",
       "groupBadge": "Gruppo Task"
     },
-    "files": { "label": "File:" },
-    "implementation": { "label": "Implementazione:" },
-    "labels": { "spec": "Spec:" },
+    "files": {
+      "label": "File:"
+    },
+    "implementation": {
+      "label": "Implementazione:"
+    },
+    "labels": {
+      "spec": "Spec:"
+    },
     "noSpecsFound": {
       "title": "Nessuna spec trovata",
       "noMatch": "Nessuna spec corrisponde a \"{{query}}\"",
@@ -287,7 +300,8 @@
       "pending": "in attesa",
       "needsRevision": "necessita revisione",
       "approved": "approvato",
-      "rejected": "rifiutato"
+      "rejected": "rifiutato",
+      "concerns": "con riserve"
     },
     "annotator": {
       "instructions": {
@@ -377,7 +391,10 @@
       "reject": "Rifiuta",
       "requestRevisions": "Richiedi Revisioni",
       "revisions": "Revisioni",
-      "useBatchActions": "Usa azioni batch per più elementi"
+      "useBatchActions": "Usa azioni batch per più elementi",
+      "concerns": "Riserve",
+      "concernsShort": "Riserve",
+      "concernsTooltip": "Procedere con riserve riconosciute"
     },
     "tooltips": {
       "goToAnnotations": "Vai alle annotazioni",
@@ -440,7 +457,14 @@
       "rejected": "\"{{title}}\" è stato rifiutato",
       "rejectFailed": "Impossibile rifiutare \"{{title}}\"",
       "revisionRequested": "Revisioni richieste per \"{{title}}\"",
-      "revisionFailed": "Impossibile richiedere revisioni per \"{{title}}\""
+      "revisionFailed": "Impossibile richiedere revisioni per \"{{title}}\"",
+      "concerns": "\"{{title}}\" approvato con riserve",
+      "concernsFailed": "Impossibile segnare le riserve per \"{{title}}\""
+    },
+    "concerns": {
+      "title": "Annotare riserve",
+      "placeholder": "Descrivi le tue riserve. L'agente procederà ma le registrerà come rischi riconosciuti...",
+      "submit": "Procedere con riserve"
     }
   },
   "logsPage": {

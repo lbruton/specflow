@@ -22,7 +22,7 @@ export interface DocumentSnapshot {
   version: number;
   timestamp: string;
   trigger: 'initial' | 'revision_requested' | 'approved' | 'manual';
-  status: 'pending' | 'approved' | 'rejected' | 'needs-revision';
+  status: 'pending' | 'approved' | 'rejected' | 'needs-revision' | 'concerns';
   content: string;
   fileStats: {
     size: number;
@@ -84,7 +84,7 @@ export interface ApprovalRequest {
   title: string;
   filePath: string; // Path to the file to be reviewed
   type: 'document' | 'action';
-  status: 'pending' | 'approved' | 'rejected' | 'needs-revision';
+  status: 'pending' | 'approved' | 'rejected' | 'needs-revision' | 'concerns';
   createdAt: string;
   respondedAt?: string;
   response?: string;
@@ -316,7 +316,7 @@ export class ApprovalStorage extends EventEmitter {
 
   async updateApproval(
     id: string,
-    status: 'approved' | 'rejected' | 'needs-revision',
+    status: 'approved' | 'rejected' | 'needs-revision' | 'concerns',
     response: string,
     annotations?: string,
     comments?: ApprovalComment[]
@@ -333,7 +333,7 @@ export class ApprovalStorage extends EventEmitter {
       } catch (error) {
         console.warn(`Failed to capture revision snapshot for approval ${id}:`, error);
       }
-    } else if (status === 'approved') {
+    } else if (status === 'approved' || status === 'concerns') {
       try {
         await this.captureSnapshot(id, 'approved');
       } catch (error) {

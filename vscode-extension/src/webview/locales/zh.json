@@ -64,7 +64,8 @@
     "response": {
       "approved": "已批准",
       "rejected": "已拒绝",
-      "needsRevision": "需要修订"
+      "needsRevision": "需要修订",
+      "concerns": "有顾虑"
     },
     "processing": "正在处理...",
     "approve": "批准",
@@ -98,11 +99,11 @@
       "undoApproved": "已批准 {{count}} 项",
       "undoRejected": "已拒绝 {{count}} 项",
       "undoRevision": "已请求修订 {{count}} 项"
-    }
+    },
+    "concerns": "顾虑"
   },
   "common": {
-    "dismiss": "关闭",
-    "scrollToTop": "回到顶部"
+    "scrollToTop": "滚动到顶部"
   },
   "specs": {
     "active": "活跃",
@@ -180,9 +181,6 @@
       "coverage": "Coverage:",
       "userStories": "User Stories:"
     }
-  },
-  "common": {
-    "scrollToTop": "滚动到顶部"
   },
   "commentModal": {
     "title": {

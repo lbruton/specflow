@@ -69,7 +69,8 @@
     "response": {
       "approved": "承認済み",
       "rejected": "拒否済み",
-      "needsRevision": "要修正"
+      "needsRevision": "要修正",
+      "concerns": "懸念あり"
     },
     "processing": "処理中...",
     "approve": "承認",
@@ -103,11 +104,11 @@
       "undoApproved": "{{count}}件を承認しました",
       "undoRejected": "{{count}}件を拒否しました",
       "undoRevision": "{{count}}件の修正を依頼しました"
-    }
+    },
+    "concerns": "懸念"
   },
   "common": {
-    "dismiss": "閉じる",
-    "scrollToTop": "トップへ戻る"
+    "scrollToTop": "一番上までスクロール"
   },
   "specs": {
     "active": "アクティブ",
@@ -185,9 +186,6 @@
       "coverage": "Coverage:",
       "userStories": "User Stories:"
     }
-  },
-  "common": {
-    "scrollToTop": "一番上までスクロール"
   },
   "commentModal": {
     "title": {

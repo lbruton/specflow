@@ -69,7 +69,8 @@
     "response": {
       "approved": "Approuvé",
       "rejected": "Rejeté",
-      "needsRevision": "Nécessite une révision"
+      "needsRevision": "Nécessite une révision",
+      "concerns": "Avec réserves"
     },
     "processing": "Traitement...",
     "approve": "Approuver",
@@ -103,11 +104,11 @@
       "undoApproved": "{{count}} éléments approuvés",
       "undoRejected": "{{count}} éléments rejetés",
       "undoRevision": "Révision demandée pour {{count}} éléments"
-    }
+    },
+    "concerns": "Réserves"
   },
   "common": {
-    "dismiss": "Fermer",
-    "scrollToTop": "Retour en haut"
+    "scrollToTop": "Défiler vers le haut"
   },
   "specs": {
     "active": "Actif",
@@ -133,9 +134,6 @@
     "noDocs": "Aucun document de pilotage trouvé",
     "copyInstructions": "Copier les Instructions",
     "copied": "Copié !"
-  },
-  "common": {
-    "scrollToTop": "Défiler vers le haut"
   },
   "commentModal": {
     "title": {

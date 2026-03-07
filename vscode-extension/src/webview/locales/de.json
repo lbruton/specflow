@@ -69,7 +69,8 @@
     "response": {
       "approved": "Genehmigt",
       "rejected": "Abgelehnt",
-      "needsRevision": "Überarbeitung erforderlich"
+      "needsRevision": "Überarbeitung erforderlich",
+      "concerns": "Mit Bedenken"
     },
     "processing": "Verarbeitung läuft...",
     "approve": "Genehmigen",
@@ -103,10 +104,10 @@
       "undoApproved": "{{count}} Elemente genehmigt",
       "undoRejected": "{{count}} Elemente abgelehnt",
       "undoRevision": "Überarbeitung für {{count}} Elemente angefordert"
-    }
+    },
+    "concerns": "Bedenken"
   },
   "common": {
-    "dismiss": "Schließen",
     "scrollToTop": "Nach oben scrollen"
   },
   "specs": {
@@ -185,9 +186,6 @@
       "coverage": "Coverage:",
       "userStories": "User Stories:"
     }
-  },
-  "common": {
-    "scrollToTop": "Nach oben scrollen"
   },
   "commentModal": {
     "title": {

@@ -382,9 +382,9 @@ async function handleGetApprovalStatus(
 
     await approvalStorage.stop();
 
-    const isCompleted = approval.status === 'approved' || approval.status === 'rejected';
-    const canProceed = approval.status === 'approved';
-    const mustWait = approval.status !== 'approved';
+    const isCompleted = approval.status === 'approved' || approval.status === 'rejected' || approval.status === 'concerns';
+    const canProceed = approval.status === 'approved' || approval.status === 'concerns';
+    const mustWait = approval.status !== 'approved' && approval.status !== 'concerns';
     const nextSteps: string[] = [];
 
     if (approval.status === 'pending') {
@@ -397,6 +397,16 @@ async function handleGetApprovalStatus(
       nextSteps.push('Run approvals action:"delete" before continuing');
       if (approval.response) {
         nextSteps.push(`Response: ${approval.response}`);
+      }
+    } else if (approval.status === 'concerns') {
+      nextSteps.push('CONCERNS ACKNOWLEDGED - Can proceed with noted risks');
+      nextSteps.push('Run approvals action:"delete" before continuing');
+      nextSteps.push('Append a "## Readiness Concerns" section to tasks.md with the noted concerns');
+      if (approval.response) {
+        nextSteps.push(`Concerns: ${approval.response}`);
+      }
+      if (approval.annotations) {
+        nextSteps.push(`Notes: ${approval.annotations}`);
       }
     } else if (approval.status === 'rejected') {
       nextSteps.push('BLOCKED - REJECTED');
@@ -510,7 +520,7 @@ async function handleDeleteApproval(
     }
 
     // Only block deletion of pending requests (still awaiting approval)
-    // Allow deletion of: approved, needs-revision, rejected
+    // Allow deletion of: approved, concerns, needs-revision, rejected
     if (approval.status === 'pending') {
       return {
         success: false,

@@ -49,7 +49,7 @@ function getSpecWorkflowGuide(): string {
 ## Overview
 
 You guide users through spec-driven development using MCP tools. Transform rough ideas into detailed specifications through Requirements → Design → Tasks → Implementation phases. Use web search when available for current best practices (current year: ${currentYear}). Its important that you follow this workflow exactly to avoid errors.
-Feature names use kebab-case (e.g., user-authentication). Create ONE spec at a time.
+Spec names MUST use Linear issue prefix: {ISSUE-ID}-{kebab-title} (e.g., STAK-123-user-authentication). A Linear issue is REQUIRED — specs without one cannot be created. Create ONE spec at a time.
 
 ## Workflow Diagram
 \`\`\`mermaid
@@ -94,8 +94,29 @@ flowchart TD
     P3_Check -->|approved| P3_Clean[approvals<br/>action: delete]
     P3_Clean -->|failed| P3_Status
 
+    %% Phase 3.5: Visual Prototype Gate (conditional)
+    P3_Clean -->|success| P35_Check{design.md declares<br/>UI changes?}
+    P35_Check -->|No| IRG_Run
+    P35_Check -->|Yes| P35_Mockup[Tasks 0.1-0.3:<br/>Stitch mockup +<br/>Playground prototype]
+    P35_Mockup --> P35_Approve{User approves<br/>visual design?}
+    P35_Approve -->|No| P35_Revise[Revise mockup/<br/>prototype]
+    P35_Revise --> P35_Mockup
+    P35_Approve -->|Yes| P35_Update[Update design.md<br/>Prototype Artifacts]
+    P35_Update --> IRG_Run
+
+    %% Phase 3.9: Implementation Readiness Gate
+    IRG_Run[Cross-validate:<br/>requirements + design + tasks<br/>Save readiness-report.md] --> IRG_Approve[approvals<br/>action: request<br/>readiness-report.md]
+    IRG_Approve --> IRG_Status[approvals<br/>action: status<br/>poll status]
+    IRG_Status --> IRG_Result{Dashboard<br/>decision?}
+    IRG_Result -->|approved| IRG_Clean[approvals<br/>action: delete]
+    IRG_Clean -->|success| P4_Ready[Spec complete.<br/>Ready to implement?]
+    IRG_Clean -->|failed| IRG_Status
+    IRG_Result -->|concerns| IRG_Log[Log concerns to<br/>tasks.md then<br/>delete approval]
+    IRG_Log --> P4_Ready
+    IRG_Result -->|rejected| IRG_Fix[Fix spec documents<br/>to resolve<br/>misalignment]
+    IRG_Fix --> IRG_Run
+
     %% Phase 4: Implementation
-    P3_Clean -->|success| P4_Ready[Spec complete.<br/>Ready to implement?]
     P4_Ready -->|Yes| P4_Status[spec-status]
     P4_Status --> P4_Task[Edit tasks.md:<br/>Change [ ] to [-]<br/>for in-progress]
     P4_Task --> P4_Code[Dispatch subagent:<br/>Implement code]
@@ -126,6 +147,16 @@ flowchart TD
     style P4_QualityReview fill:#ffe6e6
     style CheckSteering fill:#fff4e6
     style P4_More fill:#fff4e6
+    style P35_Check fill:#fff4e6
+    style P35_Approve fill:#ffe6e6
+    style P35_Mockup fill:#e8f5e9
+    style P35_Update fill:#e3f2fd
+    style IRG_Run fill:#f3e5f5
+    style IRG_Approve fill:#e3f2fd
+    style IRG_Result fill:#ffe6e6
+    style IRG_Clean fill:#e3f2fd
+    style IRG_Log fill:#fff4e6
+    style IRG_Fix fill:#ffe6e6
     style P4_Log fill:#e3f2fd
 \`\`\`
 
@@ -138,7 +169,7 @@ flowchart TD
 - Read steering docs: \`.spec-workflow/steering/*.md\` (if they exist)
 - Check for custom template: \`.spec-workflow/user-templates/requirements-template.md\`
 - Read template: \`.spec-workflow/templates/requirements-template.md\` (if no custom template)
-- Create document: \`.spec-workflow/specs/{spec-name}/requirements.md\`
+- Create document: \`.spec-workflow/specs/{issue-id}-{kebab-title}/requirements.md\`
 
 **Tools**:
 - approvals: Manage approval workflow (actions: request, status, delete)
@@ -148,7 +179,7 @@ flowchart TD
 2. Check for custom template at \`.spec-workflow/user-templates/requirements-template.md\`
 3. If no custom template, read from \`.spec-workflow/templates/requirements-template.md\`
 4. Research market/user expectations (if web search available, current year: ${currentYear})
-5. Generate requirements as user stories with EARS criteria6. Create \`requirements.md\` at \`.spec-workflow/specs/{spec-name}/requirements.md\`
+5. Generate requirements as user stories with EARS criteria6. Create \`requirements.md\` at \`.spec-workflow/specs/{issue-id}-{kebab-title}/requirements.md\`
 7. Request approval using approvals tool with action:'request' (filePath only, never content)
 8. Poll status using approvals with action:'status' until approved/needs-revision (NEVER accept verbal approval)
 9. If needs-revision: update document using comments, create NEW approval, do NOT proceed
@@ -161,7 +192,7 @@ flowchart TD
 **File Operations**:
 - Check for custom template: \`.spec-workflow/user-templates/design-template.md\`
 - Read template: \`.spec-workflow/templates/design-template.md\` (if no custom template)
-- Create document: \`.spec-workflow/specs/{spec-name}/design.md\`
+- Create document: \`.spec-workflow/specs/{issue-id}-{kebab-title}/design.md\`
 
 **Tools**:
 - approvals: Manage approval workflow (actions: request, status, delete)
@@ -171,7 +202,7 @@ flowchart TD
 2. If no custom template, read from \`.spec-workflow/templates/design-template.md\`
 3. Analyze codebase for patterns to reuse
 4. Research technology choices (if web search available, current year: ${currentYear})
-5. Generate design with all template sections6. Create \`design.md\` at \`.spec-workflow/specs/{spec-name}/design.md\`
+5. Generate design with all template sections6. Create \`design.md\` at \`.spec-workflow/specs/{issue-id}-{kebab-title}/design.md\`
 7. Request approval using approvals tool with action:'request'
 8. Poll status using approvals with action:'status' until approved/needs-revision
 9. If needs-revision: update document using comments, create NEW approval, do NOT proceed
@@ -184,7 +215,7 @@ flowchart TD
 **File Operations**:
 - Check for custom template: \`.spec-workflow/user-templates/tasks-template.md\`
 - Read template: \`.spec-workflow/templates/tasks-template.md\` (if no custom template)
-- Create document: \`.spec-workflow/specs/{spec-name}/tasks.md\`
+- Create document: \`.spec-workflow/specs/{issue-id}-{kebab-title}/tasks.md\`
 
 **Tools**:
 - approvals: Manage approval workflow (actions: request, status, delete)
@@ -202,10 +233,10 @@ flowchart TD
    - _Requirements: requirements that the task implements
    - Success: specific completion criteria
    - Instructions related to setting the task in progress in tasks.md, logging the implementation with log-implementation tool after completion, and then marking it as complete when the task is complete.
-   - Start the prompt with "Implement the task for spec {spec-name}, first run spec-workflow-guide to get the workflow guide then implement the task:"
+   - Start the prompt with "Implement the task for spec {issue-id}-{kebab-title}, first run spec-workflow-guide to get the workflow guide then implement the task:"
 6. (Optional) Add a **Recommended Agent** field to each task: Claude, Codex, Gemini, or Human
 7. Include a **File Touch Map** at the top of tasks.md listing all files the spec will CREATE, MODIFY, or TEST with brief scope notes
-8. Create \`tasks.md\` at \`.spec-workflow/specs/{spec-name}/tasks.md\`
+8. Create \`tasks.md\` at \`.spec-workflow/specs/{issue-id}-{kebab-title}/tasks.md\`
 7. Request approval using approvals tool with action:'request'
 8. Poll status using approvals with action:'status' until approved/needs-revision
 9. If needs-revision: update document using comments, create NEW approval, do NOT proceed
@@ -213,11 +244,93 @@ flowchart TD
 11. If delete fails: STOP - return to polling
 12. After successful cleanup: "Spec complete. Ready to implement?"
 
+### Phase 3.5: Visual Prototype Gate (conditional)
+**Purpose**: Ensure UI changes have visual approval before any implementation code is written.
+
+**Trigger**: This phase fires automatically if design.md contains \`Has UI Changes: Yes\` AND \`Prototype Required: Yes\` in the UI Impact Assessment section.
+
+**Skip condition**: If \`Has UI Changes: No\` or \`Prototype Required: No\`, skip directly to Phase 4.
+
+**Process**:
+1. Read design.md and check the \`UI Impact Assessment\` section
+2. If UI changes are declared with prototype required:
+   - Execute tasks 0.1–0.3 from tasks.md (these are the prototype gate tasks)
+   - Task 0.1: Create visual mockup via \`ui-mockup\` skill (Stitch) or \`frontend-design\` skill
+   - Task 0.2: Build interactive prototype via \`playground\` skill
+   - Task 0.3: Present to user, collect explicit visual approval
+3. If a reference HTML/mockup file path is listed in design.md, the prototype MUST use it as the baseline — do not ignore provided prototypes
+4. Update design.md \`Prototype Artifacts\` section with Stitch IDs and playground path
+5. **BLOCKING**: No task tagged \`ui:true\` may begin until visual approval is recorded
+6. Proceed to Phase 4
+
+**CRITICAL**: If a spec has a prototype HTML file referenced in design.md or requirements.md and the implementer ignores it, that is a spec compliance failure. The prototype is the source of truth for visual design — not the implementer's interpretation of the text description.
+
+### Phase 3.9: Implementation Readiness Gate
+**Purpose**: Cross-validate all spec documents for internal consistency before any code is written.
+
+**Trigger**: This phase fires automatically after Phase 3 approval (and Phase 3.5 if applicable). It runs on EVERY spec — it is not conditional.
+
+**File Operations**:
+- Read specs: \`.spec-workflow/specs/{issue-id}-{kebab-title}/requirements.md\`, \`design.md\`, \`tasks.md\`
+- Create report: \`.spec-workflow/specs/{issue-id}-{kebab-title}/readiness-report.md\`
+
+**Tools**:
+- approvals: Submit readiness report for dashboard review (actions: request, status, delete)
+
+**Process**:
+1. Read all three spec documents: \`requirements.md\`, \`design.md\`, \`tasks.md\`
+2. Perform cross-validation checks:
+   - **Requirement coverage**: Every requirement/user story in requirements.md has at least one corresponding task in tasks.md. Flag orphaned requirements.
+   - **Task traceability**: Every task in tasks.md references valid requirements via its \`_Requirements\` field. Flag tasks with no requirement linkage.
+   - **Design-task alignment**: Design decisions (components, data model, API changes) in design.md are reflected in the task structure. Flag design elements with no implementing task.
+   - **No contradictions**: Check for conflicting statements between documents (e.g., design says "modal" but tasks say "inline panel").
+   - **Prototype consistency**: If design.md references a prototype HTML file, verify it appears in task 0.1-0.3 artifacts and/or task \`_Leverage\` fields.
+   - **File touch map validation**: Verify the File Touch Map in tasks.md covers all files mentioned in individual tasks.
+3. Save the report as \`readiness-report.md\` in the spec folder using the output format below.
+4. Request dashboard approval using approvals tool with action:'request', filePath pointing to readiness-report.md
+5. Poll status using approvals with action:'status' until responded — the user has THREE options on the dashboard:
+   - **Approve (PASS)**: All checks satisfied. Proceed to Phase 4.
+   - **Concerns**: Minor gaps acknowledged. Agent proceeds to Phase 4 but MUST append a \`## Readiness Concerns\` section to tasks.md with the user's noted concerns.
+   - **Reject (FAIL)**: Critical misalignment. Agent fixes the spec documents and re-runs the readiness check from step 1.
+6. Once approved or concerns-acknowledged: use approvals with action:'delete' (must succeed) before proceeding.
+7. If delete fails: STOP - return to polling.
+
+**Report format** (saved to readiness-report.md):
+\`\`\`markdown
+# Implementation Readiness Report
+- **Spec**: {spec-name}
+- **Generated**: {timestamp}
+- **Recommendation**: PASS | CONCERNS | FAIL
+
+## Requirement Coverage (X/Y mapped)
+- REQ-1.1: Task 2, Task 3 ✓
+- REQ-2.1: [MISSING] ✗
+
+## Design-Task Alignment
+- Component X: Task 4 ✓
+- Data model change Y: [NO IMPLEMENTING TASK] ✗
+
+## Contradictions
+- None found | List of conflicts
+
+## Prototype Consistency
+- N/A | Verified | [MISSING from task leverage]
+
+## File Touch Map
+- Consistent | [Task 5 touches foo.js but File Touch Map omits it]
+
+## Agent Recommendation
+{Brief explanation of the recommendation — why PASS/CONCERNS/FAIL}
+\`\`\`
+
+**CRITICAL**: This gate catches the #1 cause of spec implementation failures — tasks that drift from requirements during the design-to-tasks translation. Running this check takes 30 seconds and prevents hours of rework.
+**CRITICAL**: The readiness report MUST be submitted to the dashboard for human review. Verbal approval is NOT accepted. The agent's recommendation (PASS/CONCERNS/FAIL) is advisory — the human makes the final call via the dashboard.
+
 ### Phase 4: Implementation
 **Purpose**: Execute tasks systematically.
 
 **File Operations**:
-- Read specs: \`.spec-workflow/specs/{spec-name}/*.md\` (if returning to work)
+- Read specs: \`.spec-workflow/specs/{issue-id}-{kebab-title}/*.md\` (if returning to work)
 - Edit tasks.md to update status:
   - \`- [ ]\` = Pending task
   - \`- [-]\` = In-progress task
@@ -235,14 +348,19 @@ flowchart TD
 1. Check current status with spec-status
 2. Read \`tasks.md\` to see all tasks
 3. For each task:
+   - **UI GATE CHECK**: Before dispatching any task that creates or modifies UI components, verify:
+     - Read design.md \`UI Impact Assessment\` section
+     - If \`Prototype Required: Yes\`, confirm tasks 0.1–0.3 are marked \`[x]\` and \`Prototype Artifacts\` in design.md are populated
+     - If prototype gate is incomplete, STOP — complete Phase 3.5 first
+     - Include the playground file path and/or Stitch screen IDs in the subagent prompt so the implementer has the approved visual reference
    - Edit tasks.md: Change \`[ ]\` to \`[-]\` for the task you're starting
    - **CRITICAL: BEFORE implementing, search existing implementation logs**:
-     - Implementation logs are in: \`.spec-workflow/specs/{spec-name}/Implementation Logs/\`
+     - Implementation logs are in: \`.spec-workflow/specs/{issue-id}-{kebab-title}/Implementation Logs/\`
      - **Option 1: Use grep for fast searches**:
-       - \`grep -r "api\|endpoint" .spec-workflow/specs/{spec-name}/Implementation Logs/\` - Find API endpoints
-       - \`grep -r "component" .spec-workflow/specs/{spec-name}/Implementation Logs/\` - Find UI components
-       - \`grep -r "function" .spec-workflow/specs/{spec-name}/Implementation Logs/\` - Find utility functions
-       - \`grep -r "integration" .spec-workflow/specs/{spec-name}/Implementation Logs/\` - Find integration patterns
+       - \`grep -r "api\|endpoint" .spec-workflow/specs/{issue-id}-{kebab-title}/Implementation Logs/\` - Find API endpoints
+       - \`grep -r "component" .spec-workflow/specs/{issue-id}-{kebab-title}/Implementation Logs/\` - Find UI components
+       - \`grep -r "function" .spec-workflow/specs/{issue-id}-{kebab-title}/Implementation Logs/\` - Find utility functions
+       - \`grep -r "integration" .spec-workflow/specs/{issue-id}-{kebab-title}/Implementation Logs/\` - Find integration patterns
      - **Option 2: Read markdown files directly** - Use Read tool to examine specific log files
      - Best practice: Search 2-3 different terms to discover comprehensively
      - This prevents: duplicate endpoints, reimplemented components, broken integrations
@@ -353,8 +471,12 @@ Only dispatch AFTER Stage 1 passes. Verify the code is well-built and production
    Wait for the Cloudflare Pages check to complete (green) before proceeding.
 3. Run \`/bb-test\` with the preview URL — Browserbase/Stagehand against the PR preview deployment. Session has a **10-minute hard timeout**: if any individual test step has not returned a result within 10 minutes, skip it, log a warning, and move on. Do not block spec closure on a timed-out step.
 4. If E2E tests fail: file a Linear bug issue and fix in a new patch — do not block spec closure for failures unrelated to this spec's changes.
-5. Close all linked Linear issues (move state to "Done").
-6. **The spec is NOT complete until wiki is updated AND E2E tests have been run.**
+5. **MANDATORY — Close all linked issues:**
+   - **Linear**: Use \`mcp__plugin_linear_linear__save_issue\` to move each linked issue's state to "Done"
+   - **GitHub**: Run \`gh issue close <number>\` for each linked GitHub issue
+   - Verify closure: \`gh issue view <number> --json state\` should show "CLOSED"
+   - A spec with open issues is NOT complete — this is the most commonly forgotten step
+6. **The spec is NOT complete until wiki is updated AND E2E tests have been run AND all linked issues are closed.**
 
 ## Workflow Rules
 
@@ -366,11 +488,15 @@ Only dispatch AFTER Stage 1 passes. Verify the code is well-built and production
 - Phase 5 (wiki + E2E) is mandatory — do not declare spec complete until wiki is updated and E2E tests have been run
 - Phase 5 E2E always uses Browserbase/Stagehand (/bb-test) against the PR preview URL — never browserless/smoke-test
 - One spec at a time
-- Use kebab-case for spec names
+- Spec names use Linear issue prefix: {ISSUE-ID}-{kebab-title}
 - Approval requests: provide filePath only, never content
 - BLOCKING: Never proceed if approval delete fails
 - CRITICAL: Must have approved status AND successful cleanup before next phase
 - CRITICAL: Every task marked [x] MUST have a corresponding implementation log — call log-implementation BEFORE changing [-] to [x]
+- CRITICAL: Every completed spec MUST have all linked Linear AND GitHub issues closed — a spec with open issues is NOT done
+- CRITICAL: Specs with UI changes MUST complete Phase 3.5 (visual prototype gate) before any UI implementation task begins
+- CRITICAL: If design.md references a prototype HTML file, implementers MUST source their visual design from it — ignoring a provided prototype is a spec compliance failure
+- CRITICAL: Phase 3.9 (Implementation Readiness Gate) fires on EVERY spec before Phase 4 — generates readiness-report.md, submits to dashboard for review. Three dashboard actions: Approve (proceed), Concerns (proceed with logged risks), Reject (fix and re-run). Verbal approval NOT accepted.
 - CRITICAL: Verbal approval is NEVER accepted - dashboard or VS Code extension only
 - NEVER proceed on user saying "approved" - check system status only
 - Steering docs are optional - only create when explicitly requested
@@ -386,7 +512,7 @@ Only dispatch AFTER Stage 1 passes. Verify the code is well-built and production
 │   ├── tech-template.md
 │   └── structure-template.md
 ├── specs/
-│   └── {spec-name}/
+│   └── {ISSUE-ID}-{kebab-title}/
 │       ├── requirements.md
 │       ├── design.md
 │       ├── tasks.md

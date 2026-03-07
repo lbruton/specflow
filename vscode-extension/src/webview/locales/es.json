@@ -69,7 +69,8 @@
     "response": {
       "approved": "Aprobado",
       "rejected": "Rechazado",
-      "needsRevision": "Necesita revisión"
+      "needsRevision": "Necesita revisión",
+      "concerns": "Con reservas"
     },
     "processing": "Procesando...",
     "approve": "Aprobar",
@@ -103,11 +104,11 @@
       "undoApproved": "{{count}} elementos aprobados",
       "undoRejected": "{{count}} elementos rechazados",
       "undoRevision": "Revisión solicitada para {{count}} elementos"
-    }
+    },
+    "concerns": "Reservas"
   },
   "common": {
-    "dismiss": "Cerrar",
-    "scrollToTop": "Ir arriba"
+    "scrollToTop": "Volver arriba"
   },
   "specs": {
     "active": "Activas",
@@ -185,9 +186,6 @@
       "coverage": "Coverage:",
       "userStories": "User Stories:"
     }
-  },
-  "common": {
-    "scrollToTop": "Volver arriba"
   },
   "commentModal": {
     "title": {

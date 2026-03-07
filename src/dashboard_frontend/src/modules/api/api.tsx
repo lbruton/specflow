@@ -34,7 +34,7 @@ export interface DocumentSnapshot {
   version: number;
   timestamp: string;
   trigger: 'initial' | 'revision_requested' | 'approved' | 'manual';
-  status: 'pending' | 'approved' | 'rejected' | 'needs-revision';
+  status: 'pending' | 'approved' | 'rejected' | 'needs-revision' | 'concerns';
   content: string;
   fileStats: {
     size: number;
@@ -114,7 +114,7 @@ type ApiActionsContextType = {
   getAllArchivedSpecDocuments: (name: string) => Promise<Record<string, { content: string; lastModified: string } | null>>;
   getSpecTasksProgress: (name: string) => Promise<any>;
   updateTaskStatus: (specName: string, taskId: string, status: 'pending' | 'in-progress' | 'completed') => Promise<{ ok: boolean; status: number; data?: any }>;
-  approvalsAction: (id: string, action: 'approve' | 'reject' | 'needs-revision', payload: any) => Promise<{ ok: boolean; status: number }>;
+  approvalsAction: (id: string, action: 'approve' | 'reject' | 'needs-revision' | 'concerns', payload: any) => Promise<{ ok: boolean; status: number }>;
   approvalsActionBatch: (ids: string[], action: 'approve' | 'reject', response?: string) => Promise<{ ok: boolean; status: number; data?: BatchApprovalResult }>;
   approvalsUndoBatch: (ids: string[]) => Promise<{ ok: boolean; status: number; data?: BatchApprovalResult }>;
   getApprovalContent: (id: string) => Promise<{ content: string; filePath?: string }>;

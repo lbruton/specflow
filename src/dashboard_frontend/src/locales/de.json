@@ -70,9 +70,16 @@
     }
   },
   "specViewer": {
-    "header": { "title": "Spezifikationsdokumente" },
-    "tooltips": { "viewRendered": "Gerenderte Dokument anzeigen", "viewSource": "Quell-Markdown anzeigen" },
-    "empty": { "docNotCreated": "Dieses {{doc}}-Dokument wurde noch nicht erstellt." }
+    "header": {
+      "title": "Spezifikationsdokumente"
+    },
+    "tooltips": {
+      "viewRendered": "Gerenderte Dokument anzeigen",
+      "viewSource": "Quell-Markdown anzeigen"
+    },
+    "empty": {
+      "docNotCreated": "Dieses {{doc}}-Dokument wurde noch nicht erstellt."
+    }
   },
   "language": {
     "select": "Sprache auswählen"
@@ -166,9 +173,15 @@
       "task": "Aufgabe",
       "groupBadge": "Aufgabengruppe"
     },
-    "files": { "label": "Dateien:" },
-    "implementation": { "label": "Implementierung:" },
-    "labels": { "spec": "Spezifikation:" },
+    "files": {
+      "label": "Dateien:"
+    },
+    "implementation": {
+      "label": "Implementierung:"
+    },
+    "labels": {
+      "spec": "Spezifikation:"
+    },
     "noSpecsFound": {
       "title": "Keine Spezifikationen gefunden",
       "noMatch": "Keine Spezifikationen passen zu \"{{query}}\"",
@@ -287,7 +300,8 @@
       "pending": "ausstehend",
       "needsRevision": "überarbeitung erforderlich",
       "approved": "genehmigt",
-      "rejected": "abgelehnt"
+      "rejected": "abgelehnt",
+      "concerns": "mit Bedenken"
     },
     "annotator": {
       "instructions": {
@@ -377,7 +391,10 @@
       "reject": "Ablehnen",
       "requestRevisions": "Überarbeitungen anfordern",
       "revisions": "Überarbeitungen",
-      "useBatchActions": "Batch-Aktionen für mehrere Elemente verwenden"
+      "useBatchActions": "Batch-Aktionen für mehrere Elemente verwenden",
+      "concerns": "Bedenken",
+      "concernsShort": "Bedenken",
+      "concernsTooltip": "Mit anerkannten Bedenken fortfahren"
     },
     "tooltips": {
       "goToAnnotations": "Zu Annotationen gehen",
@@ -440,7 +457,14 @@
       "rejected": "\"{{title}}\" wurde abgelehnt",
       "rejectFailed": "Ablehnung von \"{{title}}\" fehlgeschlagen",
       "revisionRequested": "Überarbeitung für \"{{title}}\" angefordert",
-      "revisionFailed": "Anforderung der Überarbeitung für \"{{title}}\" fehlgeschlagen"
+      "revisionFailed": "Anforderung der Überarbeitung für \"{{title}}\" fehlgeschlagen",
+      "concerns": "\"{{title}}\" mit Bedenken genehmigt",
+      "concernsFailed": "Bedenken für \"{{title}}\" konnten nicht markiert werden"
+    },
+    "concerns": {
+      "title": "Bedenken notieren",
+      "placeholder": "Beschreiben Sie Ihre Bedenken. Der Agent wird fortfahren, aber diese als anerkannte Risiken protokollieren...",
+      "submit": "Mit Bedenken fortfahren"
     }
   },
   "logsPage": {

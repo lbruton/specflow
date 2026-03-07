@@ -70,9 +70,16 @@
     }
   },
   "specViewer": {
-    "header": { "title": "仕様ドキュメント" },
-    "tooltips": { "viewRendered": "レンダリング表示", "viewSource": "ソース(Markdown)を表示" },
-    "empty": { "docNotCreated": "この {{doc}} ドキュメントはまだ作成されていません。" }
+    "header": {
+      "title": "仕様ドキュメント"
+    },
+    "tooltips": {
+      "viewRendered": "レンダリング表示",
+      "viewSource": "ソース(Markdown)を表示"
+    },
+    "empty": {
+      "docNotCreated": "この {{doc}} ドキュメントはまだ作成されていません。"
+    }
   },
   "language": {
     "select": "言語を選択"
@@ -126,9 +133,15 @@
       "task": "タスク",
       "groupBadge": "タスクグループ"
     },
-    "files": { "label": "ファイル:" },
-    "implementation": { "label": "実装:" },
-    "labels": { "spec": "仕様:" },
+    "files": {
+      "label": "ファイル:"
+    },
+    "implementation": {
+      "label": "実装:"
+    },
+    "labels": {
+      "spec": "仕様:"
+    },
     "taskDetails": "タスクの詳細",
     "status": "ステータス",
     "noTasksFound": "タスクが見つかりません",
@@ -287,7 +300,8 @@
       "pending": "保留中",
       "needsRevision": "修正が必要",
       "approved": "承認済み",
-      "rejected": "却下"
+      "rejected": "却下",
+      "concerns": "懸念あり"
     },
     "annotator": {
       "instructions": {
@@ -377,7 +391,10 @@
       "reject": "却下",
       "requestRevisions": "修正を依頼",
       "revisions": "修正",
-      "useBatchActions": "複数アイテムにはバッチアクションを使用"
+      "useBatchActions": "複数アイテムにはバッチアクションを使用",
+      "concerns": "懸念事項",
+      "concernsShort": "懸念",
+      "concernsTooltip": "懸念事項を認識して続行"
     },
     "tooltips": {
       "goToAnnotations": "注釈に移動",
@@ -440,7 +457,14 @@
       "rejected": "「{{title}}」が却下されました",
       "rejectFailed": "「{{title}}」の却下に失敗しました",
       "revisionRequested": "「{{title}}」の修正が要求されました",
-      "revisionFailed": "「{{title}}」の修正要求に失敗しました"
+      "revisionFailed": "「{{title}}」の修正要求に失敗しました",
+      "concerns": "\"{{title}}\" は懸念事項付きで承認されました",
+      "concernsFailed": "\"{{title}}\" の懸念事項マークに失敗しました"
+    },
+    "concerns": {
+      "title": "懸念事項を記録",
+      "placeholder": "懸念事項を記述してください。エージェントは続行しますが、認識されたリスクとして記録します...",
+      "submit": "懸念付きで続行"
     }
   },
   "logsPage": {

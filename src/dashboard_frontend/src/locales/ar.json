@@ -70,9 +70,16 @@
     }
   },
   "specViewer": {
-    "header": { "title": "وثائق المواصفة" },
-    "tooltips": { "viewRendered": "عرض الوثيقة المعروضة", "viewSource": "عرض مصدر الماركداون" },
-    "empty": { "docNotCreated": "لم يتم إنشاء وثيقة {{doc}} هذه بعد." }
+    "header": {
+      "title": "وثائق المواصفة"
+    },
+    "tooltips": {
+      "viewRendered": "عرض الوثيقة المعروضة",
+      "viewSource": "عرض مصدر الماركداون"
+    },
+    "empty": {
+      "docNotCreated": "لم يتم إنشاء وثيقة {{doc}} هذه بعد."
+    }
   },
   "language": {
     "select": "اختر اللغة"
@@ -166,9 +173,15 @@
       "task": "المهمة",
       "groupBadge": "مجموعة المهام"
     },
-    "files": { "label": "الملفات:" },
-    "implementation": { "label": "التنفيذ:" },
-    "labels": { "spec": "المواصفة:" },
+    "files": {
+      "label": "الملفات:"
+    },
+    "implementation": {
+      "label": "التنفيذ:"
+    },
+    "labels": {
+      "spec": "المواصفة:"
+    },
     "noSpecsFound": {
       "title": "لم توجد مواصفات",
       "noMatch": "لا توجد مواصفات تطابق \"{{query}}\"",
@@ -287,7 +300,8 @@
       "pending": "معلق",
       "needsRevision": "يحتاج مراجعة",
       "approved": "موافق",
-      "rejected": "مرفوض"
+      "rejected": "مرفوض",
+      "concerns": "مع تحفظات"
     },
     "annotator": {
       "instructions": {
@@ -377,7 +391,10 @@
       "reject": "رفض",
       "requestRevisions": "طلب مراجعات",
       "revisions": "مراجعات",
-      "useBatchActions": "استخدم الإجراءات المجمعة للعناصر المتعددة"
+      "useBatchActions": "استخدم الإجراءات المجمعة للعناصر المتعددة",
+      "concerns": "تحفظات",
+      "concernsShort": "تحفظات",
+      "concernsTooltip": "المتابعة مع التحفظات المعترف بها"
     },
     "tooltips": {
       "goToAnnotations": "الذهاب للتعليقات التوضيحية",
@@ -440,7 +457,14 @@
       "rejected": "تم رفض \"{{title}}\"",
       "rejectFailed": "فشل في رفض \"{{title}}\"",
       "revisionRequested": "تم طلب مراجعات لـ \"{{title}}\"",
-      "revisionFailed": "فشل في طلب مراجعات لـ \"{{title}}\""
+      "revisionFailed": "فشل في طلب مراجعات لـ \"{{title}}\"",
+      "concerns": "تمت الموافقة على \"{{title}}\" مع تحفظات",
+      "concernsFailed": "فشل في تسجيل التحفظات لـ \"{{title}}\""
+    },
+    "concerns": {
+      "title": "تسجيل التحفظات",
+      "placeholder": "صف تحفظاتك. سيستمر الوكيل ولكن سيسجلها كمخاطر معترف بها...",
+      "submit": "المتابعة مع التحفظات"
     }
   },
   "logsPage": {

@@ -76,9 +76,16 @@
     }
   },
   "specViewer": {
-    "header": { "title": "Spec Documents" },
-    "tooltips": { "viewRendered": "View rendered document", "viewSource": "View source markdown" },
-    "empty": { "docNotCreated": "This {{doc}} document hasn't been created yet." }
+    "header": {
+      "title": "Spec Documents"
+    },
+    "tooltips": {
+      "viewRendered": "View rendered document",
+      "viewSource": "View source markdown"
+    },
+    "empty": {
+      "docNotCreated": "This {{doc}} document hasn't been created yet."
+    }
   },
   "language": {
     "select": "Select language"
@@ -172,9 +179,15 @@
       "task": "Task",
       "groupBadge": "Task Group"
     },
-    "files": { "label": "Files:" },
-    "implementation": { "label": "Implementation:" },
-    "labels": { "spec": "Spec:" },
+    "files": {
+      "label": "Files:"
+    },
+    "implementation": {
+      "label": "Implementation:"
+    },
+    "labels": {
+      "spec": "Spec:"
+    },
     "noSpecsFound": {
       "title": "No specs found",
       "noMatch": "No specs match \"{{query}}\"",
@@ -259,6 +272,20 @@
     "tabs": {
       "active": "Active",
       "archived": "Archive"
+    },
+    "archive": {
+      "confirmTitle": "Archive Specification",
+      "confirmMessage": "Are you sure you want to archive \"{{name}}\"? You can restore it later from the Archive tab.",
+      "confirmButton": "Archive",
+      "successMessage": "\"{{name}}\" has been archived",
+      "errorMessage": "Failed to archive \"{{name}}\""
+    },
+    "unarchive": {
+      "confirmTitle": "Restore Specification",
+      "confirmMessage": "Are you sure you want to restore \"{{name}}\" to active specifications?",
+      "confirmButton": "Restore",
+      "successMessage": "\"{{name}}\" has been restored",
+      "errorMessage": "Failed to restore \"{{name}}\""
     }
   },
   "steeringPage": {
@@ -293,7 +320,8 @@
       "pending": "pending",
       "needsRevision": "needs revision",
       "approved": "approved",
-      "rejected": "rejected"
+      "rejected": "rejected",
+      "concerns": "concerns"
     },
     "annotator": {
       "instructions": {
@@ -384,7 +412,10 @@
       "reject": "Reject",
       "requestRevisions": "Request Revisions",
       "revisions": "Revisions",
-      "useBatchActions": "Use batch actions for multiple items"
+      "useBatchActions": "Use batch actions for multiple items",
+      "concerns": "Concerns",
+      "concernsShort": "Concerns",
+      "concernsTooltip": "Proceed with acknowledged concerns"
     },
     "tooltips": {
       "goToAnnotations": "Go to annotations",
@@ -447,7 +478,14 @@
       "rejected": "\"{{title}}\" has been rejected",
       "rejectFailed": "Failed to reject \"{{title}}\"",
       "revisionRequested": "Revisions requested for \"{{title}}\"",
-      "revisionFailed": "Failed to request revisions for \"{{title}}\""
+      "revisionFailed": "Failed to request revisions for \"{{title}}\"",
+      "concerns": "\"{{title}}\" approved with concerns noted",
+      "concernsFailed": "Failed to mark concerns for \"{{title}}\""
+    },
+    "concerns": {
+      "title": "Note Concerns",
+      "placeholder": "Describe the concerns you have. The agent will proceed but log these as acknowledged risks...",
+      "submit": "Proceed with Concerns"
     }
   },
   "logsPage": {

@@ -69,7 +69,8 @@
     "response": {
       "approved": "Одобрено",
       "rejected": "Отклонено",
-      "needsRevision": "Требует доработки"
+      "needsRevision": "Требует доработки",
+      "concerns": "С замечаниями"
     },
     "processing": "Обработка...",
     "approve": "Одобрить",
@@ -103,11 +104,11 @@
       "undoApproved": "{{count}} элементов одобрено",
       "undoRejected": "{{count}} элементов отклонено",
       "undoRevision": "Запрошена доработка для {{count}} элементов"
-    }
+    },
+    "concerns": "Замечания"
   },
   "common": {
-    "dismiss": "Закрыть",
-    "scrollToTop": "Наверх"
+    "scrollToTop": "Прокрутить вверх"
   },
   "specs": {
     "active": "Активные",
@@ -185,9 +186,6 @@
       "coverage": "Coverage:",
       "userStories": "User Stories:"
     }
-  },
-  "common": {
-    "scrollToTop": "Прокрутить вверх"
   },
   "commentModal": {
     "title": {

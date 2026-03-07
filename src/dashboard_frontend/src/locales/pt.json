@@ -70,9 +70,16 @@
     }
   },
   "specViewer": {
-    "header": { "title": "Documentos de Especificação" },
-    "tooltips": { "viewRendered": "Ver documento renderizado", "viewSource": "Ver markdown fonte" },
-    "empty": { "docNotCreated": "Este documento {{doc}} ainda não foi criado." }
+    "header": {
+      "title": "Documentos de Especificação"
+    },
+    "tooltips": {
+      "viewRendered": "Ver documento renderizado",
+      "viewSource": "Ver markdown fonte"
+    },
+    "empty": {
+      "docNotCreated": "Este documento {{doc}} ainda não foi criado."
+    }
   },
   "language": {
     "select": "Selecionar idioma"
@@ -166,9 +173,15 @@
       "task": "Tarefa",
       "groupBadge": "Grupo de Tarefas"
     },
-    "files": { "label": "Arquivos:" },
-    "implementation": { "label": "Implementação:" },
-    "labels": { "spec": "Especificação:" },
+    "files": {
+      "label": "Arquivos:"
+    },
+    "implementation": {
+      "label": "Implementação:"
+    },
+    "labels": {
+      "spec": "Especificação:"
+    },
     "noSpecsFound": {
       "title": "Nenhuma especificação encontrada",
       "noMatch": "Nenhuma especificação corresponde a \"{{query}}\"",
@@ -287,7 +300,8 @@
       "pending": "pendente",
       "needsRevision": "precisa de revisão",
       "approved": "aprovado",
-      "rejected": "rejeitado"
+      "rejected": "rejeitado",
+      "concerns": "com ressalvas"
     },
     "annotator": {
       "instructions": {
@@ -377,7 +391,10 @@
       "reject": "Rejeitar",
       "requestRevisions": "Solicitar Revisões",
       "revisions": "Revisões",
-      "useBatchActions": "Usar ações em lote para vários itens"
+      "useBatchActions": "Usar ações em lote para vários itens",
+      "concerns": "Com ressalvas",
+      "concernsShort": "Ressalvas",
+      "concernsTooltip": "Prosseguir com ressalvas reconhecidas"
     },
     "tooltips": {
       "goToAnnotations": "Ir para anotações",
@@ -440,7 +457,14 @@
       "rejected": "\"{{title}}\" foi rejeitado",
       "rejectFailed": "Falha ao rejeitar \"{{title}}\"",
       "revisionRequested": "Revisões solicitadas para \"{{title}}\"",
-      "revisionFailed": "Falha ao solicitar revisões para \"{{title}}\""
+      "revisionFailed": "Falha ao solicitar revisões para \"{{title}}\"",
+      "concerns": "\"{{title}}\" aprovado com ressalvas",
+      "concernsFailed": "Falha ao marcar ressalvas para \"{{title}}\""
+    },
+    "concerns": {
+      "title": "Registrar ressalvas",
+      "placeholder": "Descreva suas ressalvas. O agente continuará, mas as registrará como riscos reconhecidos...",
+      "submit": "Prosseguir com ressalvas"
     }
   },
   "logsPage": {

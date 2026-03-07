@@ -681,16 +681,17 @@ export class MultiProjectDashboardServer {
           return reply.code(404).send({ error: 'Project not found' });
         }
 
-        const validActions = ['approve', 'reject', 'needs-revision'];
+        const validActions = ['approve', 'reject', 'needs-revision', 'concerns'];
         if (!validActions.includes(action)) {
           return reply.code(400).send({ error: 'Invalid action' });
         }
 
         // Convert action name to status value
-        const actionToStatus: Record<string, 'approved' | 'rejected' | 'needs-revision'> = {
+        const actionToStatus: Record<string, 'approved' | 'rejected' | 'needs-revision' | 'concerns'> = {
           'approve': 'approved',
           'reject': 'rejected',
-          'needs-revision': 'needs-revision'
+          'needs-revision': 'needs-revision',
+          'concerns': 'concerns'
         };
         const status = actionToStatus[action];
 

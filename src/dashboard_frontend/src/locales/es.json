@@ -70,9 +70,16 @@
     }
   },
   "specViewer": {
-    "header": { "title": "Documentos de Especificación" },
-    "tooltips": { "viewRendered": "Ver documento renderizado", "viewSource": "Ver markdown fuente" },
-    "empty": { "docNotCreated": "Este documento {{doc}} aún no ha sido creado." }
+    "header": {
+      "title": "Documentos de Especificación"
+    },
+    "tooltips": {
+      "viewRendered": "Ver documento renderizado",
+      "viewSource": "Ver markdown fuente"
+    },
+    "empty": {
+      "docNotCreated": "Este documento {{doc}} aún no ha sido creado."
+    }
   },
   "language": {
     "select": "Seleccionar idioma"
@@ -166,9 +173,15 @@
       "task": "Tarea",
       "groupBadge": "Grupo de Tareas"
     },
-    "files": { "label": "Archivos:" },
-    "implementation": { "label": "Implementación:" },
-    "labels": { "spec": "Especificación:" },
+    "files": {
+      "label": "Archivos:"
+    },
+    "implementation": {
+      "label": "Implementación:"
+    },
+    "labels": {
+      "spec": "Especificación:"
+    },
     "noSpecsFound": {
       "title": "No se encontraron especificaciones",
       "noMatch": "Ninguna especificación coincide con \"{{query}}\"",
@@ -287,7 +300,8 @@
       "pending": "pendiente",
       "needsRevision": "necesita revisión",
       "approved": "aprobado",
-      "rejected": "rechazado"
+      "rejected": "rechazado",
+      "concerns": "con reservas"
     },
     "annotator": {
       "instructions": {
@@ -377,7 +391,10 @@
       "reject": "Rechazar",
       "requestRevisions": "Solicitar Revisiones",
       "revisions": "Revisiones",
-      "useBatchActions": "Usar acciones por lotes para múltiples elementos"
+      "useBatchActions": "Usar acciones por lotes para múltiples elementos",
+      "concerns": "Con reservas",
+      "concernsShort": "Reservas",
+      "concernsTooltip": "Proceder con reservas reconocidas"
     },
     "tooltips": {
       "goToAnnotations": "Ir a anotaciones",
@@ -440,7 +457,14 @@
       "rejected": "\"{{title}}\" ha sido rechazado",
       "rejectFailed": "Error al rechazar \"{{title}}\"",
       "revisionRequested": "Revisiones solicitadas para \"{{title}}\"",
-      "revisionFailed": "Error al solicitar revisiones para \"{{title}}\""
+      "revisionFailed": "Error al solicitar revisiones para \"{{title}}\"",
+      "concerns": "\"{{title}}\" aprobado con reservas",
+      "concernsFailed": "Error al marcar reservas para \"{{title}}\""
+    },
+    "concerns": {
+      "title": "Anotar reservas",
+      "placeholder": "Describa sus reservas. El agente continuará pero las registrará como riesgos reconocidos...",
+      "submit": "Proceder con reservas"
     }
   },
   "logsPage": {
