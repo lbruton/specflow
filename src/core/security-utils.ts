@@ -15,7 +15,7 @@ export const DEFAULT_DASHBOARD_PORT = 5000;
 // Note: allowedOrigins should be dynamically generated based on the actual port
 export const DEFAULT_SECURITY_CONFIG: SecurityConfig = {
   rateLimitEnabled: true,
-  rateLimitPerMinute: 120, // 120 requests per minute per client
+  rateLimitPerMinute: 600, // 600 requests per minute per client (local dashboard bursts on load)
   auditLogEnabled: true,
   auditLogRetentionDays: 30,
   corsEnabled: true,
