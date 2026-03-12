@@ -105,6 +105,19 @@ _If **No**, skip this section entirely. If **Yes**, complete all fields below �
 >
 > This gate is enforced in Phase 4 — the orchestrator MUST check this section before dispatching any task tagged with `ui:true`.
 
+## Open Questions
+
+> **GATE:** All blocking questions must be resolved before this document can be approved.
+> Questions carried from Requirements should be resolved here.
+
+### Blocking (must resolve before approval)
+
+- [ ] [Question — why it matters]
+
+### Resolved
+
+- [x] ~~[Question]~~ — [Answer, source]
+
 ## Error Handling
 
 ### Error Scenarios
