@@ -122,7 +122,7 @@ export async function specStatusHandler(args: any, context: ToolContext): Promis
         checklist: currentPhase === 'post-implementation' ? [
           'Wiki updated (/wiki-update)',
           'E2E tests run (/bb-test)',
-          'Linear issues closed (move to Done)',
+          'Vault issues closed (mark Done)',
           'GitHub issues closed (gh issue close)',
           'Spec archived'
         ] : undefined
@@ -170,7 +170,7 @@ export async function specStatusHandler(args: any, context: ToolContext): Promis
         nextSteps.push('1. Run /wiki-update to update affected wiki pages');
         nextSteps.push('2. Commit wiki changes to the branch BEFORE pushing');
         nextSteps.push('3. Run /bb-test against PR preview URL for E2E verification');
-        nextSteps.push('4. CLOSE all linked Linear issues (move state to "Done" via mcp__plugin_linear_linear__save_issue)');
+        nextSteps.push('4. CLOSE all linked vault issues (mark status as Done in the issue markdown file)');
         nextSteps.push('5. CLOSE the linked GitHub issue if one exists (gh issue close)');
         nextSteps.push('6. Archive the spec after all issues are closed');
         break;

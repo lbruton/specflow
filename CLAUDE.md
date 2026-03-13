@@ -14,7 +14,7 @@ Forked MCP server plugin for spec-driven development with a real-time web dashbo
 | Symlinked from | `~/.claude/plugins/marketplaces/spec-workflow-mcp-marketplace/` |
 | MCP cache entry | `~/.claude/plugins/cache/spec-workflow-mcp-marketplace/spec-workflow-mcp-with-dashboard/2.2.4-lbruton.2/.mcp.json` |
 | Dashboard port | 5000 |
-| Linear team | Spec-Workflow (`SPEX`) |
+| Issue prefix | `SWF` |
 
 ## Architecture
 

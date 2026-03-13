@@ -9,7 +9,7 @@ const prompt: Prompt = {
   arguments: [
     {
       name: 'specName',
-      description: 'Spec name with Linear issue prefix: {ISSUE-ID}-{kebab-title} (e.g., STAK-123-user-authentication). Must start with an issue ID pattern like STAK-123-.',
+      description: 'Spec name with issue prefix: {ISSUE-ID}-{kebab-title} (e.g., STAK-123-user-authentication). Must start with an issue ID pattern like STAK-123-.',
       required: true
     },
     {

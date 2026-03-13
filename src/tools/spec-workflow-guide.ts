@@ -49,7 +49,7 @@ function getSpecWorkflowGuide(): string {
 ## Overview
 
 You guide users through spec-driven development using MCP tools. Transform rough ideas into detailed specifications through Requirements → Design → Tasks → Implementation phases. Use web search when available for current best practices (current year: ${currentYear}). Its important that you follow this workflow exactly to avoid errors.
-Spec names MUST use Linear issue prefix: {ISSUE-ID}-{kebab-title} (e.g., STAK-123-user-authentication). A Linear issue is REQUIRED — specs without one cannot be created. Create ONE spec at a time.
+Spec names MUST use issue prefix: {ISSUE-ID}-{kebab-title} (e.g., STAK-123-user-authentication). An issue is REQUIRED — specs without one cannot be created. Create ONE spec at a time.
 
 ## Workflow Diagram
 \`\`\`mermaid
@@ -140,8 +140,8 @@ flowchart TD
     P5_QA_Fix --> P5_QA_Present
     P5_QA_Check -->|QA complete| P5_Final[Phase 5.3:<br/>Wiki + PR Finalization]
     P5_Final --> P5_Wiki[/wiki-update:<br/>Update wiki pages<br/>on final post-QA code]
-    P5_Wiki --> P5_Linear[Close Linear issues<br/>Move to Done]
-    P5_Linear --> P5_Ready[Mark PR<br/>ready for review]
+    P5_Wiki --> P5_Issues[Close linked issues]
+    P5_Issues --> P5_Ready[Mark PR<br/>ready for review]
     P5_Ready --> Done([Spec Complete:<br/>Hand off to /pr-resolve])
 
     style Start fill:#e1f5e1
@@ -518,8 +518,8 @@ Phase 5 has three stages. The spec is NOT complete until all three are done.
 **Process**:
 1. Run \`/wiki-update\` — auto-detects wiki pages whose YAML frontmatter \`sourceFiles\` match changed files and rewrites them from current source. Do not manually edit wiki pages. Commit wiki changes to the branch.
 2. **Close all linked issues:**
-   - **Linear**: Use \`mcp__plugin_linear_linear__save_issue\` to move each linked issue's state to "Done"
-   - **GitHub**: Run \`gh issue close <number>\` for each linked GitHub issue
+   - **Vault**: Mark each linked vault issue as Done (update status in the issue markdown file)
+   - **GitHub**: Run \`gh issue close <number>\` for each linked GitHub issue (if scope: user-facing)
    - Verify closure: \`gh issue view <number> --json state\` should show "CLOSED"
    - A spec with open issues is NOT complete — this is the most commonly forgotten step
 2. **Mark the PR ready for review:**
@@ -540,12 +540,12 @@ Phase 5 has three stages. The spec is NOT complete until all three are done.
 - CRITICAL: During Phase 5.2 (User QA), the agent MUST NOT suggest merging, declare the work done, or push back on findings. The user drives QA, the agent fixes. QA ends ONLY when the user says so
 - CRITICAL: The spec finish line is marking the PR ready for review (Phase 5.3), NOT passing automated tests. Automated tests passing = ready for QA, not ready to merge
 - One spec at a time
-- Spec names use Linear issue prefix: {ISSUE-ID}-{kebab-title}
+- Spec names use issue prefix: {ISSUE-ID}-{kebab-title}
 - Approval requests: provide filePath only, never content
 - BLOCKING: Never proceed if approval delete fails
 - CRITICAL: Must have approved status AND successful cleanup before next phase
 - CRITICAL: Every task marked [x] MUST have a corresponding implementation log — call log-implementation BEFORE changing [-] to [x]
-- CRITICAL: Every completed spec MUST have all linked Linear AND GitHub issues closed — a spec with open issues is NOT done
+- CRITICAL: Every completed spec MUST have all linked issues (vault and GitHub) closed — a spec with open issues is NOT done
 - CRITICAL: Specs with UI changes MUST complete Phase 3.5 (visual prototype gate) before any UI implementation task begins
 - CRITICAL: If design.md references a prototype HTML file, implementers MUST source their visual design from it — ignoring a provided prototype is a spec compliance failure
 - CRITICAL: All visual artifacts (playground HTML, screenshots, mockups) MUST be saved to the spec's \`artifacts/\` folder — not to project root or playground/ directories. The artifacts/ folder is the single source of visual truth for the spec

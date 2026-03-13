@@ -6,7 +6,7 @@ import { readdir, stat } from 'fs/promises';
 
 export const specListTool: Tool = {
   name: 'spec-list',
-  description: `Search and list specifications by Linear issue ID or title keywords.
+  description: `Search and list specifications by issue ID or title keywords.
 
 # Instructions
 Call to find existing specs before creating new ones. Searches both active and optionally archived specs. Matches against the full directory name (both issue ID prefix and title portion).`,
