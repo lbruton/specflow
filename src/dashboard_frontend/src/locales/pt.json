@@ -1,6 +1,6 @@
 {
   "documentTitle": "{{projectName}} Painel de Controle",
-  "projectNameDefault": "Spec Workflow",
+  "projectNameDefault": "SpecFlow",
   "projectDescription": "Painel de fluxo de trabalho de desenvolvimento",
   "nav": {
     "statistics": "Estatísticas",

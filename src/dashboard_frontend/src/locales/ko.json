@@ -1,6 +1,6 @@
 {
   "documentTitle": "{{projectName}} 대시보드",
-  "projectNameDefault": "Spec Workflow",
+  "projectNameDefault": "SpecFlow",
   "projectDescription": "개발 워크플로우 대시보드",
   "nav": {
     "statistics": "통계",

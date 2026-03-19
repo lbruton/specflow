@@ -1,6 +1,6 @@
 {
   "documentTitle": "Tableau de Bord {{projectName}}",
-  "projectNameDefault": "Spec Workflow",
+  "projectNameDefault": "SpecFlow",
   "projectDescription": "Tableau de bord du workflow de développement",
   "nav": {
     "statistics": "Statistiques",
