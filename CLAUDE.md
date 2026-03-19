@@ -13,8 +13,21 @@ Forked MCP server plugin for spec-driven development with a real-time web dashbo
 | Branch | `main` (direct commits OK) |
 | Symlinked from | `~/.claude/plugins/marketplaces/spec-workflow-mcp-marketplace/` |
 | MCP cache entry | `~/.claude/plugins/cache/spec-workflow-mcp-marketplace/spec-workflow-mcp-with-dashboard/2.2.4-lbruton.2/.mcp.json` |
-| Dashboard port | 5000 |
+| Dashboard port | 5051 |
+| Dashboard service | `com.spec-workflow.dashboard` (launchd) |
 | Issue prefix | `SWF` |
+
+## DocVault — Project Documentation
+
+Technical documentation lives in **DocVault** at `/Volumes/DATA/GitHub/DocVault/Projects/spec-workflow-mcp/`. Read relevant pages before discussing architecture or planning changes.
+
+Key pages: `Overview.md`, `Architecture.md`, `Tools & Prompts.md`, `Dashboard.md`, `Fork Divergence.md`, `Lifecycle Compliance.md`, `Spec Flow Lifecycle.canvas`.
+
+```
+Read /Volumes/DATA/GitHub/DocVault/Projects/spec-workflow-mcp/Overview.md
+```
+
+When making changes that affect documented behavior, run `/vault-update` before pushing.
 
 ## Architecture
 
@@ -55,7 +68,11 @@ If you change how specs are parsed, update BOTH parsers.
 npm run build        # Compiles src/ -> dist/, copies static assets
 ```
 
-After building, the MCP server picks up changes on next tool invocation (or restart Claude Code for a full reload).
+After building, the MCP tools pick up changes on next invocation. The dashboard UI runs as a separate launchd service and must be restarted to serve new static assets:
+
+```bash
+launchctl stop com.spec-workflow.dashboard && launchctl start com.spec-workflow.dashboard
+```
 
 ## Post-Change Gate -- MANDATORY
 
