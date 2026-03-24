@@ -2,7 +2,7 @@
   "mcpServers": {
     "spec-workflow": {
       "command": "node",
-      "args": ["/Users/lbruton/.claude/plugins/marketplaces/spec-workflow-mcp-marketplace/dist/index.js", "."]
+      "args": ["/Users/lbruton/.claude/plugins/marketplaces/specflow-marketplace/dist/index.js", "."]
     }
   }
 }
