@@ -1,10 +1,20 @@
 {
-  "name": "spec-workflow-mcp",
-  "version": "2.2.4-lbruton.1",
-  "description": "MCP server for structured spec-driven development with real-time web dashboard and VSCode extension.",
+  "name": "specflow",
+  "version": "2.2.4-lbruton.2",
+  "description": "Spec-driven development framework with structured lifecycle, governance gates, and real-time dashboard.",
   "author": {
-    "name": "Pimzino"
+    "name": "lbruton"
   },
-  "homepage": "https://github.com/Pimzino/spec-workflow-mcp",
-  "license": "GPL-3.0"
+  "homepage": "https://github.com/lbruton/spec-workflow-mcp",
+  "repository": "https://github.com/lbruton/spec-workflow-mcp",
+  "license": "GPL-3.0",
+  "keywords": [
+    "specflow",
+    "spec-driven",
+    "workflow",
+    "mcp",
+    "dashboard",
+    "governance",
+    "claude-code"
+  ]
 }

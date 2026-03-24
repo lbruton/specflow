@@ -1,32 +1,32 @@
 {
-  "name": "spec-workflow-mcp-marketplace",
+  "name": "specflow-marketplace",
   "owner": {
-    "name": "Pimzino"
+    "name": "lbruton"
   },
   "metadata": {
-    "description": "Spec Workflow MCP provides structured spec-driven development with a sequential workflow (Requirements → Design → Tasks), real-time web dashboard, and VSCode extension support. Includes human approval gates at each stage and project steering guidance."
+    "description": "SpecFlow — spec-driven development framework with structured lifecycle (Requirements → Design → Tasks → Implementation), real-time dashboard, governance gates, and multi-project orchestration."
   },
   "plugins": [
     {
-      "name": "spec-workflow-mcp",
-      "version": "2.2.4-lbruton.1",
-      "description": "MCP server for structured spec-driven development with real-time web dashboard and VSCode extension.",
+      "name": "specflow",
+      "version": "2.2.4-lbruton.2",
+      "description": "Spec-driven development framework with structured lifecycle, governance gates, and real-time dashboard.",
       "author": {
-        "name": "Pimzino"
+        "name": "lbruton"
       },
       "license": "GPL-3.0",
-      "homepage": "https://github.com/Pimzino/spec-workflow-mcp",
+      "homepage": "https://github.com/lbruton/spec-workflow-mcp",
       "source": "./.claude-plugin"
     },
     {
-      "name": "spec-workflow-mcp-with-dashboard",
-      "version": "2.2.4-lbruton.1",
-      "description": "MCP server with auto-started dashboard for structured spec-driven development.",
+      "name": "specflow-with-dashboard",
+      "version": "2.2.4-lbruton.2",
+      "description": "SpecFlow MCP server with auto-started real-time dashboard for spec-driven development.",
       "author": {
-        "name": "Pimzino"
+        "name": "lbruton"
       },
       "license": "GPL-3.0",
-      "homepage": "https://github.com/Pimzino/spec-workflow-mcp",
+      "homepage": "https://github.com/lbruton/spec-workflow-mcp",
       "source": "./.claude-plugin/with-dashboard"
     }
   ]
