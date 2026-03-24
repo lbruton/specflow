@@ -19,6 +19,8 @@ This fork layers additional patterns on top of that foundation: extended lifecyc
 
 > If you're looking for the original project, please visit [Pimzino's repo](https://github.com/Pimzino/spec-workflow-mcp) and give it a star -- SpecFlow wouldn't exist without it.
 
+**See it in action:** [Case Study -- Forge Build Session](docs/CASE-STUDY-FORGE.md) -- empty repo to deployed production app in 3 hours, 23 tasks across 30 parallel subagents, 8 dashboard approval gates.
+
 ## How It Works
 
 Pimzino's upstream provides the core spec-driven workflow that powers everything:
