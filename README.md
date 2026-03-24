@@ -1,382 +1,175 @@
-# CUSTOM FORK
+<p align="center">
+  <img src="assets/logo-wide.svg" alt="SpecFlow" height="48">
+</p>
 
-Note: I forked this repo to customize it for my own development workflows. If you are interested in this MCP and Plugin, please see below and please give all credit to the original author, and feel free to borrow any of my "improvements" :)
+<p align="center">
+  Spec-driven development framework with structured lifecycle, governance gates, and real-time dashboard.
+</p>
 
-ORIGINAL: https://github.com/Pimzino/spec-workflow-mcp
+<p align="center">
+  <a href="https://github.com/lbruton/spec-workflow-mcp"><img src="https://img.shields.io/badge/fork_of-Pimzino/spec--workflow--mcp-blue" alt="Fork of Pimzino"></a>
+  <img src="https://img.shields.io/badge/license-GPL--3.0-green" alt="License">
+</p>
 
-**[See what's different in this fork &rarr; FORK-CHANGELOG.md](FORK-CHANGELOG.md)**
+---
 
+**SpecFlow** is a fork of [Pimzino/spec-workflow-mcp](https://github.com/Pimzino/spec-workflow-mcp) that extends the original MCP server with a full development lifecycle, multi-project orchestration, and infrastructure-aware workflows.
 
-# Spec Workflow MCP
+> If you're looking for the original project, please visit [Pimzino's repo](https://github.com/Pimzino/spec-workflow-mcp) and give it a star -- SpecFlow wouldn't exist without it.
 
-[![npm version](https://img.shields.io/npm/v/@pimzino/spec-workflow-mcp)](https://www.npmjs.com/package/@pimzino/spec-workflow-mcp)
-[![VSCode Extension](https://vsmarketplacebadges.dev/version-short/Pimzino.spec-workflow-mcp.svg)](https://marketplace.visualstudio.com/items?itemName=Pimzino.spec-workflow-mcp)
+## What is SpecFlow?
 
-A Model Context Protocol (MCP) server for structured spec-driven development with real-time dashboard and VSCode extension.
+An MCP (Model Context Protocol) server that enforces structured spec-driven development through Claude Code. Instead of letting AI agents write code ad-hoc, SpecFlow gates every change through a lifecycle:
 
-## ☕ Support This Project
-
-<a href="https://buymeacoffee.com/Pimzino" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" ></a>
-
-## 📺 Showcase
-
-### 🔄 Approval System in Action
-<a href="https://www.youtube.com/watch?v=C-uEa3mfxd0" target="_blank">
-  <img src="https://img.youtube.com/vi/C-uEa3mfxd0/maxresdefault.jpg" alt="Approval System Demo" width="600">
-</a>
-
-*See how the approval system works: create documents, request approval through the dashboard, provide feedback, and track revisions.*
-
-### 📊 Dashboard & Spec Management
-<a href="https://www.youtube.com/watch?v=g9qfvjLUWf8" target="_blank">
-  <img src="https://img.youtube.com/vi/g9qfvjLUWf8/maxresdefault.jpg" alt="Dashboard Demo" width="600">
-</a>
-
-*Explore the real-time dashboard: view specs, track progress, navigate documents, and monitor your development workflow.*
-
-## ✨ Key Features
-
-- **Structured Development Workflow** - Sequential spec creation (Requirements → Design → Tasks)
-- **Real-Time Web Dashboard** - Monitor specs, tasks, and progress with live updates
-- **VSCode Extension** - Integrated sidebar dashboard for VSCode users
-- **Approval Workflow** - Complete approval process with revisions
-- **Task Progress Tracking** - Visual progress bars and detailed status
-- **Implementation Logs** - Searchable logs of all task implementations with code statistics
-- **Multi-Language Support** - Available in 11 languages
-
-## 🌍 Supported Languages
-
-🇺🇸 English • 🇯🇵 日本語 • 🇨🇳 中文 • 🇪🇸 Español • 🇧🇷 Português • 🇩🇪 Deutsch • 🇫🇷 Français • 🇷🇺 Русский • 🇮🇹 Italiano • 🇰🇷 한국어 • 🇸🇦 العربية
-
-**📖 Documentation in your language:**
-
-[English](README.md) | [日本語](README.ja.md) | [中文](README.zh.md) | [Español](README.es.md) | [Português](README.pt.md) | [Deutsch](README.de.md) | [Français](README.fr.md) | [Русский](README.ru.md) | [Italiano](README.it.md) | [한국어](README.ko.md) | [العربية](README.ar.md)
-
-## 🚀 Quick Start
-
-### Step 1: Add to your AI tool
-
-Add to your MCP configuration (see client-specific setup below):
-
-```json
-{
-  "mcpServers": {
-    "spec-workflow": {
-      "command": "npx",
-      "args": ["-y", "@pimzino/spec-workflow-mcp@latest", "/path/to/your/project"]
-    }
-  }
-}
+```
+Chat -> Issue -> Discover -> Spec (Requirements -> Design -> Tasks) -> Implement -> Retro
 ```
 
-### Step 2: Choose your interface
+Each phase transition requires human approval through a real-time web dashboard. No phase can be skipped. The AI proposes, the human approves.
 
-**Option A: Web Dashboard** (Required for CLI users)
-Start the dashboard (runs on port 5000 by default):
+## What Makes This Fork Different
+
+### 1. Infrastructure-Aware
+
+Not just code. The system deploys containers via Portainer, manages DNS via Cloudflare, provisions VMs on Proxmox, stores secrets in Infisical, and routes traffic through NPM. The AI knows the full stack -- from `git commit` to production traffic flow.
+
+### 2. Living Documentation
+
+Three-tier knowledge hierarchy: DocVault (Obsidian vault) for architecture, mem0 for cross-session episodic memory, and in-repo CLAUDE.md files for gate enforcement. Documentation is read before every architectural decision and updated after every implementation.
+
+### 3. Multi-Project Orchestration
+
+Eight repositories with shared skills, a unified branching model, and cross-project infrastructure. Issue prefixes, worktree conventions, and documentation all work across project boundaries.
+
+### 4. Verification is Cultural
+
+Nine mandatory gates, systematic debugging before fixes, evidence before assertions. The system does not trust the AI's claim that something works; it requires proof.
+
+### 5. Evolved, Not Designed
+
+Born from rEngine (August 2025), a 2688-file "agentic OS." Seven months of daily production use refined every gate, every skill, and every agent pattern through real pressure.
+
+## Comparison
+
+| Framework | Approval Gates | Memory | Best For |
+|-----------|----------------|--------|----------|
+| **SpecKit** (GitHub) | None | constitution.md (static) | Quick adoption, any AI tool |
+| **BMAD** | Advisory (PO reports) | Document-based (git) | Enterprise, team simulation |
+| **GSD** | UAT phase | STATE.md (single file) | Solo devs, context engineering |
+| **Taskmaster** | None | tasks.json (static) | PRD-to-tasks pipeline |
+| **Pimzino** (upstream) | Dashboard (blocking) | Steering docs (static) | Teams wanting audit trail |
+| **SpecFlow** (this fork) | Dashboard (hard gates) + skill enforcement | DocVault + mem0 (semantic) | Multi-project, high-governance |
+
+## Quick Start
+
+### As a Claude Code Plugin (recommended)
+
+Clone and symlink:
+
 ```bash
-npx -y @pimzino/spec-workflow-mcp@latest --dashboard
+git clone https://github.com/lbruton/spec-workflow-mcp.git
+cd spec-workflow-mcp
+npm install && npm run build
+
+# Symlink into Claude Code plugins
+ln -s "$(pwd)" ~/.claude/plugins/marketplaces/specflow-marketplace
 ```
 
-The dashboard will be accessible at: http://localhost:5000
-
-> **Note:** Only one dashboard instance is needed. All your projects will connect to the same dashboard.
-
-**Option B: VSCode Extension** (Recommended for VSCode users)
-
-Install [Spec Workflow MCP Extension](https://marketplace.visualstudio.com/items?itemName=Pimzino.spec-workflow-mcp) from the VSCode marketplace.
-
-## 📝 How to Use
-
-Simply mention spec-workflow in your conversation:
-
-- **"Create a spec for user authentication"** - Creates complete spec workflow
-- **"List my specs"** - Shows all specs and their status
-- **"Execute task 1.2 in spec user-auth"** - Runs a specific task
-
-[See more examples →](docs/PROMPTING-GUIDE.md)
-
-## 🔧 MCP Client Setup
-
-<details>
-<summary><strong>Augment Code</strong></summary>
-
-Configure in your Augment settings:
-```json
-{
-  "mcpServers": {
-    "spec-workflow": {
-      "command": "npx",
-      "args": ["-y", "@pimzino/spec-workflow-mcp@latest", "/path/to/your/project"]
-    }
-  }
-}
-```
-</details>
-
-<details>
-<summary><strong>Claude Code CLI</strong></summary>
+### As an MCP Server
 
 Add to your MCP configuration:
-```bash
-claude mcp add spec-workflow npx @pimzino/spec-workflow-mcp@latest -- /path/to/your/project
-```
 
-**Important Notes:**
-- The `-y` flag bypasses npm prompts for smoother installation
-- The `--` separator ensures the path is passed to the spec-workflow script, not to npx
-- Replace `/path/to/your/project` with your actual project directory path
-
-**Alternative for Windows (if the above doesn't work):**
-```bash
-claude mcp add spec-workflow cmd.exe /c "npx @pimzino/spec-workflow-mcp@latest /path/to/your/project"
-```
-</details>
-
-<details>
-<summary><strong>Claude Desktop</strong></summary>
-
-Add to `claude_desktop_config.json`:
 ```json
 {
   "mcpServers": {
     "spec-workflow": {
       "command": "npx",
-      "args": ["-y", "@pimzino/spec-workflow-mcp@latest", "/path/to/your/project"]
+      "args": ["-y", "@lbruton/spec-workflow-mcp@latest", "/path/to/your/project"]
     }
   }
 }
 ```
 
-> **Important:** Run the dashboard separately with `--dashboard` before starting the MCP server.
+### Dashboard
 
-</details>
-
-<details>
-<summary><strong>Cline/Claude Dev</strong></summary>
-
-Add to your MCP server configuration:
-```json
-{
-  "mcpServers": {
-    "spec-workflow": {
-      "command": "npx",
-      "args": ["-y", "@pimzino/spec-workflow-mcp@latest", "/path/to/your/project"]
-    }
-  }
-}
-```
-</details>
-
-<details>
-<summary><strong>Continue IDE Extension</strong></summary>
-
-Add to your Continue configuration:
-```json
-{
-  "mcpServers": {
-    "spec-workflow": {
-      "command": "npx",
-      "args": ["-y", "@pimzino/spec-workflow-mcp@latest", "/path/to/your/project"]
-    }
-  }
-}
-```
-</details>
-
-<details>
-<summary><strong>Cursor IDE</strong></summary>
-
-Add to your Cursor settings (`settings.json`):
-```json
-{
-  "mcpServers": {
-    "spec-workflow": {
-      "command": "npx",
-      "args": ["-y", "@pimzino/spec-workflow-mcp@latest", "/path/to/your/project"]
-    }
-  }
-}
-```
-</details>
-
-<details>
-<summary><strong>OpenCode</strong></summary>
-
-Add to your `opencode.json` configuration file:
-```json
-{
-  "$schema": "https://opencode.ai/config.json",
-  "mcp": {
-    "spec-workflow": {
-      "type": "local",
-      "command": ["npx", "-y", "@pimzino/spec-workflow-mcp@latest", "/path/to/your/project"],
-      "enabled": true
-    }
-  }
-}
-```
-</details>
-
-<details>
-<summary><strong>Windsurf</strong></summary>
-
-Add to your `~/.codeium/windsurf/mcp_config.json` configuration file:
-```json
-{
-  "mcpServers": {
-    "spec-workflow": {
-      "command": "npx",
-      "args": ["-y", "@pimzino/spec-workflow-mcp@latest", "/path/to/your/project"]
-    }
-  }
-}
-```
-</details>
-
-<details>
-<summary><strong>Codex</strong></summary>
-
-Add to your `~/.codex/config.toml` configuration file:
-```toml
-[mcp_servers.spec-workflow]
-command = "npx"
-args = ["-y", "@pimzino/spec-workflow-mcp@latest", "/path/to/your/project"]
-```
-</details>
-
-## 🐳 Docker Deployment
-
-Run the dashboard in a Docker container for isolated deployment:
+The dashboard runs on port 5051 by default and provides real-time spec tracking, approval workflows, and implementation logs.
 
 ```bash
-# Using Docker Compose (recommended)
-cd containers
-docker-compose up --build
-
-# Or using Docker CLI
-docker build -f containers/Dockerfile -t spec-workflow-mcp .
-docker run -p 5000:5000 -v "./workspace/.spec-workflow:/workspace/.spec-workflow:rw" spec-workflow-mcp
+# Start dashboard
+npx @lbruton/spec-workflow-mcp@latest --dashboard --port 5051
 ```
 
-The dashboard will be available at: http://localhost:5000
+## MCP Tools
 
-[See Docker setup guide →](containers/README.md)
+| Tool | Description |
+|------|-------------|
+| `spec-status` | Get detailed status of a spec |
+| `spec-list` | List all specs across projects |
+| `approvals` | Manage phase approval workflow |
+| `log-implementation` | Record implementation artifacts |
+| `spec-workflow-guide` | Get workflow guidance |
+| `steering-guide` | Access project steering documents |
 
-## 🔒 Security
+## MCP Prompts
 
-Spec-Workflow MCP includes enterprise-grade security features suitable for corporate environments:
+| Prompt | Description |
+|--------|-------------|
+| `create-spec` | Create a new spec from requirements |
+| `implement-task` | Generate implementation plan for a task |
+| `review-spec` | Review and provide feedback on a spec |
+| `create-steering-doc` | Create project steering documentation |
+| `spec-workflow-overview` | Get lifecycle and usage overview |
+| `troubleshoot-spec` | Diagnose spec workflow issues |
+| `configure-workflow` | Configure workflow settings |
 
-### ✅ Implemented Security Controls
+## Architecture
 
-| Feature | Description |
-|---------|-------------|
-| **Localhost Binding** | Binds to `127.0.0.1` by default, preventing network exposure |
-| **Rate Limiting** | 120 requests/minute per client with automatic cleanup |
-| **Audit Logging** | Structured JSON logs with timestamp, actor, action, and result |
-| **Security Headers** | X-Content-Type-Options, X-Frame-Options, X-XSS-Protection, CSP, Referrer-Policy |
-| **CORS Protection** | Restricted to localhost origins by default |
-| **Docker Hardening** | Non-root user, read-only filesystem, dropped capabilities, resource limits |
-
-### ⚠️ Not Yet Implemented
-
-| Feature | Workaround |
-|---------|------------|
-| **HTTPS/TLS** | Use a reverse proxy (nginx, Apache) with TLS certificates |
-| **User Authentication** | Use a reverse proxy with Basic Auth or OAuth2 Proxy for SSO |
-
-### For External/Network Access
-
-If you need to expose the dashboard beyond localhost, we recommend:
-
-1. **Keep dashboard on localhost** (`127.0.0.1`)
-2. **Use nginx or Apache** as a reverse proxy with:
-   - TLS/HTTPS termination
-   - Basic authentication or OAuth2
-3. **Configure firewall rules** to restrict access
-
-```nginx
-# Example nginx reverse proxy with auth
-server {
-    listen 443 ssl;
-    server_name dashboard.example.com;
-    
-    ssl_certificate /path/to/cert.pem;
-    ssl_certificate_key /path/to/key.pem;
-    
-    auth_basic "Dashboard Access";
-    auth_basic_user_file /etc/nginx/.htpasswd;
-    
-    location / {
-        proxy_pass http://127.0.0.1:5000;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection "upgrade";
-    }
-}
+```
+src/
+  tools/           # MCP tool definitions
+  prompts/         # MCP prompt definitions
+  core/            # Shared logic (parser, task-parser, path-utils)
+  dashboard/       # Dashboard UI server
+  types.ts         # Shared TypeScript types
+  index.ts         # Server entry point
 ```
 
-[See Docker security guide →](containers/README.md#security-configuration)
+## Extensions Over Upstream
 
-## 🔒 Sandboxed Environments
+| Feature | Upstream | This Fork |
+|---------|----------|-----------|
+| Phases | 4 (Req -> Design -> Tasks -> Impl) | 8+ (Chat -> Discover -> ... -> Retro) |
+| Memory | Steering docs (static) | DocVault + mem0 (semantic recall) |
+| Issue tracking | None | Vault-based markdown issues |
+| Versioning | Not addressed | Version lock protocol per project |
+| Casual path | None | `/gsd`, `/chat` for quick work |
+| PR gates | None | Pre-PR verification, Codacy scans |
+| Infrastructure | None | Portainer, Proxmox, NPM, Fly.io |
 
-For sandboxed environments (e.g., Codex CLI with `sandbox_mode=workspace-write`) where `$HOME` is read-only, use the `SPEC_WORKFLOW_HOME` environment variable to redirect global state files to a writable location:
+See [FORK-CHANGELOG.md](FORK-CHANGELOG.md) for a detailed list of changes.
+
+## Development
 
 ```bash
-SPEC_WORKFLOW_HOME=/workspace/.spec-workflow-mcp npx -y @pimzino/spec-workflow-mcp@latest /workspace
+npm install        # Install dependencies
+npm run build      # Compile TypeScript + build dashboard frontend
+npm run dev        # Development mode with hot reload
 ```
 
-[See Configuration Guide →](docs/CONFIGURATION.md#environment-variables)
+## Upstream Documentation
 
-## 📚 Documentation
+The original project's documentation remains applicable for core functionality:
 
-- [Configuration Guide](docs/CONFIGURATION.md) - Command-line options, config files
-- [User Guide](docs/USER-GUIDE.md) - Comprehensive usage examples
-- [Workflow Process](docs/WORKFLOW.md) - Development workflow and best practices
-- [Interfaces Guide](docs/INTERFACES.md) - Dashboard and VSCode extension details
-- [Prompting Guide](docs/PROMPTING-GUIDE.md) - Advanced prompting examples
-- [Tools Reference](docs/TOOLS-REFERENCE.md) - Complete tools documentation
-- [Development](docs/DEVELOPMENT.md) - Contributing and development setup
-- [Troubleshooting](docs/TROUBLESHOOTING.md) - Common issues and solutions
+- [Configuration Guide](docs/CONFIGURATION.md)
+- [User Guide](docs/USER-GUIDE.md)
+- [Workflow Process](docs/WORKFLOW.md)
+- [Prompting Guide](docs/PROMPTING-GUIDE.md)
+- [Tools Reference](docs/TOOLS-REFERENCE.md)
 
-## 📁 Project Structure
+## License
 
-```
-your-project/
-  .spec-workflow/
-    approvals/
-    archive/
-    specs/
-    steering/
-    templates/
-    user-templates/
-    config.example.toml
-```
+GPL-3.0 -- same as upstream.
 
-## 🛠️ Development
+## Credits
 
-```bash
-# Install dependencies
-npm install
-
-# Build the project
-npm run build
-
-# Run in development mode
-npm run dev
-```
-
-[See development guide →](docs/DEVELOPMENT.md)
-
-## 📄 License
-
-GPL-3.0
-
-## ⭐ Star History
-
-<a href="https://www.star-history.com/#Pimzino/spec-workflow-mcp&Date">
- <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=Pimzino/spec-workflow-mcp&type=Date&theme=dark" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=Pimzino/spec-workflow-mcp&type=Date" />
-   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=Pimzino/spec-workflow-mcp&type=Date" />
- </picture>
-</a>
+Built on [Pimzino/spec-workflow-mcp](https://github.com/Pimzino/spec-workflow-mcp). The dashboard, approval system, and core MCP architecture are Pimzino's work. This fork extends it with lifecycle governance, multi-project orchestration, and infrastructure awareness.
