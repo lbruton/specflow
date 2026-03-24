@@ -164,6 +164,7 @@ Pimzino's upstream is a complete, production-ready spec-driven workflow. This fo
 | Area | Upstream Provides | This Fork Adds |
 |------|-------------------|----------------|
 | Lifecycle | 4-phase workflow with dashboard approvals | Pre-workflow discovery + post-workflow retros |
+| **Implementation** | **Sequential, in-session task execution** | **Subagent dispatch with parallel batching, spec compliance review, and code quality review -- the biggest architectural change (see below)** |
 | Core workflow | Approval gates per phase | Additional validation gates and guard rails |
 | Dashboard UI | Real-time dashboard with spec/approval views | UI refinements, collapsible panels, branding, cleanup of project-specific content |
 | Knowledge | Steering docs for project context | Keeps steering docs + adds DocVault (Obsidian) and mem0 for cross-session recall |
@@ -172,6 +173,23 @@ Pimzino's upstream is a complete, production-ready spec-driven workflow. This fo
 | Quick work | Full workflow for all changes | `/gsd`, `/chat` bypass paths for small fixes |
 | PR pipeline | Implementation logging | Pre-PR verification + Codacy quality scans |
 | Infrastructure | Code-focused | Extensible to container, DNS, and deployment tooling |
+
+### Implementation Model: Subagent Dispatch
+
+The biggest architectural change from upstream is how tasks are executed. Upstream implements tasks sequentially in the current session -- one task at a time, code written inline. This fork introduces a three-stage subagent pipeline:
+
+```
+Orchestrator reads task
+  -> Dispatch Implementer Agent (fresh context, writes code, tests, commits)
+  -> Dispatch Spec Compliance Reviewer (reads actual code vs requirements)
+  -> Dispatch Code Quality Reviewer (architecture, error handling, production readiness)
+  -> Log implementation artifacts
+  -> Mark task complete
+```
+
+Because each stage runs in an isolated subagent context, the orchestrator session stays clean and multiple tasks can run through this pipeline in parallel. A File Touch Map analysis identifies which tasks have zero file overlap, and those tasks are dispatched simultaneously in batches.
+
+In practice, this means 5-6 independent tasks execute concurrently -- what would take hours sequentially completes in minutes. The [Forge case study](docs/CASE-STUDY-FORGE.md) demonstrates this with 30 parallel subagent dispatches achieving zero file conflicts across 23 tasks.
 
 This fork is under active development -- more dashboard UI improvements and workflow enhancements are in progress. See [FORK-CHANGELOG.md](FORK-CHANGELOG.md) for a detailed list of changes.
 
