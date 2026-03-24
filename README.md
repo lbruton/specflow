@@ -50,7 +50,7 @@ Three-tier knowledge hierarchy: DocVault ([Obsidian](https://github.com/obsidian
 
 ### 3. Multi-Project Orchestration
 
-Eight repositories with shared skills, a unified branching model, and cross-project infrastructure. Issue prefixes, worktree conventions, and documentation all work across project boundaries.
+Designed for developers managing multiple repositories. When installed at the user level, skills and conventions are shared across all projects -- issue prefixes distinguish work per repo, worktree conventions isolate feature work, and documentation stays centralized. The same workflow scales from a single project to a full portfolio.
 
 ### 4. Verification is Cultural
 
