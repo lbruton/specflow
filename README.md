@@ -13,29 +13,38 @@
 
 ---
 
-**SpecFlow** is a fork of [Pimzino/spec-workflow-mcp](https://github.com/Pimzino/spec-workflow-mcp) that extends the original MCP server with a full development lifecycle, multi-project orchestration, and infrastructure-aware workflows.
+**SpecFlow** is a fork of [Pimzino/spec-workflow-mcp](https://github.com/Pimzino/spec-workflow-mcp) -- a full-featured MCP server for structured spec-driven development. Pimzino's project provides the core engine: a sequential workflow (Requirements -> Design -> Tasks -> Implementation), a real-time web dashboard with blocking approval gates, implementation logging, multi-language support, a VSCode extension, and Docker deployment with enterprise security controls.
+
+This fork layers additional patterns on top of that foundation: extended lifecycle phases, multi-project orchestration, infrastructure-aware workflows, and a three-tier knowledge architecture.
 
 > If you're looking for the original project, please visit [Pimzino's repo](https://github.com/Pimzino/spec-workflow-mcp) and give it a star -- SpecFlow wouldn't exist without it.
 
-## What is SpecFlow?
+## How It Works
 
-An MCP (Model Context Protocol) server that enforces structured spec-driven development through Claude Code. Instead of letting AI agents write code ad-hoc, SpecFlow gates every change through a lifecycle:
+Pimzino's upstream provides the core spec-driven workflow that powers everything:
 
 ```
-Chat -> Issue -> Discover -> Spec (Requirements -> Design -> Tasks) -> Implement -> Retro
+Requirements -> Design -> Tasks -> Implementation
+        (each transition gated by dashboard approval)
 ```
 
-Each phase transition requires human approval through a real-time web dashboard. No phase can be skipped. The AI proposes, the human approves.
+SpecFlow wraps additional phases around this core:
+
+```
+Chat -> Issue -> Discover -> [Pimzino core workflow] -> Retro
+```
+
+The AI proposes, the human approves -- that fundamental pattern is Pimzino's design. This fork adds pre-workflow discovery, issue tracking, and post-workflow retrospectives.
 
 ## What Makes This Fork Different
 
 ### 1. Infrastructure-Aware
 
-Not just code. The system deploys containers via Portainer, manages DNS via Cloudflare, provisions VMs on Proxmox, stores secrets in Infisical, and routes traffic through NPM. The AI knows the full stack -- from `git commit` to production traffic flow.
+Not just code. The workflow extends beyond source files to container deployments, DNS management, secret storage, and reverse proxy configuration. The AI knows the full stack -- from `git commit` to production traffic flow. Skills and agents can be written for any infrastructure tooling.
 
 ### 2. Living Documentation
 
-Three-tier knowledge hierarchy: DocVault (Obsidian vault) for architecture, mem0 for cross-session episodic memory, and in-repo CLAUDE.md files for gate enforcement. Documentation is read before every architectural decision and updated after every implementation.
+Three-tier knowledge hierarchy: DocVault ([Obsidian](https://github.com/obsidianmd/obsidian-releases) vault) for architecture, [mem0](https://github.com/mem0ai/mem0) for cross-session episodic memory, and in-repo CLAUDE.md files for gate enforcement. Documentation is read before every architectural decision and updated after every implementation.
 
 ### 3. Multi-Project Orchestration
 
@@ -57,8 +66,20 @@ Born from rEngine (August 2025), a 2688-file "agentic OS." Seven months of daily
 | **BMAD** | Advisory (PO reports) | Document-based (git) | Enterprise, team simulation |
 | **GSD** | UAT phase | STATE.md (single file) | Solo devs, context engineering |
 | **Taskmaster** | None | tasks.json (static) | PRD-to-tasks pipeline |
-| **Pimzino** (upstream) | Dashboard (blocking) | Steering docs (static) | Teams wanting audit trail |
-| **SpecFlow** (this fork) | Dashboard (hard gates) + skill enforcement | DocVault + mem0 (semantic) | Multi-project, high-governance |
+| **Pimzino** (upstream) | Dashboard (blocking) | Steering docs | Teams wanting structured workflow + audit trail |
+| **SpecFlow** (this fork) | Dashboard (hard gates) + skill enforcement | Steering docs + DocVault + mem0 | Multi-project, high-governance |
+
+## Prerequisites
+
+The core spec workflow (upstream functionality) works out of the box with just Node.js. The fork's extended features use additional tools:
+
+| Component | Required For | Link |
+|-----------|-------------|------|
+| [Obsidian](https://github.com/obsidianmd/obsidian-releases) | DocVault knowledge base (living documentation tier) | [obsidian.md](https://obsidian.md) |
+| [mem0](https://github.com/mem0ai/mem0) | Cross-session episodic memory (MCP server) | [mem0.ai](https://mem0.ai) |
+| [Claude Code](https://claude.ai/claude-code) | CLI agent that consumes the MCP server | [docs](https://docs.anthropic.com/en/docs/claude-code) |
+
+These are optional -- the upstream spec workflow, dashboard, and approval system work without them.
 
 ## Quick Start
 
@@ -134,17 +155,19 @@ src/
   index.ts         # Server entry point
 ```
 
-## Extensions Over Upstream
+## What This Fork Adds
 
-| Feature | Upstream | This Fork |
-|---------|----------|-----------|
-| Phases | 4 (Req -> Design -> Tasks -> Impl) | 8+ (Chat -> Discover -> ... -> Retro) |
-| Memory | Steering docs (static) | DocVault + mem0 (semantic recall) |
-| Issue tracking | None | Vault-based markdown issues |
-| Versioning | Not addressed | Version lock protocol per project |
-| Casual path | None | `/gsd`, `/chat` for quick work |
-| PR gates | None | Pre-PR verification, Codacy scans |
-| Infrastructure | None | Portainer, Proxmox, NPM, Fly.io |
+Pimzino's upstream is a complete, production-ready spec-driven workflow. This fork extends it for a specific use case: a solo developer managing multiple repositories with shared infrastructure. These additions are opinionated and may not suit every setup.
+
+| Area | Upstream Provides | This Fork Adds |
+|------|-------------------|----------------|
+| Lifecycle | 4-phase workflow with dashboard approvals | Pre-workflow discovery + post-workflow retros |
+| Knowledge | Steering docs for project context | DocVault (Obsidian) + mem0 for cross-session recall |
+| Issue tracking | Spec-based task tracking | Vault-based markdown issues with prefixed IDs |
+| Versioning | Flexible (user-managed) | Version lock protocol per project type |
+| Quick work | Full workflow for all changes | `/gsd`, `/chat` bypass paths for small fixes |
+| PR pipeline | Implementation logging | Pre-PR verification + Codacy quality scans |
+| Infrastructure | Code-focused | Extensible to container, DNS, and deployment tooling |
 
 See [FORK-CHANGELOG.md](FORK-CHANGELOG.md) for a detailed list of changes.
 
@@ -172,4 +195,4 @@ GPL-3.0 -- same as upstream.
 
 ## Credits
 
-Built on [Pimzino/spec-workflow-mcp](https://github.com/Pimzino/spec-workflow-mcp). The dashboard, approval system, and core MCP architecture are Pimzino's work. This fork extends it with lifecycle governance, multi-project orchestration, and infrastructure awareness.
+**[Pimzino/spec-workflow-mcp](https://github.com/Pimzino/spec-workflow-mcp)** is the foundation this fork is built on. Pimzino designed and built the core architecture: the MCP server, the sequential spec workflow, the real-time dashboard with blocking approval gates, the approval storage system, the markdown spec parser, implementation logging, the template engine, multi-language support (11 languages), the VSCode extension, Docker deployment, and the security hardening. This fork adds workflow extensions and integrations on top of that substantial foundation.
