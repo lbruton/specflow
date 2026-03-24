@@ -19,7 +19,7 @@ Forked MCP server plugin for spec-driven development with a real-time web dashbo
 
 ## DocVault — Project Documentation
 
-Technical documentation lives in **DocVault** at `/Volumes/DATA/GitHub/DocVault/Projects/spec-workflow-mcp/`. Read relevant pages before discussing architecture or planning changes.
+Technical documentation lives in **DocVault** at `/Volumes/DATA/GitHub/DocVault/Projects/spec-workflow-mcp/`. mem0 supplements with session context and past decisions. Read both before discussing architecture or planning changes.
 
 Key pages: `Overview.md`, `Architecture.md`, `Tools & Prompts.md`, `Dashboard.md`, `Fork Divergence.md`, `Lifecycle Compliance.md`, `Spec Flow Lifecycle.canvas`.
 
