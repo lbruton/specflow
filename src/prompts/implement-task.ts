@@ -179,8 +179,8 @@ ${context.dashboardUrl ? `- Dashboard: ${context.dashboardUrl}` : ''}
 - View detailed statistics including files changed and lines modified
 - Or search directly using grep on markdown files in .spec-workflow/specs/{specName}/Implementation Logs/
 
-**Context Budget:** This session supports ~15-20 task dispatches with reviews (~125k tokens).
-After completing 10+ tasks, consider using a handoff to relay to a fresh session.
+**Context Budget:** This session supports ~35-40 task dispatches with reviews (~300k tokens).
+After completing 25+ tasks, consider using a handoff to relay to a fresh session.
 Save handoff context: spec name, completed tasks, in-progress state, next task ID.
 
 Please proceed with implementing ${taskId ? `task ${taskId}` : 'the next task'} following this workflow.`

@@ -442,8 +442,8 @@ Only dispatch AFTER Stage 1 passes. Verify the code is well-built and production
 
 #### Context Budget
 
-- Session budget: ~125k tokens (~15-20 task dispatches with reviews)
-- After 10+ agent dispatches or 70% context usage: suggest handoff to a fresh session
+- Session budget: ~300k tokens (~35-40 task dispatches with reviews)
+- After 25+ agent dispatches or 70% context usage: suggest handoff to a fresh session
 - Save handoff context: spec name, completed task list, in-progress state, next task ID
 - NEVER wait for auto-compaction — it loses context silently
 
