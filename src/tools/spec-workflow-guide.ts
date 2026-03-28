@@ -138,9 +138,9 @@ flowchart TD
     P5_QA_Present --> P5_QA_Check{User reports<br/>issues?}
     P5_QA_Check -->|Yes| P5_QA_Fix[Fix issue<br/>commit + push<br/>wait for rebuild]
     P5_QA_Fix --> P5_QA_Present
-    P5_QA_Check -->|QA complete| P5_Final[Phase 5.3:<br/>Wiki + PR Finalization]
-    P5_Final --> P5_Wiki[/wiki-update:<br/>Update wiki pages<br/>on final post-QA code]
-    P5_Wiki --> P5_Issues[Close linked issues]
+    P5_QA_Check -->|QA complete| P5_Final[Phase 5.3:<br/>Docs + PR Finalization]
+    P5_Final --> P5_Docs[/vault-update:<br/>Update DocVault pages<br/>on final post-QA code]
+    P5_Docs --> P5_Issues[Close linked issues]
     P5_Issues --> P5_Ready[Mark PR<br/>ready for review]
     P5_Ready --> Done([Spec Complete:<br/>Hand off to /pr-resolve])
 
@@ -458,7 +458,7 @@ Only dispatch AFTER Stage 1 passes. Verify the code is well-built and production
 | Track progress (task list) | Search codebase |
 | Approve/reject agent work | Generate new files |
 
-### Phase 5: Post-Implementation (E2E + QA + Wiki + PR Finalization)
+### Phase 5: Post-Implementation (E2E + QA + Docs + PR Finalization)
 **Purpose**: Verify the feature, QA with the user, update documentation on final code, and finalize the PR.
 
 Phase 5 has three stages. The spec is NOT complete until all three are done.
@@ -506,17 +506,17 @@ Phase 5 has three stages. The spec is NOT complete until all three are done.
 4. Repeat until the user signals QA is complete.
 5. Only then proceed to Phase 5.3.
 
-#### Phase 5.3: Wiki + PR Finalization
+#### Phase 5.3: Docs + PR Finalization
 
-**Purpose**: Update wiki on final post-QA code, close linked issues, mark PR ready for review, and hand off to the \`/pr-resolve\` workflow.
+**Purpose**: Update documentation on final post-QA code, close linked issues, mark PR ready for review, and hand off to the \`/pr-resolve\` workflow.
 
 **Tools**:
-- Skill \`wiki-update\`: Detects affected wiki pages via YAML frontmatter \`sourceFiles\` and rewrites them from current source
+- Skill \`vault-update\`: Updates DocVault documentation pages affected by the spec's changed files. DocVault is the central Obsidian vault at \`/Volumes/DATA/GitHub/DocVault/\` — it is the single source of truth for project and infrastructure documentation.
 
-**Why wiki runs here (after QA, not before):** QA fixes change code that wiki pages document. Running wiki before QA means wiki updates become stale as soon as you fix the first QA bug. Running wiki after QA means it captures the final state of the code.
+**Why docs run here (after QA, not before):** QA fixes change code that documentation describes. Running docs before QA means updates become stale as soon as you fix the first QA bug. Running docs after QA means it captures the final state of the code.
 
 **Process**:
-1. Run \`/wiki-update\` — auto-detects wiki pages whose YAML frontmatter \`sourceFiles\` match changed files and rewrites them from current source. Do not manually edit wiki pages. Commit wiki changes to the branch.
+1. Run \`/vault-update\` — updates DocVault pages affected by the spec's changed files. Commit DocVault changes (DocVault commits go direct to main, not to the feature branch).
 2. **Close all linked issues:**
    - **Vault**: Mark each linked vault issue as Done (update status in the issue markdown file)
    - **GitHub**: Run \`gh issue close <number>\` for each linked GitHub issue (if scope: user-facing)
@@ -535,7 +535,7 @@ Phase 5 has three stages. The spec is NOT complete until all three are done.
 - Follow exact template structures
 - Get explicit user approval between phases (using approvals tool with action:'request')
 - Complete phases in sequence (no skipping)
-- Phase 5 has three stages: 5.1 (automated E2E), 5.2 (user QA session), 5.3 (wiki + PR finalization) — all three are mandatory. Wiki runs AFTER QA so it captures final post-QA code
+- Phase 5 has three stages: 5.1 (automated E2E), 5.2 (user QA session), 5.3 (docs + PR finalization) — all three are mandatory. Docs run AFTER QA so documentation captures final post-QA code
 - Phase 5 E2E always uses Browserbase/Stagehand (/bb-test) against the PR preview URL — never browserless/smoke-test
 - CRITICAL: During Phase 5.2 (User QA), the agent MUST NOT suggest merging, declare the work done, or push back on findings. The user drives QA, the agent fixes. QA ends ONLY when the user says so
 - CRITICAL: The spec finish line is marking the PR ready for review (Phase 5.3), NOT passing automated tests. Automated tests passing = ready for QA, not ready to merge

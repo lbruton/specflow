@@ -120,7 +120,7 @@ export async function specStatusHandler(args: any, context: ToolContext): Promis
         name: 'Post-Implementation',
         status: currentPhase === 'post-implementation' ? 'action-required' : 'not-started',
         checklist: currentPhase === 'post-implementation' ? [
-          'Wiki updated (/wiki-update)',
+          'DocVault updated (/vault-update)',
           'E2E tests run (/bb-test)',
           'Vault issues closed (mark Done)',
           'GitHub issues closed (gh issue close)',
@@ -167,8 +167,8 @@ export async function specStatusHandler(args: any, context: ToolContext): Promis
         break;
       case 'post-implementation':
         nextSteps.push('All tasks completed (marked [x]) — Phase 5 required before spec is done');
-        nextSteps.push('1. Run /wiki-update to update affected wiki pages');
-        nextSteps.push('2. Commit wiki changes to the branch BEFORE pushing');
+        nextSteps.push('1. Run /vault-update to update affected DocVault documentation');
+        nextSteps.push('2. Commit DocVault changes (DocVault commits go direct to main)');
         nextSteps.push('3. Run /bb-test against PR preview URL for E2E verification');
         nextSteps.push('4. CLOSE all linked vault issues (mark status as Done in the issue markdown file)');
         nextSteps.push('5. CLOSE the linked GitHub issue if one exists (gh issue close)');
