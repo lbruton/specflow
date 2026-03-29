@@ -1,0 +1,1020 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SpecFlow — Spec-driven development with persistent project memory and code intelligence</title>
+  <meta name="description" content="A structured spec workflow, three-tier knowledge system, and semantic code intelligence that gives AI agents permanent, cross-project memory. Ships as MCP server plugins with a real-time dashboard.">
+  <style>
+    :root {
+      --bg: #0a0e14;
+      --bg-card: #111820;
+      --bg-code: #0d1117;
+      --border: #1e2a3a;
+      --text: #c5cdd8;
+      --text-dim: #6b7d93;
+      --text-bright: #e6edf5;
+      --accent: #6366f1;
+      --accent-glow: #6366f120;
+      --indigo: #4f46e5;
+      --indigo-light: #818cf8;
+      --green: #22c55e;
+      --green-dim: #22c55e40;
+      --amber: #f59e0b;
+      --red: #ef4444;
+      --purple: #a78bfa;
+      --mono: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Cascadia Code', Menlo, Consolas, monospace;
+      --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--sans);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+      overflow-x: hidden;
+    }
+
+    /* ─── Layout ─── */
+    .container { max-width: 960px; margin: 0 auto; padding: 0 24px; }
+    section { padding: 80px 0; }
+
+    /* ─── Typography ─── */
+    h1, h2, h3 { color: var(--text-bright); font-weight: 600; letter-spacing: -0.02em; }
+    h1 { font-size: 2.8rem; line-height: 1.15; }
+    h2 { font-size: 1.8rem; margin-bottom: 16px; }
+    h3 { font-size: 1.1rem; margin-bottom: 8px; }
+    p { margin-bottom: 16px; }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    code, .mono { font-family: var(--mono); font-size: 0.9em; }
+    .dim { color: var(--text-dim); }
+    .green { color: var(--green); }
+    .amber { color: var(--amber); }
+    .accent { color: var(--accent); }
+    .purple { color: var(--purple); }
+
+    /* ─── Nav ─── */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 0;
+      backdrop-filter: blur(12px);
+      background: #0a0e14e0;
+    }
+    nav .container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .nav-brand {
+      font-family: var(--mono);
+      font-weight: 700;
+      font-size: 1rem;
+      color: var(--text-bright);
+    }
+    .nav-brand span { color: var(--accent); }
+    .nav-links { display: flex; gap: 24px; }
+    .nav-links a { color: var(--text-dim); font-size: 0.85rem; }
+    .nav-links a:hover { color: var(--text-bright); text-decoration: none; }
+
+    /* ─── Hero ─── */
+    .hero {
+      text-align: center;
+      padding: 100px 0 80px;
+    }
+    .hero-badge {
+      display: inline-block;
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      color: var(--green);
+      border: 1px solid var(--green-dim);
+      padding: 4px 12px;
+      border-radius: 999px;
+      margin-bottom: 24px;
+    }
+    .hero h1 { margin-bottom: 20px; }
+    .hero h1 .gradient {
+      background: linear-gradient(135deg, var(--indigo), var(--indigo-light), var(--purple));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero-logo {
+      margin-bottom: 20px;
+    }
+    .hero-logo svg { height: 56px; width: auto; }
+    .hero p {
+      font-size: 1.15rem;
+      color: var(--text-dim);
+      max-width: 640px;
+      margin: 0 auto 32px;
+    }
+    .hero-ctas {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      border: none;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--indigo), var(--accent));
+      color: #fff;
+    }
+    .btn-primary:hover { background: linear-gradient(135deg, #4338ca, #4f46e5); text-decoration: none; }
+    .btn-secondary {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn-secondary:hover { border-color: var(--text-dim); text-decoration: none; }
+
+    /* ─── Problem Cards ─── */
+    .problem-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      margin-top: 32px;
+    }
+    .problem-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+    }
+    .problem-card .icon {
+      font-size: 1.6rem;
+      margin-bottom: 12px;
+    }
+    .problem-card h3 { margin-bottom: 8px; }
+    .problem-card p { color: var(--text-dim); font-size: 0.9rem; margin: 0; }
+
+    /* ─── Three Tiers ─── */
+    .tier-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      margin-top: 32px;
+    }
+    .tier {
+      display: flex;
+      align-items: stretch;
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+    }
+    .tier:first-child { border-radius: 12px 12px 0 0; }
+    .tier:last-child { border-radius: 0 0 12px 12px; }
+    .tier + .tier { border-top: none; }
+    .tier-label {
+      writing-mode: vertical-lr;
+      text-orientation: mixed;
+      transform: rotate(180deg);
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      padding: 16px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 44px;
+      border-right: 1px solid var(--border);
+    }
+    .tier-1 .tier-label { background: #3b82f615; color: var(--accent); }
+    .tier-2 .tier-label { background: #22c55e15; color: var(--green); }
+    .tier-3 .tier-label { background: #a78bfa15; color: var(--purple); }
+    .tier-content {
+      padding: 20px 24px;
+      flex: 1;
+    }
+    .tier-content h3 { font-size: 1rem; }
+    .tier-content p { font-size: 0.9rem; color: var(--text-dim); margin: 0; }
+    .tier-arrow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4px 0;
+      color: var(--text-dim);
+      font-family: var(--mono);
+      font-size: 0.75rem;
+    }
+
+    /* ─── Lifecycle ─── */
+    .lifecycle-flow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0;
+      margin: 32px 0;
+      flex-wrap: wrap;
+    }
+    .phase {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 16px 14px;
+      border-radius: 10px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      min-width: 100px;
+      text-align: center;
+    }
+    .phase-num {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 4px;
+    }
+    .phase-name { font-size: 0.85rem; font-weight: 600; color: var(--text-bright); }
+    .phase-arrow {
+      font-family: var(--mono);
+      color: var(--text-dim);
+      font-size: 0.9rem;
+      padding: 0 4px;
+    }
+
+    /* ─── Code Block ─── */
+    .code-block {
+      background: var(--bg-code);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      margin: 24px 0;
+    }
+    .code-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      color: var(--text-dim);
+    }
+    .code-dots {
+      display: flex;
+      gap: 6px;
+    }
+    .code-dots span {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--border);
+    }
+    .code-dots span:first-child { background: #ef4444; }
+    .code-dots span:nth-child(2) { background: #f59e0b; }
+    .code-dots span:nth-child(3) { background: #22c55e; }
+    .code-body {
+      padding: 16px 20px;
+      font-family: var(--mono);
+      font-size: 0.82rem;
+      line-height: 1.8;
+      overflow-x: auto;
+      white-space: pre;
+    }
+    .code-body .comment { color: #6b7d93; }
+    .code-body .cmd { color: var(--green); }
+    .code-body .output { color: var(--text-dim); }
+    .code-body .highlight { color: var(--accent); }
+    .code-body .success { color: var(--green); }
+
+    /* ─── Comparison Table ─── */
+    .compare-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 24px 0;
+      font-size: 0.88rem;
+    }
+    .compare-table th {
+      text-align: left;
+      padding: 10px 16px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text-bright);
+      font-weight: 600;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .compare-table td {
+      padding: 10px 16px;
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+    }
+    .compare-table td:first-child {
+      color: var(--text);
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    /* ─── Feature Grid ─── */
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+      margin-top: 32px;
+    }
+    .feature-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+    }
+    .feature-card .tag {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 8px;
+    }
+    .feature-card h3 { margin-bottom: 8px; }
+    .feature-card p { color: var(--text-dim); font-size: 0.9rem; margin: 0; }
+
+    /* ─── Vault Tree ─── */
+    .vault-tree {
+      font-family: var(--mono);
+      font-size: 0.82rem;
+      line-height: 2;
+      padding: 20px;
+      background: var(--bg-code);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      margin: 24px 0;
+    }
+    .vault-tree .dir { color: var(--accent); }
+    .vault-tree .file { color: var(--text-dim); }
+    .vault-tree .note { color: var(--green); font-style: italic; }
+
+    /* ─── CTA Section ─── */
+    .cta-section {
+      text-align: center;
+      padding: 80px 0;
+      border-top: 1px solid var(--border);
+    }
+    .cta-section h2 { margin-bottom: 12px; }
+    .cta-section p { color: var(--text-dim); margin-bottom: 24px; }
+
+    /* ─── Footer ─── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 24px 0;
+      text-align: center;
+      font-size: 0.8rem;
+      color: var(--text-dim);
+    }
+    footer a { color: var(--text-dim); }
+
+    /* ─── Responsive ─── */
+    @media (max-width: 768px) {
+      h1 { font-size: 2rem; }
+      .problem-grid { grid-template-columns: 1fr; }
+      .feature-grid { grid-template-columns: 1fr; }
+      .lifecycle-flow { flex-direction: column; }
+      .phase-arrow { transform: rotate(90deg); }
+      section { padding: 48px 0; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ─── Nav ─── -->
+<nav>
+  <div class="container">
+    <div class="nav-brand"><span style="color: #cbd5e1;">Spec</span><span style="color: #6366f1;">Flow</span></div>
+    <div class="nav-links">
+      <a href="#how">How it works</a>
+      <a href="#memory">Memory</a>
+      <a href="#intelligence">Code Intel</a>
+      <a href="#lifecycle">Lifecycle</a>
+      <a href="#learning">Learning Loop</a>
+      <a href="#compare">Compare</a>
+      <a href="#roadmap">Roadmap</a>
+      <a href="https://github.com/lbruton/spec-workflow-mcp">GitHub</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ─── Hero ─── -->
+<section class="hero">
+  <div class="container">
+    <div class="hero-logo">
+      <svg xmlns="http://www.w3.org/2000/svg" width="220" height="40" viewBox="0 0 220 40">
+        <defs>
+          <linearGradient id="g1" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#4f46e5"/><stop offset="100%" stop-color="#6366f1"/></linearGradient>
+          <linearGradient id="g2" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#6366f1"/><stop offset="100%" stop-color="#818cf8"/></linearGradient>
+          <linearGradient id="g3" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#818cf8"/><stop offset="100%" stop-color="#a78bfa"/></linearGradient>
+        </defs>
+        <polygon points="2,4 18,20 2,36" fill="url(#g1)" opacity="0.4"/>
+        <polygon points="12,4 28,20 12,36" fill="url(#g2)" opacity="0.65"/>
+        <polygon points="22,4 38,20 22,36" fill="url(#g3)"/>
+        <line x1="38" y1="20" x2="46" y2="20" stroke="#a78bfa" stroke-width="2.5" stroke-linecap="round"/>
+        <text x="56" y="29" font-family="-apple-system, system-ui, sans-serif" font-size="26" font-weight="800" letter-spacing="-0.5">
+          <tspan fill="#cbd5e1">Spec</tspan><tspan fill="#6366f1">Flow</tspan>
+        </text>
+      </svg>
+    </div>
+    <div class="hero-badge">MCP Server Plugin &bull; Open Source</div>
+    <h1>Spec-driven development with<br><span class="gradient">persistent project memory</span></h1>
+    <p>AI agents lose context between sessions. They forget decisions, repeat mistakes, and drift from reality. SpecFlow gives them a structured lifecycle, persistent memory, and semantic code intelligence &mdash; all self-hosted.</p>
+    <div class="hero-ctas">
+      <a href="https://github.com/lbruton/spec-workflow-mcp" class="btn btn-primary">
+        View on GitHub
+      </a>
+      <a href="#how" class="btn btn-secondary">
+        See how it works
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ─── Problem ─── -->
+<section>
+  <div class="container">
+    <h2>The problem with AI-assisted development</h2>
+    <p class="dim">Every session starts from zero. Three failure modes compound over time.</p>
+    <div class="problem-grid">
+      <div class="problem-card">
+        <div class="icon">&#x1f9ca;</div>
+        <h3>Cold starts</h3>
+        <p>The agent has no memory of yesterday. It doesn't know what it built, what broke, or what conventions you agreed on. You re-explain everything, every time.</p>
+      </div>
+      <div class="problem-card">
+        <div class="icon">&#x1f4a5;</div>
+        <h3>Context flooding</h3>
+        <p>You stuff everything into CLAUDE.md &mdash; architecture, conventions, decisions, infrastructure. The file balloons. Token waste goes up. Attention quality goes down.</p>
+      </div>
+      <div class="problem-card">
+        <div class="icon">&#x1f4c9;</div>
+        <h3>No lifecycle</h3>
+        <p>Agents jump straight to code. No requirements phase. No design review. No approval gates. The result: rework, scope creep, and features that don't match intent.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── How It Works ─── -->
+<section id="how">
+  <div class="container">
+    <h2>Four systems, one workflow</h2>
+    <p class="dim"><strong class="accent">SpecFlow</strong> structures <em>how</em> work gets done. <strong class="purple">DocVault</strong> structures <em>what the agent knows</em>. <strong class="green">Code Context</strong> gives it <em>semantic understanding of your code</em>. Together, they replace the bloated CLAUDE.md + ad-hoc prompting pattern.</p>
+
+    <div class="feature-grid">
+      <div class="feature-card">
+        <div class="tag accent">SpecFlow &mdash; MCP Server</div>
+        <h3>Spec-driven lifecycle</h3>
+        <p>Requirements &rarr; Design &rarr; Tasks &rarr; Implementation with dashboard approvals at every gate. Ships as a Claude Code MCP plugin with 6 tools and 7 prompts.</p>
+      </div>
+      <div class="feature-card">
+        <div class="tag purple">DocVault &mdash; Obsidian Vault</div>
+        <h3>Cross-project knowledge base</h3>
+        <p>One Obsidian vault serves 8+ repos. Architecture, infrastructure, decisions, issues &mdash; all in structured markdown with graph visualization and wikilinks.</p>
+      </div>
+      <div class="feature-card">
+        <div class="tag green">Code Context &mdash; Semantic Search</div>
+        <h3>Vector-indexed code intelligence</h3>
+        <p>Self-hosted Milvus vector database indexes every codebase. Agents search code by meaning, not just keywords. Forked from Zilliz, hardened with timeouts and stability fixes.</p>
+      </div>
+      <div class="feature-card">
+        <div class="tag amber">Skill System &mdash; 60+ Skills</div>
+        <h3>Procedural knowledge routing</h3>
+        <p>CLAUDE.md stays tiny &mdash; a routing table to skills. Each skill encodes a full workflow: debugging, deployment, PR resolution, infrastructure management.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── Three-Tier Memory ─── -->
+<section id="memory" style="background: #0d1117;">
+  <div class="container">
+    <h2>Three-tier memory architecture</h2>
+    <p class="dim">Not everything belongs in one file. Each tier has a purpose, a source of truth ranking, and a different retrieval cost.</p>
+
+    <div class="tier-stack">
+      <div class="tier tier-1">
+        <div class="tier-label">Tier 1</div>
+        <div class="tier-content">
+          <h3>DocVault <span class="dim">&mdash; Ground truth</span></h3>
+          <p>Human-curated Obsidian vault. Architecture, infrastructure topology, data models, deployment procedures. Version-controlled. Wins all tie-breaking conflicts. Read via Grep, Glob, or semantic search.</p>
+        </div>
+      </div>
+      <div class="tier tier-2">
+        <div class="tier-label">Tier 2</div>
+        <div class="tier-content">
+          <h3>File Memory <span class="dim">&mdash; Session context</span></h3>
+          <p>Project-scoped markdown files at <code>~/.claude/projects/*/memory/</code>. Agent-curated, human-reviewable. Loaded at session start. Stores user preferences, feedback, project state, and external references.</p>
+        </div>
+      </div>
+      <div class="tier tier-3">
+        <div class="tier-label">Tier 3</div>
+        <div class="tier-content">
+          <h3>mem0 <span class="dim">&mdash; Episodic recall</span></h3>
+          <p>Cloud-based semantic memory. Automatically populated from session digests. Probabilistic retrieval via embedding similarity. Never authoritative &mdash; DocVault always wins. Best for past decisions, operational context, and gap-filling.</p>
+        </div>
+      </div>
+    </div>
+    <div class="tier-arrow">&#9660; conflict resolution: newest wins, highest tier breaks ties</div>
+  </div>
+</section>
+
+<!-- ─── Code Intelligence ─── -->
+<section id="intelligence">
+  <div class="container">
+    <h2>Code intelligence, self-hosted</h2>
+    <p class="dim">Agents shouldn't grep blindly through your codebase. Code Context gives them semantic understanding &mdash; search by meaning, not string matching. Backed by a self-hosted Milvus vector database with zero cloud dependencies.</p>
+
+    <div class="feature-grid">
+      <div class="feature-card">
+        <div class="tag green">Semantic Code Search</div>
+        <h3>Search by meaning</h3>
+        <p>Ask "find the authentication middleware" and get results even if the code never uses the word "auth." Vector embeddings capture semantic relationships across your entire codebase.</p>
+      </div>
+      <div class="feature-card">
+        <div class="tag accent">Self-Hosted Milvus</div>
+        <h3>No collection limits</h3>
+        <p>Cloud vector databases cap you at 4 collections on free tiers. Self-hosted Milvus on your own infrastructure gives unlimited project indices with full data sovereignty.</p>
+      </div>
+      <div class="feature-card">
+        <div class="tag purple">Hardened Fork</div>
+        <h3>Production-stable</h3>
+        <p>Forked from Zilliz's MCP server with critical fixes: 30s fetch timeouts, gRPC connection guards, and pinned npm versions. No more silent upstream breakage pulling broken builds into your sessions.</p>
+      </div>
+      <div class="feature-card">
+        <div class="tag amber">Persistent Indices</div>
+        <h3>Index once, search forever</h3>
+        <p>Code indices persist across sessions in Milvus. No re-indexing on every cold start. Incremental updates catch only what changed since the last index run.</p>
+      </div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span></span><span></span><span></span></div>
+        Code search tiers &mdash; cheapest first
+      </div>
+      <div class="code-body"><span class="comment"># Tier 1: Structural graph (callers, imports, dead code)</span>
+<span class="cmd">code-graph-context</span>  <span class="output">→ Neo4j &mdash; "what calls this function?"</span>
+
+<span class="comment"># Tier 2: Semantic search (meaning-based)</span>
+<span class="cmd">code-context</span>        <span class="output">→ Milvus &mdash; "find code related to payment processing"</span>
+
+<span class="comment"># Tier 3: Literal search (exact strings)</span>
+<span class="cmd">grep / glob</span>         <span class="output">→ Filesystem &mdash; "find all files matching *.test.ts"</span>
+
+<span class="comment"># Tier 4: Deep analysis (only when tiers 1-3 leave gaps)</span>
+<span class="cmd">code-oracle agent</span>  <span class="output">→ Subagent &mdash; combines all sources + AI reasoning</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── Lifecycle ─── -->
+<section id="lifecycle">
+  <div class="container">
+    <h2>Spec workflow lifecycle</h2>
+    <p class="dim">Every non-trivial feature follows the same path. Approvals required at each gate. No phase-skipping.</p>
+
+    <div class="lifecycle-flow">
+      <div class="phase">
+        <div class="phase-num dim">Phase 0</div>
+        <div class="phase-name">/chat</div>
+      </div>
+      <div class="phase-arrow">&rarr;</div>
+      <div class="phase">
+        <div class="phase-num accent">Phase 1</div>
+        <div class="phase-name">/discover</div>
+      </div>
+      <div class="phase-arrow">&rarr;</div>
+      <div class="phase">
+        <div class="phase-num green">Phase 2</div>
+        <div class="phase-name">/spec</div>
+      </div>
+      <div class="phase-arrow">&rarr;</div>
+      <div class="phase">
+        <div class="phase-num amber">Phase 3</div>
+        <div class="phase-name">Design</div>
+      </div>
+      <div class="phase-arrow">&rarr;</div>
+      <div class="phase">
+        <div class="phase-num" style="color: var(--red);">Phase 4</div>
+        <div class="phase-name">Implement</div>
+      </div>
+      <div class="phase-arrow">&rarr;</div>
+      <div class="phase">
+        <div class="phase-num purple">Phase 5</div>
+        <div class="phase-name">/retro</div>
+      </div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span></span><span></span><span></span></div>
+        Session lifecycle
+      </div>
+      <div class="code-body"><span class="comment"># Explore an idea without committing to code</span>
+<span class="cmd">/chat</span> <span class="output">"what if we added real-time price alerts?"</span>
+
+<span class="comment"># Structured brainstorm with research agents</span>
+<span class="cmd">/discover</span> <span class="highlight">STAK-42</span>
+<span class="output">  Dispatching research agents...</span>
+<span class="output">  Discovery Brief generated with all open questions resolved</span>
+
+<span class="comment"># Create spec: Requirements → Design → Tasks</span>
+<span class="cmd">/spec</span> <span class="highlight">STAK-42</span>
+<span class="output">  Requirements approved ✓  Design approved ✓  Tasks generated ✓</span>
+
+<span class="comment"># Implementation with parallel subagents</span>
+<span class="output">  Task 1/4: WebSocket server      </span><span class="success">■■■■■■■■■■ done</span>
+<span class="output">  Task 2/4: Alert rules engine     </span><span class="success">■■■■■■■■■■ done</span>
+<span class="output">  Task 3/4: Push notification API   </span><span class="success">■■■■■■■■■■ done</span>
+<span class="output">  Task 4/4: Frontend alert panel    </span><span class="success">■■■■■■■■■■ done</span>
+
+<span class="comment"># Extract lessons, save to mem0</span>
+<span class="cmd">/retro</span>
+<span class="output">  3 prescriptive lessons saved</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── Continuous Learning ─── -->
+<section id="learning" style="background: #0d1117;">
+  <div class="container">
+    <h2>Every session learns from the last</h2>
+    <p class="dim">Most AI tools treat each session as isolated. SpecFlow creates a continuous learning loop: sessions end with knowledge extraction, and new sessions start pre-loaded with everything that matters.</p>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span></span><span></span><span></span></div>
+        The continuous context lifecycle
+      </div>
+      <div class="code-body"><span class="comment">┌─────────────────────────────────────────────────────────┐</span>
+<span class="comment">│              THE CONTINUOUS LEARNING LOOP                │</span>
+<span class="comment">└─────────────────────────────────────────────────────────┘</span>
+
+<span class="highlight">Morning — /prime boots you up</span>
+<span class="output">  Indexes codebase (Code Context + Code Graph)</span>
+<span class="output">  Reads recent session digests from DocVault</span>
+<span class="output">  Pulls relevant memories from mem0</span>
+<span class="output">  Checks open issues + git status</span>
+<span class="output">  Presents: "Here's where you left off, here's what's next"</span>
+
+<span class="highlight">During the day — sessions compound</span>
+<span class="output">  Each session has full context from /prime</span>
+<span class="output">  Work produces commits, specs, implementation logs</span>
+<span class="output">  /handoff relays state between terminal sessions</span>
+
+<span class="highlight">End of day — /goodnight captures everything</span>
+<span class="cmd">/goodnight</span>
+<span class="output">  Step 1: /retro</span>
+<span class="output">    Extracts prescriptive lessons from conversation</span>
+<span class="output">    "Always check both parsers when modifying spec parsing"</span>
+<span class="output">    "The Milvus health endpoint is /healthz, not /health"</span>
+<span class="output">    Saves to mem0 as structured retro-learning memories</span>
+<span class="output">  Step 2: /digest-session</span>
+<span class="output">    Reads JSONL session transcripts</span>
+<span class="output">    Summarizes via local Ollama (no cloud API calls)</span>
+<span class="output">    Writes daily digest to DocVault/Daily Digests/</span>
+<span class="output">    Saves key facts to mem0 for cross-session recall</span>
+
+<span class="comment">┌─────────────────────────────────────────────────────────┐</span>
+<span class="comment">│  /prime ──→ work ──→ /goodnight ──→ /prime ──→ ...      │</span>
+<span class="comment">│  Tomorrow's /prime reads today's digest + retro lessons │</span>
+<span class="comment">└─────────────────────────────────────────────────────────┘</span></div>
+    </div>
+
+    <div class="feature-grid">
+      <div class="feature-card">
+        <div class="tag green">/prime</div>
+        <h3>Session startup with full context</h3>
+        <p>Indexes code, reads digests, pulls mem0 memories, checks issues and git status. The agent starts every session knowing what happened yesterday, what's in progress, and what's next.</p>
+      </div>
+      <div class="feature-card">
+        <div class="tag accent">/retro</div>
+        <h3>Prescriptive lesson extraction</h3>
+        <p>Not "what did we do" but "what should we do differently." Extracts actionable rules from the conversation and saves them as structured memories. Future sessions apply these lessons automatically.</p>
+      </div>
+      <div class="feature-card">
+        <div class="tag purple">/digest-session</div>
+        <h3>Session log processing</h3>
+        <p>Reads Claude Code JSONL transcripts, summarizes via local Ollama (llama3.2:3b), writes to DocVault daily digests, and saves key facts to mem0. Zero external API calls for digestion.</p>
+      </div>
+      <div class="feature-card">
+        <div class="tag amber">/goodnight</div>
+        <h3>End-of-day wrapup</h3>
+        <p>Runs /retro then /digest-session sequentially. One command captures everything: prescriptive lessons first, then descriptive session summaries. Tomorrow's /prime reads both.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── Vault Structure ─── -->
+<section>
+  <div class="container">
+    <h2>One vault, all projects</h2>
+    <p class="dim">DocVault is a single Obsidian vault that serves every project. No per-repo scaffolding. No duplicate context files. Infrastructure docs sit alongside application architecture.</p>
+
+    <div class="vault-tree">
+<span class="dir">DocVault/</span>
+  <span class="dir">Projects/</span>
+    <span class="dir">StakTrakr/</span>
+      <span class="file">Overview.md, Architecture.md, Data Model.md, API.md...</span>
+    <span class="dir">HexTrackr/</span>
+      <span class="file">Overview.md, Architecture.md, Database.md, WebSocket.md...</span>
+    <span class="dir">spec-workflow-mcp/</span>
+      <span class="file">Overview.md, Tools &amp; Prompts.md, Dashboard.md...</span>
+  <span class="dir">Infrastructure/</span>
+    <span class="file">Host Inventory.md</span>   <span class="note">&larr; every IP, port, and DNS record</span>
+    <span class="file">Stack Registry.md</span>   <span class="note">&larr; 26 Docker stacks</span>
+    <span class="file">Portainer.md, Proxmox.md, Cloudflare.md, NPM.md...</span>
+  <span class="dir">Architecture/</span>
+    <span class="file">Methodology.md, Memory Pipeline.md, Skill Matrix.md...</span>
+  <span class="dir">Daily Digests/</span>
+    <span class="dir">StakTrakr/</span>
+      <span class="file">2026-03-29.md, 2026-03-28.md...</span>   <span class="note">&larr; auto-generated</span>
+  <span class="dir">Templates/</span>
+    <span class="file">requirements.md, design.md, tasks.md, steering.md...</span>
+  <span class="file">Issues.base</span>   <span class="note">&larr; vault-based issue tracking</span>
+    </div>
+  </div>
+</section>
+
+<!-- ─── Comparison ─── -->
+<section id="compare">
+  <div class="container">
+    <h2>How it compares</h2>
+    <p class="dim">Different approaches to the same problem: giving AI agents persistent project context.</p>
+
+    <table class="compare-table">
+      <thead>
+        <tr>
+          <th>Dimension</th>
+          <th>SpecKit</th>
+          <th>BMAD</th>
+          <th>GSD</th>
+          <th>Taskmaster</th>
+          <th>mex</th>
+          <th>Pimzino</th>
+          <th>SpecFlow</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Approval gates</td>
+          <td>None</td>
+          <td>Advisory</td>
+          <td>UAT phase</td>
+          <td>None</td>
+          <td>None</td>
+          <td class="green">Dashboard (blocking)</td>
+          <td class="accent">Dashboard + skill enforcement</td>
+        </tr>
+        <tr>
+          <td>Memory</td>
+          <td>constitution.md</td>
+          <td>Git docs</td>
+          <td>STATE.md</td>
+          <td>tasks.json</td>
+          <td>Scaffold files</td>
+          <td>Steering docs</td>
+          <td class="accent">3-tier: DocVault + file + mem0</td>
+        </tr>
+        <tr>
+          <td>Session learning</td>
+          <td>None</td>
+          <td>None</td>
+          <td>None</td>
+          <td>None</td>
+          <td>GROW loop</td>
+          <td>None</td>
+          <td class="accent">/prime &rarr; work &rarr; /goodnight</td>
+        </tr>
+        <tr>
+          <td>Code search</td>
+          <td>None</td>
+          <td>None</td>
+          <td>None</td>
+          <td>None</td>
+          <td>None</td>
+          <td>None</td>
+          <td class="accent">Semantic + structural</td>
+        </tr>
+        <tr>
+          <td>Multi-project</td>
+          <td>Per-repo</td>
+          <td>Per-repo</td>
+          <td>Per-repo</td>
+          <td>Per-repo</td>
+          <td>Per-repo</td>
+          <td>Per-repo</td>
+          <td class="accent">One vault, all repos</td>
+        </tr>
+        <tr>
+          <td>Infrastructure</td>
+          <td>Code only</td>
+          <td>Code only</td>
+          <td>Code only</td>
+          <td>Code only</td>
+          <td>Code only</td>
+          <td>Code only</td>
+          <td class="accent">Docker, DNS, VMs, proxies</td>
+        </tr>
+        <tr>
+          <td>Drift detection</td>
+          <td>None</td>
+          <td>None</td>
+          <td>None</td>
+          <td>None</td>
+          <td class="green">8 checkers</td>
+          <td>None</td>
+          <td>/vault-update gate</td>
+        </tr>
+        <tr>
+          <td>Multi-tool</td>
+          <td class="green">Any AI tool</td>
+          <td>Any AI tool</td>
+          <td>Claude focused</td>
+          <td>Any AI tool</td>
+          <td class="green">4 tools</td>
+          <td>Claude + MCP</td>
+          <td>Claude + MCP ecosystem</td>
+        </tr>
+        <tr>
+          <td>Self-hosted</td>
+          <td>Files only</td>
+          <td>Files only</td>
+          <td>Files only</td>
+          <td>Files only</td>
+          <td>Files only</td>
+          <td>Node.js</td>
+          <td class="accent">Milvus, Neo4j, Ollama</td>
+        </tr>
+        <tr>
+          <td>Best for</td>
+          <td class="dim">Quick adoption</td>
+          <td class="dim">Enterprise teams</td>
+          <td class="dim">Solo context eng.</td>
+          <td class="dim">PRD pipelines</td>
+          <td class="dim">Per-repo memory</td>
+          <td class="dim">Structured workflow</td>
+          <td class="accent">Multi-project, high-governance</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ─── Architecture ─── -->
+<section>
+  <div class="container">
+    <h2>What ships in the box</h2>
+    <p class="dim">SpecFlow is an MCP server plugin. DocVault is an Obsidian vault. Code Context is a semantic search engine. They work together through Claude Code's skill and memory systems.</p>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span></span><span></span><span></span></div>
+        MCP Tools &amp; Prompts
+      </div>
+      <div class="code-body"><span class="highlight">Tools (6)</span>
+  <span class="cmd">spec-workflow-guide</span>    <span class="output">Lifecycle orchestration instructions</span>
+  <span class="cmd">steering-guide</span>         <span class="output">Steering document creation guidance</span>
+  <span class="cmd">spec-status</span>            <span class="output">Phase, completion, implementation audit</span>
+  <span class="cmd">approvals</span>              <span class="output">Dashboard approve/reject/request changes</span>
+  <span class="cmd">log-implementation</span>     <span class="output">Record artifacts (functions, endpoints, tests)</span>
+  <span class="cmd">spec-list</span>              <span class="output">List all specs with status</span>
+
+<span class="highlight">Prompts (7)</span>
+  <span class="cmd">create-spec</span>            <span class="output">Create requirements, design, or tasks doc</span>
+  <span class="cmd">create-steering-doc</span>    <span class="output">Create product/tech/structure steering</span>
+  <span class="cmd">implement-task</span>         <span class="output">Dispatch implementation to subagents</span>
+  <span class="cmd">refresh-tasks</span>          <span class="output">Re-sync task state from spec files</span>
+  <span class="cmd">+ 3 injection prompts</span>  <span class="output">Context injection for guides</span></div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span></span><span></span><span></span></div>
+        Dashboard &mdash; localhost:5051
+      </div>
+      <div class="code-body"><span class="output">Real-time web UI for spec management</span>
+
+  <span class="success">&#x2713;</span> <span class="output">View all specs across projects with phase indicators</span>
+  <span class="success">&#x2713;</span> <span class="output">Approve, reject, or request changes at each gate</span>
+  <span class="success">&#x2713;</span> <span class="output">Track implementation progress per task</span>
+  <span class="success">&#x2713;</span> <span class="output">Implementation log audit trail</span>
+  <span class="success">&#x2713;</span> <span class="output">Auto-starts with MCP server initialization</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── Parallel Execution ─── -->
+<section style="background: #0d1117;">
+  <div class="container">
+    <h2>Parallel subagent dispatch</h2>
+    <p class="dim">The biggest architectural difference from other spec workflows: tasks don't execute sequentially in one session. Each task runs through an isolated three-stage pipeline, and tasks with zero file overlap execute concurrently.</p>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span></span><span></span><span></span></div>
+        Subagent pipeline &mdash; per task
+      </div>
+      <div class="code-body"><span class="comment"># Each task runs through 3 isolated stages</span>
+
+<span class="cmd">Orchestrator</span> <span class="output">reads task from spec</span>
+  <span class="output">&rarr;</span> <span class="highlight">Implementer Agent</span>     <span class="output">fresh context, writes code, tests, commits</span>
+  <span class="output">&rarr;</span> <span class="highlight">Compliance Reviewer</span>    <span class="output">reads actual code vs requirements</span>
+  <span class="output">&rarr;</span> <span class="highlight">Quality Reviewer</span>      <span class="output">architecture, error handling, production readiness</span>
+  <span class="output">&rarr;</span> <span class="cmd">log-implementation</span>    <span class="output">record artifacts</span>
+  <span class="output">&rarr;</span> <span class="success">mark complete</span>
+
+<span class="comment"># File Touch Map identifies zero-overlap tasks</span>
+<span class="comment"># Those tasks dispatch simultaneously in batches</span>
+
+<span class="output">Batch 1:  Task 1 + Task 3 + Task 5     </span><span class="success">parallel</span>
+<span class="output">Batch 2:  Task 2 + Task 4               </span><span class="success">parallel</span>
+<span class="output">Batch 3:  Task 6 (depends on Task 2)    </span><span class="output">sequential</span></div>
+    </div>
+
+    <div class="feature-card" style="margin-top: 24px; text-align: center;">
+      <div class="tag green">Case Study</div>
+      <h3>Forge: Empty repo to deployed production app in 3 hours</h3>
+      <p>23 tasks, 30 parallel subagent dispatches, 8 dashboard approval gates, zero file conflicts. What would take a full day sequentially completed in one afternoon.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ─── Roadmap ─── -->
+<section id="roadmap" style="background: #0d1117;">
+  <div class="container">
+    <h2>Where this is going</h2>
+    <p class="dim">Each component is independently useful today. The roadmap is consolidation: one install, one Docker container, zero cloud dependencies.</p>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span></span><span></span><span></span></div>
+        Consolidation roadmap
+      </div>
+      <div class="code-body"><span class="success">&#x2713;</span> <span class="output">SpecFlow MCP server — spec lifecycle + dashboard</span>           <span class="success">shipped</span>
+<span class="success">&#x2713;</span> <span class="output">DocVault — cross-project knowledge vault</span>                    <span class="success">shipped</span>
+<span class="success">&#x2713;</span> <span class="output">Code Context — semantic search (Milvus, self-hosted)</span>        <span class="success">shipped</span>
+<span class="success">&#x2713;</span> <span class="output">Code Graph Context — structural search (Neo4j, local)</span>       <span class="success">shipped</span>
+<span class="success">&#x2713;</span> <span class="output">60+ skills — procedural knowledge routing</span>                   <span class="success">shipped</span>
+<span class="success">&#x2713;</span> <span class="output">Memory pipeline — session digests via local Ollama</span>           <span class="success">shipped</span>
+
+<span class="highlight">&#x25cb;</span> <span class="output">Rebrand Code Context — merge into SpecFlow plugin</span>           <span class="highlight">next</span>
+<span class="highlight">&#x25cb;</span> <span class="output">Self-host mem0 — fork + local deployment</span>                    <span class="highlight">planned</span>
+<span class="highlight">&#x25cb;</span> <span class="output">Self-host CGC — fork + local Neo4j bundle</span>                   <span class="highlight">planned</span>
+<span class="highlight">&#x25cb;</span> <span class="output">Unified Docker container — all services in one stack</span>        <span class="highlight">planned</span>
+<span class="highlight">&#x25cb;</span> <span class="output">Rebrand + package — one-command install for any project</span>     <span class="highlight">future</span></div>
+    </div>
+
+    <p style="text-align: center; margin-top: 24px;">
+      <span class="dim">The end state: a single installable system that gives any AI agent persistent memory, semantic code search, structural code intelligence, and spec-driven workflow &mdash; all self-hosted, zero cloud dependencies.</span>
+    </p>
+  </div>
+</section>
+
+<!-- ─── CTA ─── -->
+<section class="cta-section">
+  <div class="container">
+    <h2>Stop re-explaining your project every session</h2>
+    <p>SpecFlow is open source and runs entirely on your machine. No cloud dependencies. No token waste. No amnesia.</p>
+    <div class="hero-ctas">
+      <a href="https://github.com/lbruton/spec-workflow-mcp" class="btn btn-primary">
+        Star on GitHub
+      </a>
+      <a href="https://github.com/lbruton/spec-workflow-mcp#readme" class="btn btn-secondary">
+        Read the docs
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ─── Footer ─── -->
+<footer>
+  <div class="container">
+    <p>SpecFlow &mdash; built by <a href="https://github.com/lbruton">lbruton</a> &bull; MIT License &bull; Components forked from <a href="https://github.com/Pimzino/spec-workflow-mcp">Pimzino/spec-workflow-mcp</a> and <a href="https://github.com/zilliztech/mcp-server-milvus">Zilliz/claude-context</a></p>
+  </div>
+</footer>
+
+</body>
+</html>

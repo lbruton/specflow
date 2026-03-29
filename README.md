@@ -3,91 +3,122 @@
 </p>
 
 <p align="center">
-  Spec-driven development framework with structured lifecycle, governance gates, and real-time dashboard.
+  Spec-driven development with persistent project memory and semantic code intelligence.
 </p>
 
 <p align="center">
-  <a href="https://github.com/lbruton/spec-workflow-mcp"><img src="https://img.shields.io/badge/fork_of-Pimzino/spec--workflow--mcp-blue" alt="Fork of Pimzino"></a>
-  <img src="https://img.shields.io/badge/license-GPL--3.0-green" alt="License">
+  <a href="https://github.com/lbruton/spec-workflow-mcp"><img src="https://img.shields.io/badge/license-GPL--3.0-green" alt="License"></a>
+  <img src="https://img.shields.io/badge/MCP_Server-Plugin-6366f1" alt="MCP Server Plugin">
+  <img src="https://img.shields.io/badge/self--hosted-zero_cloud_deps-22c55e" alt="Self-hosted">
+</p>
+
+<p align="center">
+  <a href="launch/index.html"><strong>View the full interactive about page</strong></a> &bull;
+  <a href="docs/CASE-STUDY-FORGE.md">Case Study: Forge</a> &bull;
+  <a href="FORK-CHANGELOG.md">Changelog</a>
 </p>
 
 ---
 
-**SpecFlow** is a fork of [Pimzino/spec-workflow-mcp](https://github.com/Pimzino/spec-workflow-mcp) -- a full-featured MCP server for structured spec-driven development. Pimzino's project provides the core engine: a sequential workflow (Requirements -> Design -> Tasks -> Implementation), a real-time web dashboard with blocking approval gates, implementation logging, multi-language support, a VSCode extension, and Docker deployment with enterprise security controls.
+AI agents forget everything between sessions. They lose decisions, repeat mistakes, and drift from reality. **SpecFlow** gives them a structured lifecycle, persistent cross-project memory, and semantic code intelligence -- all self-hosted.
 
-This fork layers additional patterns on top of that foundation: extended lifecycle phases, multi-project orchestration, infrastructure-aware workflows, and a three-tier knowledge architecture.
+Built on [Pimzino/spec-workflow-mcp](https://github.com/Pimzino/spec-workflow-mcp)'s core engine (sequential spec workflow, real-time dashboard, blocking approval gates). This fork layers extended lifecycle phases, multi-project orchestration, three-tier knowledge architecture, and semantic code search on top.
 
-> If you're looking for the original project, please visit [Pimzino's repo](https://github.com/Pimzino/spec-workflow-mcp) and give it a star -- SpecFlow wouldn't exist without it.
+## Four Systems, One Workflow
 
-**See it in action:** [Case Study -- Forge Build Session](docs/CASE-STUDY-FORGE.md) -- empty repo to deployed production app in 3 hours, 23 tasks across 30 parallel subagents, 8 dashboard approval gates.
+| System | What It Does |
+|--------|-------------|
+| **SpecFlow** (MCP Server) | Spec-driven lifecycle: Requirements → Design → Tasks → Implementation with dashboard approvals at every gate. 6 tools, 7 prompts. |
+| **DocVault** (Obsidian Vault) | Cross-project knowledge base. One vault serves 8+ repos -- architecture, infrastructure, decisions, issues. Graph visualization + wikilinks. |
+| **Code Context** (Milvus) | Semantic code search via self-hosted vector database. Search by meaning, not keywords. Forked from [Zilliz/claude-context](https://github.com/zilliztech/mcp-server-milvus), hardened with timeouts and pinned versions. |
+| **Skill System** (60+ Skills) | CLAUDE.md stays tiny -- a routing table to skills. Each skill encodes a full workflow: debugging, deployment, PR resolution, infrastructure management. |
 
-## How It Works
+## Three-Tier Memory Architecture
 
-Pimzino's upstream provides the core spec-driven workflow that powers everything:
+Not everything belongs in one file. Each tier has a purpose and a source of truth ranking.
+
+| Tier | System | Role |
+|------|--------|------|
+| **1** | DocVault | Ground truth. Human-curated Obsidian vault. Wins all conflicts. |
+| **2** | File Memory | Session context. Project-scoped markdown at `~/.claude/projects/*/memory/`. |
+| **3** | mem0 | Episodic recall. Semantic retrieval from session digests. Never authoritative. |
+
+## Continuous Learning Loop
+
+Every session learns from the previous. This is the single biggest differentiator.
 
 ```
-Requirements -> Design -> Tasks -> Implementation
-        (each transition gated by dashboard approval)
+/prime (morning)              /goodnight (end of day)
+  ├─ Index codebase             ├─ /retro
+  ├─ Read recent digests        │   └─ Extract prescriptive lessons → mem0
+  ├─ Pull mem0 memories         └─ /digest-session
+  ├─ Check issues + git             ├─ Read JSONL transcripts
+  └─ "Here's where you left off"    ├─ Summarize via local Ollama
+                                     ├─ Write to DocVault/Daily Digests/
+                                     └─ Save key facts to mem0
+
+  Tomorrow's /prime reads today's digest + retro lessons
 ```
 
-SpecFlow wraps additional phases around this core:
+## Spec Workflow Lifecycle
+
+Every non-trivial feature follows the same path. Approvals required at each gate.
 
 ```
-Chat -> Issue -> Discover -> [Pimzino core workflow] -> Retro
+Phase 0      Phase 1       Phase 2      Phase 3     Phase 4       Phase 5
+/chat    →   /discover  →  /spec    →   Design  →   Implement  →  /retro
+
+Bug fast path: /systematic-debugging → issue → fix (skip Phases 0-2)
+Casual path:   /gsd — no issue, no spec, chore: PR
 ```
 
-The AI proposes, the human approves -- that fundamental pattern is Pimzino's design. This fork adds pre-workflow discovery, issue tracking, and post-workflow retrospectives.
+### Parallel Subagent Dispatch
 
-## What Makes This Fork Different
+Tasks don't execute sequentially. Each runs through an isolated three-stage pipeline:
 
-### 1. Infrastructure-Aware
+```
+Orchestrator reads task
+  → Implementer Agent      (fresh context, writes code, tests, commits)
+  → Compliance Reviewer    (reads actual code vs requirements)
+  → Quality Reviewer       (architecture, error handling, readiness)
+  → log-implementation     (record artifacts)
+  → mark complete
 
-Not just code. The workflow extends beyond source files to container deployments, DNS management, secret storage, and reverse proxy configuration. The AI knows the full stack -- from `git commit` to production traffic flow. Skills and agents can be written for any infrastructure tooling.
+Tasks with zero file overlap execute concurrently in batches.
+```
 
-### 2. Living Documentation
+**[Case Study: Forge](docs/CASE-STUDY-FORGE.md)** -- empty repo to deployed production app in 3 hours, 23 tasks across 30 parallel subagents, 8 dashboard approval gates, zero file conflicts.
 
-Three-tier knowledge hierarchy: DocVault ([Obsidian](https://github.com/obsidianmd/obsidian-releases) vault) for architecture, [mem0](https://github.com/mem0ai/mem0) for cross-session episodic memory, and in-repo CLAUDE.md files for gate enforcement. Documentation is read before every architectural decision and updated after every implementation.
+## Code Intelligence
 
-### 3. Multi-Project Orchestration
+Agents shouldn't grep blindly through your codebase. Four search tiers, cheapest first:
 
-Designed for developers managing multiple repositories. When installed at the user level, skills and conventions are shared across all projects -- issue prefixes distinguish work per repo, worktree conventions isolate feature work, and documentation stays centralized. The same workflow scales from a single project to a full portfolio.
+| Tier | Engine | Query Style |
+|------|--------|-------------|
+| 1 | Code Graph Context (Neo4j) | Structural: "what calls this function?" |
+| 2 | Code Context (Milvus) | Semantic: "find code related to payment processing" |
+| 3 | Grep / Glob | Literal: exact strings, filenames, identifiers |
+| 4 | Code Oracle Agent | Deep analysis: combines all sources + AI reasoning |
 
-### 4. Verification is Cultural
-
-Nine mandatory gates, systematic debugging before fixes, evidence before assertions. The system does not trust the AI's claim that something works; it requires proof.
-
-### 5. Evolved, Not Designed
-
-Born from rEngine (August 2025), a 2688-file "agentic OS." Seven months of daily production use refined every gate, every skill, and every agent pattern through real pressure.
+Code Context is a [hardened fork](https://github.com/lbruton/claude-context) of Zilliz's MCP server -- self-hosted Milvus, 30s timeouts, pinned npm versions. No collection limits, full data sovereignty.
 
 ## Comparison
 
-| Framework | Approval Gates | Memory | Best For |
-|-----------|----------------|--------|----------|
-| **SpecKit** (GitHub) | None | constitution.md (static) | Quick adoption, any AI tool |
-| **BMAD** | Advisory (PO reports) | Document-based (git) | Enterprise, team simulation |
-| **GSD** | UAT phase | STATE.md (single file) | Solo devs, context engineering |
-| **Taskmaster** | None | tasks.json (static) | PRD-to-tasks pipeline |
-| **Pimzino** (upstream) | Dashboard (blocking) | Steering docs | Teams wanting structured workflow + audit trail |
-| **SpecFlow** (this fork) | Dashboard (hard gates) + skill enforcement | Steering docs + DocVault + mem0 | Multi-project, high-governance |
-
-## Prerequisites
-
-The core spec workflow (upstream functionality) works out of the box with just Node.js. The fork's extended features use additional tools:
-
-| Component | Required For | Link |
-|-----------|-------------|------|
-| [Obsidian](https://github.com/obsidianmd/obsidian-releases) | DocVault knowledge base (living documentation tier) | [obsidian.md](https://obsidian.md) |
-| [mem0](https://github.com/mem0ai/mem0) | Cross-session episodic memory (MCP server) | [mem0.ai](https://mem0.ai) |
-| [Claude Code](https://claude.ai/claude-code) | CLI agent that consumes the MCP server | [docs](https://docs.anthropic.com/en/docs/claude-code) |
-
-These are optional -- the upstream spec workflow, dashboard, and approval system work without them.
+| Dimension | SpecKit | BMAD | GSD | Taskmaster | mex | Pimzino | **SpecFlow** |
+|-----------|---------|------|-----|------------|-----|---------|------------|
+| Approval gates | None | Advisory | UAT | None | None | Dashboard | **Dashboard + skills** |
+| Memory | constitution.md | Git docs | STATE.md | tasks.json | Scaffold | Steering docs | **3-tier** |
+| Session learning | None | None | None | None | GROW loop | None | **/prime → /goodnight** |
+| Code search | None | None | None | None | None | None | **Semantic + structural** |
+| Multi-project | Per-repo | Per-repo | Per-repo | Per-repo | Per-repo | Per-repo | **One vault, all repos** |
+| Infrastructure | Code only | Code only | Code only | Code only | Code only | Code only | **Docker, DNS, VMs** |
+| Drift detection | None | None | None | None | 8 checkers | None | /vault-update gate |
+| Self-hosted | Files | Files | Files | Files | Files | Node.js | **Milvus, Neo4j, Ollama** |
+| Best for | Quick adoption | Enterprise teams | Solo context eng. | PRD pipelines | Per-repo memory | Structured workflow | **Multi-project governance** |
 
 ## Quick Start
 
 ### As a Claude Code Plugin (recommended)
-
-Clone and symlink:
 
 ```bash
 git clone https://github.com/lbruton/spec-workflow-mcp.git
@@ -99,8 +130,6 @@ ln -s "$(pwd)" ~/.claude/plugins/marketplaces/specflow-marketplace
 ```
 
 ### As an MCP Server
-
-Add to your MCP configuration:
 
 ```json
 {
@@ -115,10 +144,9 @@ Add to your MCP configuration:
 
 ### Dashboard
 
-The dashboard runs on port 5051 by default and provides real-time spec tracking, approval workflows, and implementation logs.
+Real-time web UI for spec tracking, approvals, and implementation logs. Port 5051 by default.
 
 ```bash
-# Start dashboard
 npx @lbruton/spec-workflow-mcp@latest --dashboard --port 5051
 ```
 
@@ -139,59 +167,48 @@ npx @lbruton/spec-workflow-mcp@latest --dashboard --port 5051
 |--------|-------------|
 | `create-spec` | Create a new spec from requirements |
 | `implement-task` | Generate implementation plan for a task |
-| `review-spec` | Review and provide feedback on a spec |
 | `create-steering-doc` | Create project steering documentation |
-| `spec-workflow-overview` | Get lifecycle and usage overview |
-| `troubleshoot-spec` | Diagnose spec workflow issues |
-| `configure-workflow` | Configure workflow settings |
+| `refresh-tasks` | Re-sync task state from spec files |
+| + 3 injection prompts | Context injection for guides |
+
+## Prerequisites
+
+The core spec workflow works out of the box with Node.js. Extended features use:
+
+| Component | Purpose | Link |
+|-----------|---------|------|
+| [Obsidian](https://obsidian.md) | DocVault knowledge base | [obsidian.md](https://obsidian.md) |
+| [mem0](https://github.com/mem0ai/mem0) | Cross-session episodic memory | [mem0.ai](https://mem0.ai) |
+| [Milvus](https://milvus.io) | Self-hosted vector DB for Code Context | [milvus.io](https://milvus.io) |
+| [Claude Code](https://claude.ai/claude-code) | CLI agent that consumes MCP servers | [docs](https://docs.anthropic.com/en/docs/claude-code) |
 
 ## Architecture
 
 ```
 src/
-  tools/           # MCP tool definitions
-  prompts/         # MCP prompt definitions
-  core/            # Shared logic (parser, task-parser, path-utils)
-  dashboard/       # Dashboard UI server
-  types.ts         # Shared TypeScript types
-  index.ts         # Server entry point
+  tools/               # MCP tool definitions (6 tools)
+  prompts/             # MCP prompt definitions (7 prompts)
+  core/                # Shared logic (parser, task-parser, path-utils)
+  dashboard/           # Dashboard backend (multi-server, approval-storage)
+  dashboard_frontend/  # React 18 frontend (Vite + Tailwind)
+  markdown/            # Document and review templates
+  types.ts             # Shared TypeScript types
+  index.ts             # CLI entry point
 ```
 
-## What This Fork Adds
+## Roadmap
 
-Pimzino's upstream is a complete, production-ready spec-driven workflow. This fork extends it for a specific use case: a solo developer managing multiple repositories with shared infrastructure. These additions are opinionated and may not suit every setup.
-
-| Area | Upstream Provides | This Fork Adds |
-|------|-------------------|----------------|
-| Lifecycle | 4-phase workflow with dashboard approvals | Pre-workflow discovery + post-workflow retros |
-| **Implementation** | **Sequential, in-session task execution** | **Subagent dispatch with parallel batching, spec compliance review, and code quality review -- the biggest architectural change (see below)** |
-| Core workflow | Approval gates per phase | Additional validation gates and guard rails |
-| Dashboard UI | Real-time dashboard with spec/approval views | UI refinements, collapsible panels, branding, cleanup of project-specific content |
-| Knowledge | Steering docs for project context | Keeps steering docs + adds DocVault (Obsidian) and mem0 for cross-session recall |
-| Issue tracking | Spec-based task tracking | Vault-based markdown issues with prefixed IDs |
-| Versioning | Flexible (user-managed) | Version lock protocol per project type |
-| Quick work | Full workflow for all changes | `/gsd`, `/chat` bypass paths for small fixes |
-| PR pipeline | Implementation logging | Pre-PR verification + Codacy quality scans |
-| Infrastructure | Code-focused | Extensible to container, DNS, and deployment tooling |
-
-### Implementation Model: Subagent Dispatch
-
-The biggest architectural change from upstream is how tasks are executed. Upstream implements tasks sequentially in the current session -- one task at a time, code written inline. This fork introduces a three-stage subagent pipeline:
-
-```
-Orchestrator reads task
-  -> Dispatch Implementer Agent (fresh context, writes code, tests, commits)
-  -> Dispatch Spec Compliance Reviewer (reads actual code vs requirements)
-  -> Dispatch Code Quality Reviewer (architecture, error handling, production readiness)
-  -> Log implementation artifacts
-  -> Mark task complete
-```
-
-Because each stage runs in an isolated subagent context, the orchestrator session stays clean and multiple tasks can run through this pipeline in parallel. A File Touch Map analysis identifies which tasks have zero file overlap, and those tasks are dispatched simultaneously in batches.
-
-In practice, this means 5-6 independent tasks execute concurrently -- what would take hours sequentially completes in minutes. The [Forge case study](docs/CASE-STUDY-FORGE.md) demonstrates this with 30 parallel subagent dispatches achieving zero file conflicts across 23 tasks.
-
-This fork is under active development -- more dashboard UI improvements and workflow enhancements are in progress. See [FORK-CHANGELOG.md](FORK-CHANGELOG.md) for a detailed list of changes.
+- [x] SpecFlow MCP server -- spec lifecycle + dashboard
+- [x] DocVault -- cross-project knowledge vault
+- [x] Code Context -- semantic search (Milvus, self-hosted)
+- [x] Code Graph Context -- structural search (Neo4j, local)
+- [x] 60+ skills -- procedural knowledge routing
+- [x] Memory pipeline -- session digests via local Ollama
+- [ ] Rebrand Code Context -- merge into SpecFlow plugin
+- [ ] Self-host mem0 -- fork + local deployment
+- [ ] Self-host CGC -- fork + local Neo4j bundle
+- [ ] Unified Docker container -- all services in one stack
+- [ ] One-command install for any project
 
 ## Development
 
@@ -203,7 +220,7 @@ npm run dev        # Development mode with hot reload
 
 ## Upstream Documentation
 
-The original project's documentation remains applicable for core functionality:
+Core functionality docs from Pimzino's project:
 
 - [Configuration Guide](docs/CONFIGURATION.md)
 - [User Guide](docs/USER-GUIDE.md)
@@ -211,10 +228,12 @@ The original project's documentation remains applicable for core functionality:
 - [Prompting Guide](docs/PROMPTING-GUIDE.md)
 - [Tools Reference](docs/TOOLS-REFERENCE.md)
 
+## Credits
+
+**[Pimzino/spec-workflow-mcp](https://github.com/Pimzino/spec-workflow-mcp)** is the foundation. Pimzino designed and built the core architecture: the MCP server, sequential spec workflow, real-time dashboard with blocking approval gates, approval storage, markdown parser, implementation logging, template engine, multi-language support, VSCode extension, Docker deployment, and security hardening. SpecFlow adds workflow extensions, knowledge architecture, and code intelligence on top of that substantial foundation.
+
+**[Zilliz/claude-context](https://github.com/zilliztech/mcp-server-milvus)** provides the semantic code search engine that Code Context is forked from.
+
 ## License
 
 GPL-3.0 -- same as upstream.
-
-## Credits
-
-**[Pimzino/spec-workflow-mcp](https://github.com/Pimzino/spec-workflow-mcp)** is the foundation this fork is built on. Pimzino designed and built the core architecture: the MCP server, the sequential spec workflow, the real-time dashboard with blocking approval gates, the approval storage system, the markdown spec parser, implementation logging, the template engine, multi-language support (11 languages), the VSCode extension, Docker deployment, and the security hardening. This fork adds workflow extensions and integrations on top of that substantial foundation.
