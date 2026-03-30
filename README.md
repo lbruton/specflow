@@ -13,7 +13,7 @@
 </p>
 
 <p align="center">
-  <a href="launch/index.html"><strong>View the full interactive about page</strong></a> &bull;
+  <a href="https://lbruton.github.io/specflow/"><strong>View the full interactive about page</strong></a> &bull;
   <a href="docs/CASE-STUDY-FORGE.md">Case Study: Forge</a> &bull;
   <a href="FORK-CHANGELOG.md">Changelog</a>
 </p>
