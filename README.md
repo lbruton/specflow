@@ -7,7 +7,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/lbruton/spec-workflow-mcp"><img src="https://img.shields.io/badge/license-GPL--3.0-green" alt="License"></a>
+  <a href="https://github.com/lbruton/specflow"><img src="https://img.shields.io/badge/license-GPL--3.0-green" alt="License"></a>
   <img src="https://img.shields.io/badge/MCP_Server-Plugin-6366f1" alt="MCP Server Plugin">
   <img src="https://img.shields.io/badge/self--hosted-zero_cloud_deps-22c55e" alt="Self-hosted">
 </p>
@@ -121,7 +121,7 @@ Code Context is a [hardened fork](https://github.com/lbruton/claude-context) of 
 ### As a Claude Code Plugin (recommended)
 
 ```bash
-git clone https://github.com/lbruton/spec-workflow-mcp.git
+git clone https://github.com/lbruton/specflow.git
 cd spec-workflow-mcp
 npm install && npm run build
 
@@ -136,7 +136,7 @@ ln -s "$(pwd)" ~/.claude/plugins/marketplaces/specflow-marketplace
   "mcpServers": {
     "spec-workflow": {
       "command": "npx",
-      "args": ["-y", "@lbruton/spec-workflow-mcp@latest", "/path/to/your/project"]
+      "args": ["-y", "@lbruton/specflow@latest", "/path/to/your/project"]
     }
   }
 }
@@ -147,7 +147,7 @@ ln -s "$(pwd)" ~/.claude/plugins/marketplaces/specflow-marketplace
 Real-time web UI for spec tracking, approvals, and implementation logs. Port 5051 by default.
 
 ```bash
-npx @lbruton/spec-workflow-mcp@latest --dashboard --port 5051
+npx @lbruton/specflow@latest --dashboard --port 5051
 ```
 
 ## MCP Tools

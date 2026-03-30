@@ -1,30 +1,30 @@
-# spec-workflow-mcp (spex / specflow)
+# SpecFlow
 
-Forked MCP server plugin for spec-driven development with a real-time web dashboard. Powers the spec workflow across all projects.
+MCP server plugin for spec-driven development with a real-time web dashboard. Powers the spec workflow across all projects.
 
 ## Quick Reference
 
 | Field | Value |
 |-------|-------|
-| Package | `@lbruton/spec-workflow-mcp` |
+| Package | `@lbruton/specflow` |
 | Version | `2.2.4-lbruton.2` |
 | Upstream | [Pimzino/spec-workflow-mcp](https://github.com/Pimzino/spec-workflow-mcp) |
-| Origin | [lbruton/spec-workflow-mcp](https://github.com/lbruton/spec-workflow-mcp) |
+| Origin | [lbruton/specflow](https://github.com/lbruton/specflow) |
 | Branch | `main` (direct commits OK) |
-| Symlinked from | `~/.claude/plugins/marketplaces/spec-workflow-mcp-marketplace/` |
-| MCP cache entry | `~/.claude/plugins/cache/spec-workflow-mcp-marketplace/specflow-with-dashboard/2.2.4-lbruton.2/.mcp.json` |
+| Symlinked from | `~/.claude/plugins/marketplaces/specflow-marketplace/` |
+| MCP cache entry | `~/.claude/plugins/cache/specflow-marketplace/specflow-with-dashboard/.../.mcp.json` |
 | Dashboard port | 5051 |
 | Dashboard service | `com.spec-workflow.dashboard` (launchd) |
 | Issue prefix | `SWF` |
 
 ## DocVault — Project Documentation
 
-Technical documentation lives in **DocVault** at `/Volumes/DATA/GitHub/DocVault/Projects/spec-workflow-mcp/`. mem0 supplements with session context and past decisions. Read both before discussing architecture or planning changes.
+Technical documentation lives in **DocVault** at `/Volumes/DATA/GitHub/DocVault/Projects/SpecFlow/`. mem0 supplements with session context and past decisions. Read both before discussing architecture or planning changes.
 
 Key pages: `Overview.md`, `Architecture.md`, `Tools & Prompts.md`, `Dashboard.md`, `Fork Divergence.md`, `Lifecycle Compliance.md`, `Spec Flow Lifecycle.canvas`.
 
 ```
-Read /Volumes/DATA/GitHub/DocVault/Projects/spec-workflow-mcp/Overview.md
+Read /Volumes/DATA/GitHub/DocVault/Projects/SpecFlow/Overview.md
 ```
 
 When making changes that affect documented behavior, run `/vault-update` before pushing.
@@ -34,9 +34,9 @@ When making changes that affect documented behavior, run `/vault-update` before 
 This repo is symlinked into the Claude Code plugin directory. Building here updates the MCP server directly — no sync step needed.
 
 ```
-/Volumes/DATA/GitHub/spec-workflow-mcp/          <-- you are here (canonical source)
+/Volumes/DATA/GitHub/specflow/              <-- you are here (canonical source)
     symlinked as:
-~/.claude/plugins/marketplaces/spec-workflow-mcp-marketplace/
+~/.claude/plugins/marketplaces/specflow-marketplace/
     loaded by MCP via:
 ~/.claude/plugins/cache/.../dist/index.js
 ```
@@ -99,4 +99,4 @@ Never leave uncommitted source changes. `dist/` is gitignored -- if you build wi
 
 ## Consumers
 
-This plugin is loaded by every project: StakTrakr, HexTrackr, StakTrakrApi, HelloKittyFriends, WhoseOnFirst, Playground. Changes here affect all of them. Test carefully.
+This plugin is loaded by every project: StakTrakr, HexTrackr, StakTrakrApi, MyMelo, WhoseOnFirst, Playground. Changes here affect all of them. Test carefully.

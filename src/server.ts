@@ -42,7 +42,7 @@ export class SpecWorkflowMCPServer {
     }, {} as Record<string, {}>);
 
     this.server = new Server({
-      name: 'spec-workflow-mcp',
+      name: 'specflow',
       version: packageJson.version
     }, {
       capabilities: {

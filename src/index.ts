@@ -14,10 +14,10 @@ const DEFAULT_DASHBOARD_PORT = 5000;
 
 function showHelp() {
   console.error(`
-Spec Workflow MCP Server - A Model Context Protocol server for spec-driven development
+SpecFlow — Spec-driven development with persistent project memory
 
 USAGE:
-  spec-workflow-mcp [path] [options]
+  specflow [path] [options]
 
 ARGUMENTS:
   path                    Project path (defaults to current directory)
@@ -42,15 +42,15 @@ IMPORTANT:
 MODES OF OPERATION:
 
 1. MCP Server Only (default):
-   spec-workflow-mcp
-   spec-workflow-mcp ~/my-project
+   specflow
+   specflow ~/my-project
 
    Starts MCP server without dashboard. Dashboard can be started separately.
 
 2. Dashboard Only Mode:
-   spec-workflow-mcp --dashboard
-   spec-workflow-mcp --dashboard --port 8080
-   spec-workflow-mcp --dashboard --no-open
+   specflow --dashboard
+   specflow --dashboard --port 8080
+   specflow --dashboard --no-open
 
    Runs only the web dashboard without MCP server (default port: 5000).
    Projects will automatically appear in the dashboard as MCP servers register.
@@ -59,25 +59,25 @@ MODES OF OPERATION:
 
 EXAMPLES:
   # Start MCP server in current directory (no dashboard)
-  spec-workflow-mcp
+  specflow
 
   # Start MCP server in a specific project directory
-  spec-workflow-mcp ~/projects/my-app
+  specflow ~/projects/my-app
 
   # Run dashboard (default port 5000) - START THIS FIRST
-  spec-workflow-mcp --dashboard
+  specflow --dashboard
 
   # Run dashboard on custom port (if 5000 is unavailable)
-  spec-workflow-mcp --dashboard --port 8080
+  specflow --dashboard --port 8080
 
 TYPICAL WORKFLOW:
   1. Start the dashboard once:
-     spec-workflow-mcp --dashboard
+     specflow --dashboard
 
   2. Start MCP servers for your projects (in separate terminals):
-     spec-workflow-mcp ~/project1
-     spec-workflow-mcp ~/project2
-     spec-workflow-mcp ~/project3
+     specflow ~/project1
+     specflow ~/project2
+     specflow ~/project3
 
   All projects will appear in the same dashboard at http://localhost:5000
 
@@ -85,7 +85,7 @@ PARAMETER FORMATS:
   --port 3456             Space-separated format
   --port=3456             Equals format
 
-For more information, visit: https://github.com/Pimzino/spec-workflow-mcp
+For more information, visit: https://github.com/lbruton/specflow
 `);
 }
 
