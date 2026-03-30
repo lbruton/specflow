@@ -1,6 +1,6 @@
 {
   "name": "@lbruton/specflow",
-  "version": "2.2.4-lbruton.2",
+  "version": "3.0.0",
   "description": "MCP server for spec-driven development workflow with real-time web dashboard",
   "main": "dist/index.js",
   "type": "module",
