@@ -438,7 +438,7 @@
     </div>
     <div class="hero-badge">MCP Server Plugin &bull; Open Source</div>
     <h1>Spec-driven development with<br><span class="gradient">persistent project memory</span></h1>
-    <p>AI agents lose context between sessions. They forget decisions, repeat mistakes, and drift from reality. SpecFlow gives them a structured lifecycle, persistent memory, and semantic code intelligence &mdash; all self-hosted.</p>
+    <p>AI agents lose context between sessions. They forget decisions, repeat mistakes, and drift from reality. SpecFlow gives them a structured lifecycle, persistent memory, and semantic code intelligence &mdash; self-hosted core with optional cloud integrations.</p>
     <div class="hero-ctas">
       <a href="https://github.com/lbruton/specflow" class="btn btn-primary">
         View on GitHub
@@ -543,7 +543,7 @@
 <section id="intelligence">
   <div class="container">
     <h2>Code intelligence, self-hosted</h2>
-    <p class="dim">Agents shouldn't grep blindly through your codebase. Code Context gives them semantic understanding &mdash; search by meaning, not string matching. Backed by a self-hosted Milvus vector database with zero cloud dependencies.</p>
+    <p class="dim">Agents shouldn't grep blindly through your codebase. Code Context gives them semantic understanding &mdash; search by meaning, not string matching. Backed by a self-hosted Milvus vector database. Embedding generation uses a cloud API or local model via Ollama.</p>
 
     <div class="feature-grid">
       <div class="feature-card">
@@ -692,7 +692,7 @@
 <span class="output">    Saves to mem0 as structured retro-learning memories</span>
 <span class="output">  Step 2: /digest-session</span>
 <span class="output">    Reads JSONL session transcripts</span>
-<span class="output">    Summarizes via local Ollama (no cloud API calls)</span>
+<span class="output">    Summarizes via configurable LLM (local Ollama or cloud Haiku/Sonnet/Opus)</span>
 <span class="output">    Writes daily digest to DocVault/Daily Digests/</span>
 <span class="output">    Saves key facts to mem0 for cross-session recall</span>
 
@@ -978,7 +978,7 @@
 <span class="success">&#x2713;</span> <span class="output">Code Context — semantic search (Milvus, self-hosted)</span>        <span class="success">shipped</span>
 <span class="success">&#x2713;</span> <span class="output">Code Graph Context — structural search (Neo4j, local)</span>       <span class="success">shipped</span>
 <span class="success">&#x2713;</span> <span class="output">60+ skills — procedural knowledge routing</span>                   <span class="success">shipped</span>
-<span class="success">&#x2713;</span> <span class="output">Memory pipeline — session digests via local Ollama</span>           <span class="success">shipped</span>
+<span class="success">&#x2713;</span> <span class="output">Memory pipeline — session digests (local Ollama or cloud LLM)</span>           <span class="success">shipped</span>
 
 <span class="highlight">&#x25cb;</span> <span class="output">Rebrand Code Context — merge into SpecFlow plugin</span>           <span class="highlight">next</span>
 <span class="highlight">&#x25cb;</span> <span class="output">Self-host mem0 — fork + local deployment</span>                    <span class="highlight">planned</span>
@@ -988,7 +988,7 @@
     </div>
 
     <p style="text-align: center; margin-top: 24px;">
-      <span class="dim">The end state: a single installable system that gives any AI agent persistent memory, semantic code search, structural code intelligence, and spec-driven workflow &mdash; all self-hosted, zero cloud dependencies.</span>
+      <span class="dim">The end state: a single installable system that gives any AI agent persistent memory, semantic code search, structural code intelligence, and spec-driven workflow &mdash; self-hosted core, cloud optional.</span>
     </p>
   </div>
 </section>
@@ -997,7 +997,7 @@
 <section class="cta-section">
   <div class="container">
     <h2>Stop re-explaining your project every session</h2>
-    <p>SpecFlow is open source and runs entirely on your machine. No cloud dependencies. No token waste. No amnesia.</p>
+    <p>SpecFlow is open source. The core workflow runs entirely on your machine. Cloud integrations (mem0, embeddings, session digests) are optional and configurable &mdash; use local models or cloud APIs based on your preference and hardware.</p>
     <div class="hero-ctas">
       <a href="https://github.com/lbruton/specflow" class="btn btn-primary">
         Star on GitHub

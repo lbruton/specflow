@@ -9,7 +9,7 @@
 <p align="center">
   <a href="https://github.com/lbruton/specflow"><img src="https://img.shields.io/badge/license-GPL--3.0-green" alt="License"></a>
   <img src="https://img.shields.io/badge/MCP_Server-Plugin-6366f1" alt="MCP Server Plugin">
-  <img src="https://img.shields.io/badge/self--hosted-zero_cloud_deps-22c55e" alt="Self-hosted">
+  <img src="https://img.shields.io/badge/self--hosted-cloud_optional-22c55e" alt="Self-hosted, cloud optional">
 </p>
 
 <p align="center">
@@ -20,7 +20,7 @@
 
 ---
 
-AI agents forget everything between sessions. They lose decisions, repeat mistakes, and drift from reality. **SpecFlow** gives them a structured lifecycle, persistent cross-project memory, and semantic code intelligence -- all self-hosted.
+AI agents forget everything between sessions. They lose decisions, repeat mistakes, and drift from reality. **SpecFlow** gives them a structured lifecycle, persistent cross-project memory, and semantic code intelligence -- self-hosted core with optional cloud integrations.
 
 Built on [Pimzino/spec-workflow-mcp](https://github.com/Pimzino/spec-workflow-mcp)'s core engine (sequential spec workflow, real-time dashboard, blocking approval gates). This fork layers extended lifecycle phases, multi-project orchestration, three-tier knowledge architecture, and semantic code search on top.
 
@@ -41,7 +41,7 @@ Not everything belongs in one file. Each tier has a purpose and a source of trut
 |------|--------|------|
 | **1** | DocVault | Ground truth. Human-curated Obsidian vault. Wins all conflicts. |
 | **2** | File Memory | Session context. Project-scoped markdown at `~/.claude/projects/*/memory/`. |
-| **3** | mem0 | Episodic recall. Semantic retrieval from session digests. Never authoritative. |
+| **3** | mem0 | Episodic recall. Semantic retrieval from session digests. Never authoritative. Cloud API by default; self-hosted fork planned. |
 
 ## Continuous Learning Loop
 
@@ -53,9 +53,9 @@ Every session learns from the previous. This is the single biggest differentiato
   ├─ Read recent digests        │   └─ Extract prescriptive lessons → mem0
   ├─ Pull mem0 memories         └─ /digest-session
   ├─ Check issues + git             ├─ Read JSONL transcripts
-  └─ "Here's where you left off"    ├─ Summarize via local Ollama
+  └─ "Here's where you left off"    ├─ Summarize via configurable LLM (Ollama or cloud)
                                      ├─ Write to DocVault/Daily Digests/
-                                     └─ Save key facts to mem0
+                                     └─ Save key facts to mem0 (cloud API)
 
   Tomorrow's /prime reads today's digest + retro lessons
 ```
@@ -100,7 +100,7 @@ Agents shouldn't grep blindly through your codebase. Four search tiers, cheapest
 | 3 | Grep / Glob | Literal: exact strings, filenames, identifiers |
 | 4 | Code Oracle Agent | Deep analysis: combines all sources + AI reasoning |
 
-Code Context is a [hardened fork](https://github.com/lbruton/claude-context) of Zilliz's MCP server -- self-hosted Milvus, 30s timeouts, pinned npm versions. No collection limits, full data sovereignty.
+Code Context is a [hardened fork](https://github.com/lbruton/claude-context) of Zilliz's MCP server -- self-hosted Milvus, 30s timeouts, pinned npm versions. No collection limits, full data sovereignty. Embedding generation requires a cloud API (OpenAI or compatible) or a local model via Ollama.
 
 ## Comparison
 
@@ -113,7 +113,7 @@ Code Context is a [hardened fork](https://github.com/lbruton/claude-context) of 
 | Multi-project | Per-repo | Per-repo | Per-repo | Per-repo | Per-repo | Per-repo | **One vault, all repos** |
 | Infrastructure | Code only | Code only | Code only | Code only | Code only | Code only | **Docker, DNS, VMs** |
 | Drift detection | None | None | None | None | 8 checkers | None | /vault-update gate |
-| Self-hosted | Files | Files | Files | Files | Files | Node.js | **Milvus, Neo4j, Ollama** |
+| Self-hosted | Files | Files | Files | Files | Files | Node.js | **Milvus, Neo4j + cloud optional** |
 | Best for | Quick adoption | Enterprise teams | Solo context eng. | PRD pipelines | Per-repo memory | Structured workflow | **Multi-project governance** |
 
 ## Quick Start
@@ -173,12 +173,12 @@ npx @lbruton/specflow@latest --dashboard --port 5051
 
 ## Prerequisites
 
-The core spec workflow works out of the box with Node.js. Extended features use:
+The core spec workflow works out of the box with Node.js. Extended features use additional services -- some self-hosted, some cloud-based. Local LLM support exists via Ollama but results vary significantly by model size and hardware (a capable GPU is recommended; smaller models may produce lower-quality output):
 
 | Component | Purpose | Link |
 |-----------|---------|------|
 | [Obsidian](https://obsidian.md) | DocVault knowledge base | [obsidian.md](https://obsidian.md) |
-| [mem0](https://github.com/mem0ai/mem0) | Cross-session episodic memory | [mem0.ai](https://mem0.ai) |
+| [mem0](https://github.com/mem0ai/mem0) | Cross-session episodic memory (cloud API; self-hosted fork planned) | [mem0.ai](https://mem0.ai) |
 | [Milvus](https://milvus.io) | Self-hosted vector DB for Code Context | [milvus.io](https://milvus.io) |
 | [Claude Code](https://claude.ai/claude-code) | CLI agent that consumes MCP servers | [docs](https://docs.anthropic.com/en/docs/claude-code) |
 
@@ -203,7 +203,7 @@ src/
 - [x] Code Context -- semantic search (Milvus, self-hosted)
 - [x] Code Graph Context -- structural search (Neo4j, local)
 - [x] 60+ skills -- procedural knowledge routing
-- [x] Memory pipeline -- session digests via local Ollama
+- [x] Memory pipeline -- session digests (configurable: local Ollama or cloud models like Haiku/Sonnet/Opus)
 - [ ] Rebrand Code Context -- merge into SpecFlow plugin
 - [ ] Self-host mem0 -- fork + local deployment
 - [ ] Self-host CGC -- fork + local Neo4j bundle
