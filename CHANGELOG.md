@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 SpecFlow is a fork of [Pimzino/spec-workflow-mcp](https://github.com/Pimzino/spec-workflow-mcp). Upstream releases (≤ 2.2.3) are preserved below. SpecFlow releases begin at 3.0.0.
 
+## [3.1.0] - 2026-03-31
+
+### Added
+
+- **`/wrap` prompt** (SWF-50) -- End-of-session orchestrator. Verifies PR merged, cleans worktrees, updates DocVault, captures retro lessons to mem0, writes session digest directly from in-context model. Replaces `/goodnight` and `/digest-session` with higher-fidelity single workflow.
+- **`/prime` prompt** (SWF-52) -- Fast session quick-start (~15 seconds, no agents). Gathers git status, open issues/PRs, today's vault digest, and targeted mem0 search. `prime full` mode available for deep scans with code-oracle, Codacy, and indexing.
+- **`/audit` prompt** (SWF-51) -- On-demand project health check. Scans code quality (CGC dead code, complexity), security posture (Codacy SRM), instruction file drift (CLAUDE.md vs Agents.md vs Gemini.md), issue landscape, and index health. Focused mode available via `focus` argument.
+
+### Changed
+
+- **Session lifecycle redesign** -- split monolithic `/prime` into three focused skills: `/prime` (start fast), `/audit` (scan deep), `/wrap` (close clean). Each skill does one thing well at the right time.
+- **Prompt count** -- 7 → 10 registered MCP prompts.
+
+### Deprecated
+
+- **`/goodnight`** -- replaced by `/wrap` which adds worktree cleanup, issue closure, and log-implementation gates.
+- **`/digest-session`** -- absorbed into `/wrap`. Session summaries now written directly by the in-context model instead of dispatching Haiku agents over JSONL transcripts.
+
 ## [3.0.1] - 2026-03-29
 
 ### Added
