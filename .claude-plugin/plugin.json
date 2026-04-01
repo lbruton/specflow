@@ -1,6 +1,6 @@
 {
   "name": "specflow",
-  "version": "2.2.4-lbruton.2",
+  "version": "3.1.0",
   "description": "Spec-driven development framework with structured lifecycle, governance gates, and real-time dashboard.",
   "author": {
     "name": "lbruton"

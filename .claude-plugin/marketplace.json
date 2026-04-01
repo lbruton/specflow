@@ -9,7 +9,7 @@
   "plugins": [
     {
       "name": "specflow",
-      "version": "2.2.4-lbruton.2",
+      "version": "3.1.0",
       "description": "Spec-driven development framework with structured lifecycle, governance gates, and real-time dashboard.",
       "author": {
         "name": "lbruton"
@@ -17,17 +17,6 @@
       "license": "GPL-3.0",
       "homepage": "https://github.com/lbruton/specflow",
       "source": "./.claude-plugin"
-    },
-    {
-      "name": "specflow-with-dashboard",
-      "version": "2.2.4-lbruton.2",
-      "description": "SpecFlow MCP server with auto-started real-time dashboard for spec-driven development.",
-      "author": {
-        "name": "lbruton"
-      },
-      "license": "GPL-3.0",
-      "homepage": "https://github.com/lbruton/specflow",
-      "source": "./.claude-plugin/with-dashboard"
     }
   ]
 }
