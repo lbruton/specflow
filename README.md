@@ -28,7 +28,7 @@ Built on [Pimzino/spec-workflow-mcp](https://github.com/Pimzino/spec-workflow-mc
 
 | System | What It Does |
 |--------|-------------|
-| **SpecFlow** (MCP Server) | Spec-driven lifecycle: Requirements → Design → Tasks → Implementation with dashboard approvals at every gate. 6 tools, 7 prompts. |
+| **SpecFlow** (MCP Server) | Spec-driven lifecycle: Requirements → Design → Tasks → Implementation with dashboard approvals at every gate. 6 tools, 10 prompts. |
 | **DocVault** (Obsidian Vault) | Cross-project knowledge base. One vault serves 8+ repos -- architecture, infrastructure, decisions, issues. Graph visualization + wikilinks. |
 | **Code Context** (Milvus) | Semantic code search via self-hosted vector database. Search by meaning, not keywords. Forked from [Zilliz/claude-context](https://github.com/zilliztech/mcp-server-milvus), hardened with timeouts and pinned versions. |
 | **Skill System** (60+ Skills) | CLAUDE.md stays tiny -- a routing table to skills. Each skill encodes a full workflow: debugging, deployment, PR resolution, infrastructure management. |
@@ -48,16 +48,18 @@ Not everything belongs in one file. Each tier has a purpose and a source of trut
 Every session learns from the previous. This is the single biggest differentiator.
 
 ```
-/prime (morning)              /goodnight (end of day)
-  ├─ Index codebase             ├─ /retro
-  ├─ Read recent digests        │   └─ Extract prescriptive lessons → mem0
-  ├─ Pull mem0 memories         └─ /digest-session
-  ├─ Check issues + git             ├─ Read JSONL transcripts
-  └─ "Here's where you left off"    ├─ Summarize via configurable LLM (Ollama or cloud)
-                                     ├─ Write to DocVault/Daily Digests/
-                                     └─ Save key facts to mem0 (cloud API)
-
-  Tomorrow's /prime reads today's digest + retro lessons
+/prime (session start)         /wrap (session end)
+  ├─ Index codebase (~15s)       ├─ Cleanup (stale branches, uncommitted work)
+  ├─ Read recent digests         ├─ /vault-update (documentation sync)
+  ├─ Pull mem0 memories          ├─ /retro (prescriptive lessons → mem0)
+  ├─ Check issues + git          └─ /digest-session (JSONL → DocVault + mem0)
+  ├─ Optional: --deep mode
+  └─ "Here's where you left off"
+                                 /audit (on-demand health check)
+  Tomorrow's /prime reads          ├─ Code quality + security scan
+  today's digest + retro           ├─ Documentation drift detection
+  lessons automatically            ├─ Issue staleness check
+                                   └─ Actionable remediation report
 ```
 
 ## Spec Workflow Lifecycle
@@ -65,10 +67,9 @@ Every session learns from the previous. This is the single biggest differentiato
 Every non-trivial feature follows the same path. Approvals required at each gate.
 
 ```
-Phase 0      Phase 1       Phase 2      Phase 3     Phase 4       Phase 5
-/chat    →   /discover  →  /spec    →   Design  →   Implement  →  /retro
+/prime (start) → /chat → /discover → /spec → Design → Implement → /audit (health) → /wrap (close)
 
-Bug fast path: /systematic-debugging → issue → fix (skip Phases 0-2)
+Bug fast path: /systematic-debugging → issue → fix (skip discovery/spec)
 Casual path:   /gsd — no issue, no spec, chore: PR
 ```
 
@@ -108,7 +109,7 @@ Code Context is a [hardened fork](https://github.com/lbruton/claude-context) of 
 |-----------|---------|------|-----|------------|-----|---------|------------|
 | Approval gates | None | Advisory | UAT | None | None | Dashboard | **Dashboard + skills** |
 | Memory | constitution.md | Git docs | STATE.md | tasks.json | Scaffold | Steering docs | **3-tier** |
-| Session learning | None | None | None | None | GROW loop | None | **/prime → /goodnight** |
+| Session learning | None | None | None | None | GROW loop | None | **/prime → /wrap** |
 | Code search | None | None | None | None | None | None | **Semantic + structural** |
 | Multi-project | Per-repo | Per-repo | Per-repo | Per-repo | Per-repo | Per-repo | **One vault, all repos** |
 | Infrastructure | Code only | Code only | Code only | Code only | Code only | Code only | **Docker, DNS, VMs** |
@@ -169,7 +170,12 @@ npx @lbruton/specflow@latest --dashboard --port 5051
 | `implement-task` | Generate implementation plan for a task |
 | `create-steering-doc` | Create project steering documentation |
 | `refresh-tasks` | Re-sync task state from spec files |
+| `wrap` | End-of-session orchestrator (cleanup, documentation, retro, digest) |
+| `prime` | Fast session quick-start (~15s) with optional deep mode |
+| `audit` | On-demand project health check (code, security, drift, issues) |
 | + 3 injection prompts | Context injection for guides |
+
+> **v3.1.0 note:** `/wrap` replaces the standalone `/goodnight` and `/digest-session` skills, which are now deprecated.
 
 ## Prerequisites
 
@@ -187,7 +193,7 @@ The core spec workflow works out of the box with Node.js. Extended features use 
 ```
 src/
   tools/               # MCP tool definitions (6 tools)
-  prompts/             # MCP prompt definitions (7 prompts)
+  prompts/             # MCP prompt definitions (10 prompts)
   core/                # Shared logic (parser, task-parser, path-utils)
   dashboard/           # Dashboard backend (multi-server, approval-storage)
   dashboard_frontend/  # React 18 frontend (Vite + Tailwind)

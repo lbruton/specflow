@@ -485,7 +485,7 @@
       <div class="feature-card">
         <div class="tag accent">SpecFlow &mdash; MCP Server</div>
         <h3>Spec-driven lifecycle</h3>
-        <p>Requirements &rarr; Design &rarr; Tasks &rarr; Implementation with dashboard approvals at every gate. Ships as a Claude Code MCP plugin with 6 tools and 7 prompts.</p>
+        <p>Requirements &rarr; Design &rarr; Tasks &rarr; Implementation with dashboard approvals at every gate. Ships as a Claude Code MCP plugin with 6 tools and 10 prompts.</p>
       </div>
       <div class="feature-card">
         <div class="tag purple">DocVault &mdash; Obsidian Vault</div>
@@ -683,21 +683,28 @@
 <span class="output">  Work produces commits, specs, implementation logs</span>
 <span class="output">  /handoff relays state between terminal sessions</span>
 
-<span class="highlight">End of day — /goodnight captures everything</span>
-<span class="cmd">/goodnight</span>
-<span class="output">  Step 1: /retro</span>
+<span class="highlight">End of session — /wrap orchestrates everything</span>
+<span class="cmd">/wrap</span>
+<span class="output">  Step 1: Cleanup (stale branches, uncommitted work)</span>
+<span class="output">  Step 2: /vault-update (sync documentation)</span>
+<span class="output">  Step 3: /retro</span>
 <span class="output">    Extracts prescriptive lessons from conversation</span>
-<span class="output">    "Always check both parsers when modifying spec parsing"</span>
-<span class="output">    "The Milvus health endpoint is /healthz, not /health"</span>
 <span class="output">    Saves to mem0 as structured retro-learning memories</span>
-<span class="output">  Step 2: /digest-session</span>
+<span class="output">  Step 4: /digest-session</span>
 <span class="output">    Reads JSONL session transcripts</span>
-<span class="output">    Summarizes via configurable LLM (local Ollama or cloud Haiku/Sonnet/Opus)</span>
+<span class="output">    Summarizes via configurable LLM (local Ollama or cloud)</span>
 <span class="output">    Writes daily digest to DocVault/Daily Digests/</span>
 <span class="output">    Saves key facts to mem0 for cross-session recall</span>
 
+<span class="highlight">On-demand — /audit checks project health</span>
+<span class="cmd">/audit</span>
+<span class="output">  Code quality + security scan</span>
+<span class="output">  Documentation drift detection</span>
+<span class="output">  Issue staleness check</span>
+<span class="output">  Actionable remediation report</span>
+
 <span class="comment">┌─────────────────────────────────────────────────────────┐</span>
-<span class="comment">│  /prime ──→ work ──→ /goodnight ──→ /prime ──→ ...      │</span>
+<span class="comment">│  /prime ──→ work ──→ /audit ──→ /wrap ──→ /prime ──→ .. │</span>
 <span class="comment">│  Tomorrow's /prime reads today's digest + retro lessons │</span>
 <span class="comment">└─────────────────────────────────────────────────────────┘</span></div>
     </div>
@@ -705,23 +712,23 @@
     <div class="feature-grid">
       <div class="feature-card">
         <div class="tag green">/prime</div>
-        <h3>Session startup with full context</h3>
-        <p>Indexes code, reads digests, pulls mem0 memories, checks issues and git status. The agent starts every session knowing what happened yesterday, what's in progress, and what's next.</p>
+        <h3>Fast session quick-start</h3>
+        <p>Boots in ~15 seconds: indexes code, reads digests, pulls mem0 memories, checks issues and git status. Optional <code>--deep</code> mode for thorough codebase analysis. The agent starts every session knowing what happened yesterday.</p>
       </div>
       <div class="feature-card">
-        <div class="tag accent">/retro</div>
+        <div class="tag accent">/wrap</div>
+        <h3>End-of-session orchestrator</h3>
+        <p>One command to close a session cleanly: cleanup stale branches, sync documentation via /vault-update, extract prescriptive lessons via /retro, then process session logs via /digest-session. Replaces the deprecated /goodnight and /digest-session skills.</p>
+      </div>
+      <div class="feature-card">
+        <div class="tag purple">/audit</div>
+        <h3>On-demand project health check</h3>
+        <p>Scans code quality, security posture, documentation drift, and issue staleness. Produces an actionable remediation report. Run anytime &mdash; before a release, after a sprint, or when things feel off.</p>
+      </div>
+      <div class="feature-card">
+        <div class="tag amber">/retro</div>
         <h3>Prescriptive lesson extraction</h3>
         <p>Not "what did we do" but "what should we do differently." Extracts actionable rules from the conversation and saves them as structured memories. Future sessions apply these lessons automatically.</p>
-      </div>
-      <div class="feature-card">
-        <div class="tag purple">/digest-session</div>
-        <h3>Session log processing</h3>
-        <p>Reads Claude Code JSONL transcripts, summarizes via local Ollama (llama3.2:3b), writes to DocVault daily digests, and saves key facts to mem0. Zero external API calls for digestion.</p>
-      </div>
-      <div class="feature-card">
-        <div class="tag amber">/goodnight</div>
-        <h3>End-of-day wrapup</h3>
-        <p>Runs /retro then /digest-session sequentially. One command captures everything: prescriptive lessons first, then descriptive session summaries. Tomorrow's /prime reads both.</p>
       </div>
     </div>
   </div>
@@ -806,7 +813,7 @@
           <td>None</td>
           <td>GROW loop</td>
           <td>None</td>
-          <td class="accent">/prime &rarr; work &rarr; /goodnight</td>
+          <td class="accent">/prime &rarr; /audit &rarr; /wrap</td>
         </tr>
         <tr>
           <td>Code search</td>
@@ -902,11 +909,14 @@
   <span class="cmd">log-implementation</span>     <span class="output">Record artifacts (functions, endpoints, tests)</span>
   <span class="cmd">spec-list</span>              <span class="output">List all specs with status</span>
 
-<span class="highlight">Prompts (7)</span>
+<span class="highlight">Prompts (10)</span>
   <span class="cmd">create-spec</span>            <span class="output">Create requirements, design, or tasks doc</span>
   <span class="cmd">create-steering-doc</span>    <span class="output">Create product/tech/structure steering</span>
   <span class="cmd">implement-task</span>         <span class="output">Dispatch implementation to subagents</span>
   <span class="cmd">refresh-tasks</span>          <span class="output">Re-sync task state from spec files</span>
+  <span class="cmd">wrap</span>                   <span class="output">End-of-session orchestrator (cleanup, docs, retro, digest)</span>
+  <span class="cmd">prime</span>                  <span class="output">Fast session quick-start (~15s, optional deep mode)</span>
+  <span class="cmd">audit</span>                  <span class="output">On-demand project health check</span>
   <span class="cmd">+ 3 injection prompts</span>  <span class="output">Context injection for guides</span></div>
     </div>
 
