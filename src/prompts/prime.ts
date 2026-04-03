@@ -82,7 +82,11 @@ Also gather these (parallel with above):
 # List open issues (scan frontmatter for status != done)
 grep -rl "status: backlog\\|status: todo\\|status: in-progress" /Volumes/DATA/GitHub/DocVault/Projects/<name>/Issues/*.md 2>/dev/null | head -50
 \`\`\`
-For each file found, read the first 15 lines and extract \`title\`, \`status\`, and \`priority\` from YAML frontmatter. If \`priority\` is absent, treat as P3. Store all three fields — they drive the urgency table in Phase 3.
+For each file found:
+- The **issue ID** is the filename without extension (e.g. \`FORGE-42.md\` → \`FORGE-42\`)
+- Read the first 15 lines and extract \`title\`, \`status\`, and \`priority\` from YAML frontmatter
+- If \`priority\` is absent, default to \`P3\`
+Store all four values (id, title, status, priority) per issue — they populate the urgency table in Phase 3.
 
 **Active Specs** — if \`.spec-workflow/specs/\` exists:
 - Use the **spec-status** tool (no specName — returns all specs) or:
@@ -145,7 +149,7 @@ Branch: \`<branch>\` | Version: \`<version>\` | Status: <clean/dirty>
 ## Open Issues (urgency ranked)
 | Priority | Issue | Title | Status |
 |----------|-------|-------|--------|
-<All open issues sorted by priority ascending (P1 first), then by status (in-progress > todo > backlog). Show ALL open issues — no row limit. If no open issues: "No open issues.">
+<One row per open issue. Sort: P1 before P2 before P3; within each tier: in-progress before todo before backlog. Show ALL open issues — no row limit. NEVER collapse to a bullet list — the table format is mandatory. If no open issues: single row "— | — | No open issues | —">
 
 ## Suggested Next Steps
 1. <highest priority — based on in-progress items, open PRs, or recent commits>
