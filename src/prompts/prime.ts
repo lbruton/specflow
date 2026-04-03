@@ -126,6 +126,14 @@ mcp__code-graph-context__get_repository_stats(repo_path="/workspace/<name>")
 \`\`\`
 If claude-context is stale (>24h), also trigger: \`mcp__claude-context__index_codebase(path="${context.projectPath}")\`
 
+**Code health (run both — if CGC is unavailable, note it and skip):**
+\`\`\`
+mcp__code-graph-context__find_dead_code(repo_path="/workspace/<name>", limit=15)
+\`\`\`
+\`\`\`
+mcp__code-graph-context__find_most_complex_functions(repo_path="/workspace/<name>", limit=5)
+\`\`\`
+
 **Codacy SRM (run both):**
 \`\`\`
 mcp__codacy__codacy_search_repository_srm_items(
@@ -235,8 +243,17 @@ All logs already processed.
 | claude-context | <Fresh/Stale/Indexing/Error> | <N files or error> |
 | CGC (Neo4j) | <Running/Down/Error> | <N files, N functions or error> |
 
-## Code Health
-Background code scan not run — use \`/audit\` or \`/prime full\` with code-oracle for dead code and complexity analysis.
+## Code Health (CGC)
+
+### Dead Code
+| Symbol | File:Line | Notes |
+|--------|-----------|-------|
+<From find_dead_code. If none: "No dead code detected." If CGC unavailable: "CGC unavailable — skipped.">
+
+### Complexity Hotspots
+| Function | File:Line | CCN | Rating |
+|----------|-----------|-----|--------|
+<Top 5 from find_most_complex_functions. If CGC unavailable: "CGC unavailable — skipped.">
 
 ## Security Reviews
 <If review found:>
@@ -324,6 +341,10 @@ Branch: \`<branch>\` | Version: \`<version>\` | Status: <clean/dirty>
 <One row per open issue. Sort: P1 → P2 → P3, then in-progress → todo → backlog.
 ALL open issues — no row limit. MANDATORY table — never a bullet list.
 If none: one row with "—" in every column.>
+
+## Code Health
+<Dead code: N symbols found — or "None detected" — or "CGC unavailable">
+<Complexity: top offender name + CCN — or "CGC unavailable">
 
 ## Security & Codacy
 <Latest security review: date + posture, or "No reviews on file">
