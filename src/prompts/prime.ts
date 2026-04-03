@@ -80,9 +80,9 @@ Also gather these (parallel with above):
 **Vault Issues** — if \`issuePrefix\` exists, scan the vault issues folder:
 \`\`\`bash
 # List open issues (scan frontmatter for status != done)
-grep -rl "status: backlog\\|status: todo\\|status: in-progress" /Volumes/DATA/GitHub/DocVault/Projects/<name>/Issues/*.md 2>/dev/null | head -20
+grep -rl "status: backlog\\|status: todo\\|status: in-progress" /Volumes/DATA/GitHub/DocVault/Projects/<name>/Issues/*.md 2>/dev/null | head -50
 \`\`\`
-For each file found, extract just the title and status from frontmatter (read first 10 lines).
+For each file found, read the first 15 lines and extract \`title\`, \`status\`, and \`priority\` from YAML frontmatter. If \`priority\` is absent, treat as P3. Store all three fields — they drive the urgency table in Phase 3.
 
 **Active Specs** — if \`.spec-workflow/specs/\` exists:
 - Use the **spec-status** tool (no specName — returns all specs) or:
@@ -130,7 +130,7 @@ From the results, extract only what adds context BEYOND what git/issues show:
 
 ## Phase 3: Present
 
-Display a concise terminal summary. **Must stay under 25 lines.**
+Display a concise terminal summary.
 
 \`\`\`
 # <ProjectName> — <date>
@@ -139,9 +139,13 @@ Branch: \`<branch>\` | Version: \`<version>\` | Status: <clean/dirty>
 ## Where We Left Off
 <2-3 sentences from today's digest + mem0 context. If no digest: use mem0 alone. If neither: "No recent session history.">
 
-## Open Work
-<Compact list: open PRs, active specs with task counts, in-progress issues — one line each, max 8 items>
-<If nothing open: "No open work items.">
+## Open PRs & Active Specs
+<One line each: open PRs and active specs with pending/in-progress task counts. If none: omit section.>
+
+## Open Issues (urgency ranked)
+| Priority | Issue | Title | Status |
+|----------|-------|-------|--------|
+<All open issues sorted by priority ascending (P1 first), then by status (in-progress > todo > backlog). Show ALL open issues — no row limit. If no open issues: "No open issues.">
 
 ## Suggested Next Steps
 1. <highest priority — based on in-progress items, open PRs, or recent commits>
