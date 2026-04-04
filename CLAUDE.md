@@ -31,11 +31,11 @@ When making changes that affect documented behavior, run `/vault-update` before 
 
 ## Architecture
 
-This repo is symlinked into the Claude Code plugin directory. Building here updates the MCP server directly — no sync step needed.
+This repo is the canonical source. The plugin directory at `~/.claude/plugins/marketplaces/specflow-marketplace/` is a **copy**, not a symlink — plugin skill files must be manually copied after edits (see gotcha below). The compiled `dist/` in the MCP cache auto-updates from npm on next Claude Code launch.
 
 ```
 /Volumes/DATA/GitHub/specflow/              <-- you are here (canonical source)
-    symlinked as:
+    copied to:
 ~/.claude/plugins/marketplaces/specflow-marketplace/
     loaded by MCP via:
 ~/.claude/plugins/cache/.../dist/index.js
@@ -53,6 +53,12 @@ src/
   dashboard/       # Dashboard UI server (parser.ts + server.ts)
   types.ts         # Shared TypeScript types
   index.ts         # Server entry point
+plugin/
+  skills/          # Plugin skills — session commands Claude follows literally
+    prime/         # Universal session boot
+    wrap/          # End-of-session orchestrator (supports --handoff)
+    audit/         # On-demand project health check
+    migrate-skill/ # Skill migration checklist
 ```
 
 ## Two Parsers - Keep in Sync
@@ -62,10 +68,11 @@ src/
 
 If you change how specs are parsed, update BOTH parsers.
 
-## Build and Deploy
+## Build, Test, and Deploy
 
 ```bash
 npm run build        # Compiles src/ -> dist/, copies static assets
+npm test             # Runs vitest suite (196 tests)
 ```
 
 After building, the MCP tools pick up changes on next invocation. The dashboard UI runs as a separate launchd service and must be restarted to serve new static assets:
@@ -84,6 +91,26 @@ After ANY source edit:
 4. `git push origin main`
 
 Never leave uncommitted source changes. `dist/` is gitignored -- if you build without committing, the next `git pull` silently reverts your work.
+
+## Publishing
+
+```bash
+# 1. Edit package.json version
+# 2. npm run build
+# 3. npm test
+# 4. git add package.json package-lock.json && git commit && git push
+# 5. npm publish --access public   (requires npm OTP/web auth)
+```
+
+## Gotcha: Plugin Skill Files
+
+Plugin skill files (`plugin/skills/*/SKILL.md`) are NOT symlinked — they are copied to the plugin directory. After editing a skill in this repo, you must manually copy it:
+
+```bash
+cp plugin/skills/<name>/SKILL.md ~/.claude/plugins/marketplaces/specflow-marketplace/plugin/skills/<name>/SKILL.md
+```
+
+The compiled MCP server (`dist/`) auto-updates from npm on next Claude Code launch.
 
 ## Adding a New Tool
 
