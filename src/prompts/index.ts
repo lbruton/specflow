@@ -10,9 +10,9 @@ import { specStatusPrompt } from './spec-status.js';
 import { injectSpecWorkflowGuidePrompt } from './inject-spec-workflow-guide.js';
 import { injectSteeringGuidePrompt } from './inject-steering-guide.js';
 import { refreshTasksPrompt } from './refresh-tasks.js';
-import { wrapPrompt } from './wrap.js';
+// wrap is now a plugin skill (skills/wrap/SKILL.md), not an MCP prompt
 // prime is now a plugin skill (skills/prime/SKILL.md), not an MCP prompt
-import { auditPrompt } from './audit.js';
+// audit is now a plugin skill (skills/audit/SKILL.md), not an MCP prompt
 
 // Registry of all prompts
 const promptDefinitions: PromptDefinition[] = [
@@ -22,9 +22,7 @@ const promptDefinitions: PromptDefinition[] = [
   specStatusPrompt,
   injectSpecWorkflowGuidePrompt,
   injectSteeringGuidePrompt,
-  refreshTasksPrompt,
-  wrapPrompt,
-  auditPrompt
+  refreshTasksPrompt
 ];
 
 /**
