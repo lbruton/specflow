@@ -99,7 +99,32 @@ git remote get-url origin 2>/dev/null
 
 Store all values for agent dispatch.
 
-### Step 0.4: Find undigested session logs
+### Step 0.4: Find and read latest session digest
+
+The session digest is the **primary** "where we left off" source — NOT mem0. Digests live
+in DocVault and contain structured session summaries with goals, decisions, and next steps.
+
+```bash
+# Find the most recent digest for this project
+DIGEST_DIR="/Volumes/DATA/GitHub/DocVault/Daily Digests/<tag>"
+LATEST_DIGEST=$(ls -t "$DIGEST_DIR"/*.md 2>/dev/null | head -1)
+if [ -n "$LATEST_DIGEST" ]; then
+  echo "latest_digest=$LATEST_DIGEST"
+  echo "latest_digest_date=$(basename "$LATEST_DIGEST" .md)"
+fi
+```
+
+If a digest exists, **read it in full** immediately — it's a small file and provides the
+richest context. Extract:
+- **Goals and accomplishments** from each session block
+- **Decisions made** and their rationale
+- **Next steps** / follow-up items listed at the end
+- **Key learnings** and pain points
+
+Store the full digest content. This is the authoritative session history that feeds the
+"Where We Left Off" section. If no digest exists, set `hasDigest=false`.
+
+### Step 0.5: Find undigested session logs
 
 ```bash
 # Count logs not yet processed
@@ -111,7 +136,7 @@ find "$LOGDIR" -maxdepth 1 -name "*.log" -newer "$PROCESSED" -type f 2>/dev/null
 
 Store the list of undigested log files.
 
-### Step 0.5: Check for recent prime run
+### Step 0.6: Check for recent prime run
 
 ```bash
 # Find most recent prime report for this project
@@ -188,13 +213,21 @@ mcp__codacy__codacy_search_repository_srm_items(
 Compare results against the previous prime report's Codacy section to identify **new**
 findings since last prime. Highlight net-new items in the delta report.
 
-### Step I.4: Quick mem0 check
+### Step I.4: Read latest session digest
 
-Run a single mem0 search for recent context:
+Read the latest digest found in Step 0.4 (if not already read). This is the primary
+"where we left off" source — even in incremental mode.
+
+### Step I.4.5: Supplemental mem0 check
+
+Run 1-2 targeted mem0 searches using keywords from the digest and new commits. mem0
+supplements the digest with retro learnings, workarounds, and cross-session decisions:
 
 ```
-mcp__mem0__search_memories(query="latest session <name>", filters={"AND": [{"agent_id": "<tag>"}]}, limit=3)
+mcp__mem0__search_memories(query="<keywords from digest next-steps + new commit topics>", filters={"AND": [{"agent_id": "<tag>"}]}, limit=5)
 ```
+
+If the project tag yields few results, try without `agent_id` for cross-project context.
 
 ### Step I.5: Produce delta report
 
@@ -247,9 +280,10 @@ Delta from: <previous prime date/time>
 <If no new findings: "No change in Codacy findings since last prime.">
 <If Codacy unavailable: "Codacy MCP unavailable — skipped.">
 
-## Session Context (mem0)
-<Brief context from mem0 search — 2-3 sentences about recent work>
-<If no results: "No recent session context found.">
+## Where We Left Off (from session digest)
+<3-5 sentence recap from the latest session digest — goals, decisions, next steps>
+<Supplement with any relevant mem0 findings: retro learnings, workarounds, known issues>
+<If no digest: fall back to mem0 context. If neither: "No recent session context found.">
 
 ## Suggested Next Steps
 1. <based on new commits and open work>
@@ -273,8 +307,8 @@ Branch: `<branch>` | Version: `<version>` | Since: <last prime time>
 <If Codacy has open findings: "**Codacy:** N Critical, N High SRM findings (N overdue) — see full report">
 <If Codacy clean: "**Codacy:** Clean">
 
-## Session Context
-<2-3 sentences from mem0>
+## Where We Left Off
+<3-5 sentence recap from session digest, supplemented by mem0>
 
 ## Suggested Next Steps
 1. <highest priority>
@@ -292,15 +326,18 @@ Full prime last ran: <previous prime date/time> — run `/prime full` to force a
 > `recentPrimeExists` and run the full Phase 1-3 flow regardless. This lets users force a
 > refresh when they know the delta won't be sufficient.
 
-## Phase 1: Parallel Agent Dispatch (deterministic sources)
+## Phase 1: Indexes + Parallel Agent Dispatch
 
-Fire ALL of the following agents simultaneously using background dispatch. Agents A and C
-have zero data dependencies. Agent D (prime-status) MUST return before Phase 1.5 can begin —
-dispatch it in the foreground or poll for completion.
+### Step 1.0: Start indexes FIRST (background, instant)
+
+Kick off CGC and claude-context indexing checks immediately — these run while everything
+else gathers data. By the time we reach the report, index results are ready.
+
+Run Phase 2 Steps 2.1, 2.2, and 2.3 (claude-context, CGC, Codacy) in parallel NOW.
 
 ### Agent A: Session Digest (if undigested logs exist, background)
 
-Skip if no undigested logs found in Step 0.4.
+Skip if no undigested logs found in Step 0.5.
 
 Dispatch `session-digest` agent for the most recent undigested log:
 
@@ -352,14 +389,17 @@ Return only the synthesized report.
 
 ## Phase 1.5: Keyword-Informed Context Enrichment
 
-This phase runs AFTER Agent D returns. It extracts keywords from the deterministic sources
-and uses them to make targeted searches of fuzzy/episodic memory. This is the key improvement
-over generic queries — the git history, PRs, and issues tell us WHAT happened, and now we
-ask mem0 and session-oracle WHY and WHAT'S NEXT with precision.
+This phase runs AFTER Agent D returns. The session digest (read in Step 0.4) is the
+**primary** "where we left off" source. This phase extracts keywords from ALL deterministic
+sources (git + digest + issues) and uses them for **targeted mem0 queries** that supplement
+the digest with retro learnings, workarounds, and cross-session decisions.
 
-### Step 1.5.1: Extract keywords from Agent D results
+**Data flow:** GitHub → Session Digest → Issues → Compile Keywords → mem0 (supplemental)
 
-Parse the prime-status report to extract:
+### Step 1.5.1: Extract keywords from Agent D results + digest
+
+Parse BOTH the prime-status report AND the session digest to extract:
+- **Digest keywords**: Goals, decisions, next steps, pain points from the latest digest
 - **Commit keywords**: Significant nouns and verbs from the last 15 commit messages
   (strip prefixes like "fix:", "feat:", "update:", "add:" — keep the substance)
 - **PR keywords**: Titles of open PRs
@@ -370,32 +410,34 @@ Deduplicate and select the **top 10-15 most distinctive terms** — skip generic
 (update, fix, change, add, remove) and focus on domain terms (feature names, component
 names, bug descriptions, technology references).
 
-Example: If commits mention "LACP", "bge0", "portfast", "VLAN 10", "TrueNAS Scale" and
-issues mention "qBittorrent decom", "corosync QDevice" — those are the keywords.
+Example: If the digest mentions "three-tier architecture", "plugin skills", "template
+inversion" and commits mention "migrate-skill", "marketplace.json" — those are the keywords.
 
-### Step 1.5.2: Dispatch targeted searches (parallel)
+### Step 1.5.2: Targeted mem0 search (supplemental)
 
-Fire BOTH of these simultaneously:
-
-**Targeted mem0 search** (main context — fast, no agent needed):
+mem0 is **supplemental** — it fills gaps the digest doesn't cover: retro learnings,
+workarounds, known issues, cross-session decisions, and verbal plans not captured in digests.
 
 Run 2-3 mem0 searches using the extracted keywords. Group related keywords into queries:
 
 ```
 mcp__mem0__search_memories(query="<keyword group 1 — e.g., feature/component names>", filters={"AND": [{"agent_id": "<tag>"}]}, limit=5)
 mcp__mem0__search_memories(query="<keyword group 2 — e.g., bug/issue terms>", filters={"AND": [{"agent_id": "<tag>"}]}, limit=5)
-mcp__mem0__search_memories(query="<keyword group 3 — e.g., infrastructure/tooling terms>", filters={"AND": [{"agent_id": "<tag>"}]}, limit=5)
 ```
 
 If the project tag yields few results, also try without the agent_id filter for
 cross-project context (some decisions span repos).
 
-Deduplicate results and keep only memories that add context beyond what git/issues show
-(e.g., verbal decisions, rationale, planned next steps, blocked-on-external-dependency).
+Deduplicate results and keep only memories that **add context beyond what the digest shows**
+(e.g., retro learnings from earlier sessions, known workarounds, blocked-on-external-dependency).
+Discard mem0 results that merely repeat what the digest already says.
 
-**Targeted session-oracle** (agent dispatch):
+### Step 1.5.3: Session-oracle (optional, background only)
 
-Dispatch `session-oracle` agent with keyword-informed query:
+Session-oracle is **optional** — only dispatch if `hasDigest=false` (no digest exists for
+this project). When a digest exists, the oracle adds little value and burns time/context.
+
+If dispatched:
 
 ```
 Search for the most recent session context for this project:
@@ -406,14 +448,14 @@ Search for the most recent session context for this project:
 Focus on: decisions made, rationale for choices, next steps discussed,
 blockers identified, and any handoff notes.
 
-Return a 3-5 sentence recap of where we left off, prioritizing information
-that explains the WHY behind recent commits and open issues.
+Return a 3-5 sentence recap of where we left off.
 ```
 
-## Phase 2: Indexing (runs during Phase 1 and 1.5)
+## Phase 2: Indexing (started in Phase 1, Step 1.0)
 
-While waiting for agents, run indexing in main context. These are fast operations.
-Start indexing during Phase 1 and let it continue through Phase 1.5.
+These operations were kicked off at the start of Phase 1 and run in parallel with agent
+dispatch. By the time Phase 1.5 completes, results should be ready. The steps below
+describe WHAT to run — they are initiated in Step 1.0, not sequentially here.
 
 ### Step 2.1: claude-context index
 
@@ -525,12 +567,12 @@ Wait for ALL agents (Phase 1 + Phase 1.5) to return. Combine their reports into 
 report below and write it to the Obsidian DocVault for historical tracking. Then display a
 concise terminal summary. The data flow is:
 
+- Step 0.4 session digest → **primary** "where we left off" (read directly from DocVault)
 - Agent D (prime-status) → ground truth: git, PRs, issues, specs
-- Phase 1.5 mem0 → targeted context: decisions, rationale, verbal plans
-- Phase 1.5 session-oracle → targeted context: where we left off, next steps
+- Phase 1.5 mem0 → **supplemental** context: retro learnings, workarounds, cross-session decisions
 - Agent C (code-oracle) → code health: dead code, complexity, conventions
 - Step 2.3 Codacy → security: SRM findings, critical issues, overdue items
-- Agent A (session-digest) → housekeeping: logs processed
+- Agent A (session-digest) → housekeeping: undigested logs processed
 
 ### Step 3.1: Assemble full report
 
@@ -597,10 +639,11 @@ Branch: <branch> | Status: <clean/dirty> | Version: <from version.lock or "n/a">
 | Commits (7d)            | **N**                              |
 | Version range           | vX.Y.Z1 -> vX.Y.Z2 (N patches)   |
 
-## Where We Left Off (keyword-targeted session-oracle + mem0)
-<3-5 sentence recap from Phase 1.5 session-oracle — informed by keywords from git/PRs/issues>
-<Weave in relevant mem0 findings: decisions, rationale, planned next steps>
-<If no results from either: "No recent session history found.">
+## Where We Left Off (from session digest + mem0 supplemental)
+<3-5 sentence recap from the latest session digest — goals, decisions, next steps, pain points>
+<Weave in relevant mem0 findings: retro learnings, workarounds, known issues from earlier sessions>
+<If no digest exists: fall back to mem0 + session-oracle results>
+<If neither: "No recent session history found.">
 
 ## Session Logs Digested
 <Results from Agent A — how many logs processed, key topics>
@@ -689,7 +732,7 @@ Overall: <summary/posture line from the review>
 1. <highest priority actionable item>
 2. <next priority>
 3. <next priority>
-<3-5 items based on: recent git activity > open PRs > unfinished specs > open bugs > mem0 planned next steps > session-oracle handoff items > quick wins>
+<3-5 items based on: digest next-steps > open PRs > unfinished specs > open bugs > mem0 retro learnings > recent git activity > quick wins>
 ```
 
 ---
@@ -701,7 +744,7 @@ Overall: <summary/posture line from the review>
 Branch: `<branch>` | Version: `<version>` | Status: <clean/dirty>
 
 ## Where We Left Off
-<3-5 sentence recap from Phase 1.5 session-oracle + mem0, informed by git/PR/issue keywords>
+<3-5 sentence recap from session digest, supplemented by mem0 retro learnings/workarounds>
 
 ## This Week
 | Metric | Count |
@@ -742,6 +785,7 @@ Not every project has every capability. Handle missing pieces:
 
 | Missing | Behavior |
 |---------|----------|
+| No session digest | Set `hasDigest=false`, fall back to mem0 + session-oracle for "where we left off" |
 | No `issuePrefix` | Skip vault issue queries, show GitHub issues only |
 | No CGC (Docker down) | Skip CGC stats + dead code + complexity, note in Index Health |
 | CGC MCP disconnected | Note "CGC MCP unavailable — container may have restarted" in Index Health. Do NOT restart containers. |
@@ -758,17 +802,29 @@ Not every project has every capability. Handle missing pieces:
 
 ## Rules
 
+### Data Source Priority
+- **Session digest is the PRIMARY "where we left off" source** — read from DocVault/Daily Digests/<tag>/
+- **mem0 is SUPPLEMENTAL** — retro learnings, workarounds, cross-session decisions, known issues
+- **session-oracle is OPTIONAL** — only dispatch when no digest exists for the project
+- The correct flow is: GitHub → Session Digest → Issues → Code/Security → Compile Keywords → mem0 → Report
+
+### Execution
+- Phase 2 indexes (CGC, claude-context, Codacy) start FIRST in Phase 1 Step 1.0 — they run in background while data is gathered
 - Phase 1 agents MUST run in background — do not block on them sequentially
-- Phase 2 indexing runs in main context while agents work (it's lightweight)
 - NEVER run code-oracle or session-oracle in main context — always isolated agents
-- If ALL agents fail, fall back to just the Phase 0 local context + Phase 2 indexing
+- If ALL agents fail, fall back to Phase 0 local context + digest + Phase 2 indexing
+
+### Output
 - The **full report** goes to DocVault ONLY — never dump the full report in the terminal
 - The **terminal summary** must stay under 40 lines — concise, actionable, scannable
 - Always `mkdir -p` the prime/ subdirectory before writing — it may not exist on first run
 - DocVault path is ALWAYS `/Volumes/DATA/GitHub/DocVault/Projects/<name>/prime/` — use the project name from `project.json`, not the tag
 - Timestamp format for filenames: `YYYY-MM-DD-HHMMSS` (local time, no colons — filesystem safe)
 - After presenting the terminal summary, the session is ready for work — do not prompt for /prime again
+
+### Incremental Mode
 - Incremental prime skips ALL background agents (code-oracle, session-digest, prime-status) — main context only
+- Incremental prime STILL reads the session digest — it's fast and critical for context
 - Incremental prime still writes to DocVault with the `prime-delta` tag for traceability
 - `/prime full` forces a complete refresh regardless of recent prime existence
 - Security review staleness threshold is 30 days — flag stale reviews in both full and incremental reports
