@@ -26,11 +26,18 @@ function buildPrimeMessages(context: ToolContext, forceFull: boolean): PromptMes
       role: 'user',
       content: {
         type: 'text',
-        text: `Session boot. Run every step below in order. Write a prime report to DocVault. Display the terminal summary.
+        text: `## HARD CONSTRAINTS — read before doing anything
+
+1. **Do not produce any output, summary, or narration until Step 4 is reached.** Run Steps 1–3 silently. No "presenting quick summary", no "dispatching scans", no status messages. Just execute.
+2. **There is no quick phase followed by a deep phase.** All data is gathered in one parallel Step 3. The report is assembled once in Step 4. One pass, one report.
+3. **Do not dispatch any background agents.** All data comes from bash commands and MCP calls in main context.
+4. **Write the full report to DocVault before displaying anything to the user.**
+
+---
 
 **Project path:** ${context.projectPath}
 ${context.dashboardUrl ? `**Dashboard:** ${context.dashboardUrl}` : ''}
-${forceFull ? '**Mode: FULL** — skip the 24h delta check, always run the full pipeline.' : ''}
+${forceFull ? '**Mode: FULL** — skip the 24h delta check.' : ''}
 
 ---
 
