@@ -198,6 +198,7 @@ Include **concrete anchors**: commit hashes, issue IDs, version numbers, file pa
 
 - **Without `--handoff` (session complete):** End with a summary and conclusion. The "Next session" note is a suggestion, not a continuation plan.
 - **With `--handoff` (work continues):** Append a `## Handoff Notes` section at the end of the digest entry with:
+  - **Continue issue:** The issue ID to jump to next session (REQUIRED — e.g., `SWF-48`). If no issue exists for the active work, create one before writing handoff notes.
   - **Resume with:** The exact command or action to start with (e.g., `/prime`, a specific file to open, a test to run)
   - **Immediate next:** The task that was actively being worked on, with enough detail to resume without re-reading code
   - **Then:** 2-3 follow-up tasks in priority order

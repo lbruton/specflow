@@ -124,6 +124,11 @@ richest context. Extract:
 Store the full digest content. This is the authoritative session history that feeds the
 "Where We Left Off" section. If no digest exists, set `hasDigest=false`.
 
+**Handoff detection:** If the digest contains a `## Handoff Notes` section, extract the
+**Continue issue** ID (e.g., `SWF-48`). Set `handoffIssue=<ID>`. This issue becomes the
+top suggested action in the session plan — the previous session explicitly handed off to it.
+Read the issue file from DocVault to get its title and acceptance criteria for context.
+
 ### Step 0.5: Find undigested session logs
 
 ```bash
@@ -729,10 +734,11 @@ Overall: <summary/posture line from the review>
 <If issuePrefix is "none": omit vault issue sections, show GitHub issues only>
 
 ## Suggested Session Plan
-1. <highest priority actionable item>
+<If handoffIssue exists: "**Handoff from last session:** <issue ID> — <issue title>">
+1. <If handoffIssue: that issue is #1 | otherwise: highest priority actionable item>
 2. <next priority>
 3. <next priority>
-<3-5 items based on: digest next-steps > open PRs > unfinished specs > open bugs > mem0 retro learnings > recent git activity > quick wins>
+<3-5 items based on: handoff issue > digest next-steps > open PRs > unfinished specs > open bugs > mem0 retro learnings > recent git activity > quick wins>
 ```
 
 ---
@@ -771,7 +777,8 @@ Branch: `<branch>` | Version: `<version>` | Status: <clean/dirty>
 <If Codacy unavailable: "Codacy unavailable — skipped.">
 
 ## Suggested Session Plan
-1. <highest priority actionable item>
+<If handoffIssue exists: "**Handoff from last session:** <issue ID> — <issue title>. Jump straight to this.">
+1. <If handoffIssue: that issue is #1 | otherwise: highest priority actionable item>
 2. <next priority>
 3. <next priority>
 
