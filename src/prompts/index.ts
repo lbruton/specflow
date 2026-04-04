@@ -11,7 +11,7 @@ import { injectSpecWorkflowGuidePrompt } from './inject-spec-workflow-guide.js';
 import { injectSteeringGuidePrompt } from './inject-steering-guide.js';
 import { refreshTasksPrompt } from './refresh-tasks.js';
 import { wrapPrompt } from './wrap.js';
-import { primePrompt } from './prime.js';
+// prime is now a plugin skill (skills/prime/SKILL.md), not an MCP prompt
 import { auditPrompt } from './audit.js';
 
 // Registry of all prompts
@@ -24,7 +24,6 @@ const promptDefinitions: PromptDefinition[] = [
   injectSteeringGuidePrompt,
   refreshTasksPrompt,
   wrapPrompt,
-  primePrompt,
   auditPrompt
 ];
 
