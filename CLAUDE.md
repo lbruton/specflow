@@ -7,7 +7,7 @@ MCP server plugin for spec-driven development with a real-time web dashboard. Po
 | Field | Value |
 |-------|-------|
 | Package | `@lbruton/specflow` |
-| Version | `3.4.0` |
+| Version | `3.5.3` |
 | Upstream | [Pimzino/spec-workflow-mcp](https://github.com/Pimzino/spec-workflow-mcp) |
 | Origin | [lbruton/specflow](https://github.com/lbruton/specflow) |
 | Branch | `main` (direct commits OK) |
@@ -44,20 +44,29 @@ Plugin directory:                    Copy of plugin/skills/ + commands/
 MCP install:                         User-level settings.json → npx
 ```
 
-### Future: DocVault Consolidation
+### DocVault Consolidation (SWF-2 — shipped v3.5.0)
 
-All spec-workflow artifacts currently in per-project `.specflow/` folders will migrate to DocVault:
+All specflow artifacts live in DocVault. Each project has only `.specflow/config.json` locally.
 
 ```
 DocVault/specflow/
-  templates/                         # Global templates
+  templates/                         # Global templates (bundled, always overwritten)
   {ProjectName}/
     steering/                        # product.md, tech.md, structure.md
-    templates/                       # Project-level template overrides
-    specs/                           # All spec artifacts (requirements, design, tasks)
+    templates/                       # Project-level overrides ONLY (not copies of globals)
+    specs/                           # All spec artifacts (requirements, design, tasks, logs)
+    approvals/                       # Approval records
+    archive/specs/                   # Archived specs
 ```
 
-This consolidates all knowledge into one version-controlled repo, backs up specs across projects, and lets Obsidian `_Index.md` serve as the RAG layer.
+**Config:** `.specflow/config.json` in each project root points to DocVault:
+```json
+{ "project": "StakTrakr", "docvault": "../DocVault", "issue_prefix": "STAK" }
+```
+
+**Path resolution:** `PathUtils.getWorkflowRoot()` reads config.json and returns DocVault path. All callers resolve automatically.
+
+**Key modules:** `config-loader.ts` (read/validate config), `migration.ts` (one-time copy from local .specflow/ to DocVault), `index-updater.ts` (_Index.md lifecycle)
 
 ## Source Structure
 
@@ -68,6 +77,9 @@ src/
   prompts/         # MCP prompt definitions (create-spec, implement-task, etc.)
     index.ts       # Prompt registry
   core/            # Shared logic (parser, task-parser, path-utils)
+                   # config-loader.ts — read/validate .specflow/config.json
+                   # migration.ts — one-time .specflow/ → DocVault copy
+                   # index-updater.ts — _Index.md lifecycle management
   dashboard/       # Dashboard UI server (parser.ts + server.ts)
   types.ts         # Shared TypeScript types
   index.ts         # Server entry point
@@ -81,24 +93,24 @@ plugin/
 
 ## Steering Documents
 
-Project-level guidance lives in `.specflow/steering/`:
+Project-level guidance lives in `DocVault/specflow/{project}/steering/`:
 - `product.md` — vision, target users, principles, success metrics
 - `tech.md` — stack decisions, architecture rationale, known limitations
 - `structure.md` — directory layout, naming conventions, module boundaries
 
 Reference these when planning new features or making architectural decisions.
 
-## Templates — Three-Tier System
+## Templates — Three-Tier Precedence
 
 | Tier | Path | Behavior |
 |------|------|----------|
-| Bundled | `src/markdown/templates/` → `dist/markdown/templates/` | Shipped in npm, copied to projects on startup (always overwrites) |
-| Project | `.specflow/templates/` | Copied from bundled on every MCP startup — always fresh |
-| User | `.specflow/user-templates/` | Generated once from conventions, never auto-overwritten |
+| Project override | `DocVault/specflow/{project}/templates/` | User-authored overrides — NEVER auto-populated |
+| Global | `DocVault/specflow/templates/` | Bundled templates copied here on startup (always overwrites) |
+| Bundled fallback | `dist/markdown/templates/` | Emergency fallback if DocVault unavailable |
 
-**Warning:** The bundled `tasks-template.md` body contains upstream Pimzino's TypeScript/React/Express sample (SWF-70 tracks rewrite). The closing tasks section is correctly genericized by `template-generator.ts` convention detection.
+**Key rule:** Project templates dir is for user overrides ONLY. Do NOT copy globals into it.
 
-`writeUserTemplates()` in `src/core/template-generator.ts` has a guard clause (line 239) that returns early if user-templates exist — template fixes in new versions never propagate to existing projects.
+**Warning:** The bundled `tasks-template.md` body contains upstream Pimzino's TypeScript/React/Express sample (SWF-70 tracks rewrite).
 
 ## Two Parsers - Keep in Sync
 
@@ -111,7 +123,7 @@ If you change how specs are parsed, update BOTH parsers.
 
 ```bash
 npm run build        # Compiles src/ -> dist/, copies static assets
-npm test             # Runs vitest suite (196 tests)
+npm test             # Runs vitest suite (243 tests)
 ```
 
 After building, the MCP tools pick up changes on next invocation. The dashboard UI runs as a separate launchd service and must be restarted to serve new static assets:
@@ -139,6 +151,8 @@ Never leave uncommitted source changes. `dist/` is gitignored -- if you build wi
 # 3. npm test
 # 4. git add package.json package-lock.json && git commit && git push
 # 5. npm publish --access public   (requires npm OTP/web auth)
+# 6. Clear npx cache: find ~/.npm/_npx -path "*/specflow/package.json" -exec dirname {} \; | xargs rm -rf
+# 7. Verify: npm view @lbruton/specflow version
 ```
 
 ## Gotcha: Plugin Skill Files
@@ -167,6 +181,22 @@ The compiled MCP server (`dist/`) auto-updates from npm on next Claude Code laun
 
 Every DocVault folder must have `_Index.md`. When creating, deleting, or moving files in DocVault, update the folder's `_Index.md` and parent indexes in the same commit. Run `/vault-reconcile` to detect drift.
 
+## Post-Publish Verification -- MANDATORY
+
+After `npm publish`, before telling the user it's done:
+
+1. Verify npm has the new version: `npm view @lbruton/specflow version`
+2. Clear npx cache if stale (see Publishing section)
+3. `/mcp` reconnect to load new version
+4. Verify config loads: check `DocVault/specflow/{project}/` dirs exist
+5. Verify migration ran: local `.specflow/` should contain only `config.json`
+6. Verify templates: project templates dir should have overrides only, not globals
+7. Run a test spec or `spec-status` to confirm MCP tools work with DocVault paths
+
+## Gotcha: Prompt Path References
+
+MCP prompts in `src/prompts/` embed file paths in their text output. These paths MUST use `PathUtils.getWorkflowRoot()` — never hardcode `.specflow/`. If you change path resolution, grep all prompts for stale path strings. Files: create-spec.ts, implement-task.ts, spec-status.ts, create-steering-doc.ts, inject-steering-guide.ts.
+
 ## Consumers
 
-This plugin is loaded by every project: StakTrakr, HexTrackr, StakTrakrApi, MyMelo, WhoseOnFirst, Playground. Changes here affect all of them. Test carefully.
+This plugin is loaded by every project: StakTrakr, HexTrackr, Forge, MyMelo, WhoseOnFirst, Playground, claude-context, HomeNetwork, Portfolio (lbruton.github.io), obsidian-mcp, TechRefreshMacCompare. Changes here affect all of them. Test carefully.

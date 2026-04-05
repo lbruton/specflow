@@ -1,5 +1,6 @@
 import { Tool } from '@modelcontextprotocol/sdk/types.js';
 import { ToolContext, ToolResponse } from '../types.js';
+import { PathUtils } from '../core/path-utils.js';
 
 export const specWorkflowGuideTool: Tool = {
   name: 'spec-workflow-guide',
@@ -28,7 +29,7 @@ export async function specWorkflowGuideHandler(args: any, context: ToolContext):
     success: true,
     message: 'Complete spec workflow guide loaded - follow this workflow exactly',
     data: {
-      guide: getSpecWorkflowGuide(),
+      guide: getSpecWorkflowGuide(PathUtils.getWorkflowRoot(context.projectPath)),
       dashboardUrl: context.dashboardUrl,
       dashboardAvailable: !!context.dashboardUrl
     },
@@ -42,8 +43,11 @@ export async function specWorkflowGuideHandler(args: any, context: ToolContext):
   };
 }
 
-function getSpecWorkflowGuide(): string {
+function getSpecWorkflowGuide(workflowRoot: string): string {
   const currentYear = new Date().getFullYear();
+  // workflowRoot is the resolved path (DocVault or local ${wr}/)
+  // Use it in all path references so agents look in the right place
+  const wr = workflowRoot;
   return `# Spec Development Workflow
 
 ## Overview
@@ -55,13 +59,13 @@ Spec names MUST use issue prefix: {ISSUE-ID}-{kebab-title} (e.g., STAK-123-user-
 \`\`\`mermaid
 flowchart TD
     Start([Start: User requests feature]) --> CheckSteering{Steering docs exist?}
-    CheckSteering -->|Yes| P1_Load[Read steering docs:<br/>.specflow/steering/*.md]
+    CheckSteering -->|Yes| P1_Load[Read steering docs:<br/>${wr}/steering/*.md]
     CheckSteering -->|No| P1_Template
 
     %% Phase 1: Requirements
-    P1_Load --> P1_Template[Check user-templates first,<br/>then read template:<br/>requirements-template.md]
+    P1_Load --> P1_Template[Check project template overrides,<br/>then global template:<br/>requirements-template.md]
     P1_Template --> P1_Research[Web search if available]
-    P1_Research --> P1_Create[Create file:<br/>.specflow/specs/{name}/<br/>requirements.md]
+    P1_Research --> P1_Create[Create file:<br/>${wr}/specs/{name}/<br/>requirements.md]
     P1_Create --> P1_Approve[approvals<br/>action: request<br/>filePath only]
     P1_Approve --> P1_Status[approvals<br/>action: status<br/>poll status]
     P1_Status --> P1_Check{Status?}
@@ -71,9 +75,9 @@ flowchart TD
     P1_Clean -->|failed| P1_Status
 
     %% Phase 2: Design
-    P1_Clean -->|success| P2_Template[Check user-templates first,<br/>then read template:<br/>design-template.md]
+    P1_Clean -->|success| P2_Template[Check project template overrides,<br/>then global template:<br/>design-template.md]
     P2_Template --> P2_Analyze[Analyze codebase patterns]
-    P2_Analyze --> P2_Create[Create file:<br/>.specflow/specs/{name}/<br/>design.md]
+    P2_Analyze --> P2_Create[Create file:<br/>${wr}/specs/{name}/<br/>design.md]
     P2_Create --> P2_Approve[approvals<br/>action: request<br/>filePath only]
     P2_Approve --> P2_Status[approvals<br/>action: status<br/>poll status]
     P2_Status --> P2_Check{Status?}
@@ -83,9 +87,9 @@ flowchart TD
     P2_Clean -->|failed| P2_Status
 
     %% Phase 3: Tasks
-    P2_Clean -->|success| P3_Template[Check user-templates first,<br/>then read template:<br/>tasks-template.md]
+    P2_Clean -->|success| P3_Template[Check project template overrides,<br/>then global template:<br/>tasks-template.md]
     P3_Template --> P3_Break[Convert design to tasks]
-    P3_Break --> P3_Create[Create file:<br/>.specflow/specs/{name}/<br/>tasks.md]
+    P3_Break --> P3_Create[Create file:<br/>${wr}/specs/{name}/<br/>tasks.md]
     P3_Create --> P3_Approve[approvals<br/>action: request<br/>filePath only]
     P3_Approve --> P3_Status[approvals<br/>action: status<br/>poll status]
     P3_Status --> P3_Check{Status?}
@@ -177,20 +181,20 @@ flowchart TD
 **Purpose**: Define what to build based on user needs.
 
 **File Operations**:
-- Read steering docs: \`.specflow/steering/*.md\` (if they exist)
-- Check for custom template: \`.specflow/user-templates/requirements-template.md\`
-- Read template: \`.specflow/templates/requirements-template.md\` (if no custom template)
-- Create document: \`.specflow/specs/{issue-id}-{kebab-title}/requirements.md\`
+- Read steering docs: \`${wr}/steering/*.md\` (if they exist)
+- Check for project override: \`${wr}/templates/requirements-template.md\`
+- Read global template: \`${wr}/templates/requirements-template.md\` (if no custom template)
+- Create document: \`${wr}/specs/{issue-id}-{kebab-title}/requirements.md\`
 
 **Tools**:
 - approvals: Manage approval workflow (actions: request, status, delete)
 
 **Process**:
-1. Check if \`.specflow/steering/\` exists (if yes, read product.md, tech.md, structure.md)
-2. Check for custom template at \`.specflow/user-templates/requirements-template.md\`
-3. If no custom template, read from \`.specflow/templates/requirements-template.md\`
+1. Check if \`${wr}/steering/\` exists (if yes, read product.md, tech.md, structure.md)
+2. Check for project template override at \`${wr}/templates/requirements-template.md\`
+3. If no project override, the global template is used automatically from \`${wr}/templates/requirements-template.md\`
 4. Research market/user expectations (if web search available, current year: ${currentYear})
-5. Generate requirements as user stories with EARS criteria6. Create \`requirements.md\` at \`.specflow/specs/{issue-id}-{kebab-title}/requirements.md\`
+5. Generate requirements as user stories with EARS criteria6. Create \`requirements.md\` at \`${wr}/specs/{issue-id}-{kebab-title}/requirements.md\`
 7. Request approval using approvals tool with action:'request' (filePath only, never content)
 8. Poll status using approvals with action:'status' until approved/needs-revision (NEVER accept verbal approval)
 9. If needs-revision: update document using comments, create NEW approval, do NOT proceed
@@ -201,19 +205,19 @@ flowchart TD
 **Purpose**: Create technical design addressing all requirements.
 
 **File Operations**:
-- Check for custom template: \`.specflow/user-templates/design-template.md\`
-- Read template: \`.specflow/templates/design-template.md\` (if no custom template)
-- Create document: \`.specflow/specs/{issue-id}-{kebab-title}/design.md\`
+- Check for project override: \`${wr}/templates/design-template.md\`
+- Read global template: \`${wr}/templates/design-template.md\` (if no custom template)
+- Create document: \`${wr}/specs/{issue-id}-{kebab-title}/design.md\`
 
 **Tools**:
 - approvals: Manage approval workflow (actions: request, status, delete)
 
 **Process**:
-1. Check for custom template at \`.specflow/user-templates/design-template.md\`
-2. If no custom template, read from \`.specflow/templates/design-template.md\`
+1. Check for project template override at \`${wr}/templates/design-template.md\`
+2. If no project override, the global template is used automatically from \`${wr}/templates/design-template.md\`
 3. Analyze codebase for patterns to reuse
 4. Research technology choices (if web search available, current year: ${currentYear})
-5. Generate design with all template sections6. Create \`design.md\` at \`.specflow/specs/{issue-id}-{kebab-title}/design.md\`
+5. Generate design with all template sections6. Create \`design.md\` at \`${wr}/specs/{issue-id}-{kebab-title}/design.md\`
 7. Request approval using approvals tool with action:'request'
 8. Poll status using approvals with action:'status' until approved/needs-revision
 9. If needs-revision: update document using comments, create NEW approval, do NOT proceed
@@ -224,16 +228,16 @@ flowchart TD
 **Purpose**: Break design into atomic implementation tasks.
 
 **File Operations**:
-- Check for custom template: \`.specflow/user-templates/tasks-template.md\`
-- Read template: \`.specflow/templates/tasks-template.md\` (if no custom template)
-- Create document: \`.specflow/specs/{issue-id}-{kebab-title}/tasks.md\`
+- Check for project override: \`${wr}/templates/tasks-template.md\`
+- Read global template: \`${wr}/templates/tasks-template.md\` (if no custom template)
+- Create document: \`${wr}/specs/{issue-id}-{kebab-title}/tasks.md\`
 
 **Tools**:
 - approvals: Manage approval workflow (actions: request, status, delete)
 
 **Process**:
-1. Check for custom template at \`.specflow/user-templates/tasks-template.md\`
-2. If no custom template, read from \`.specflow/templates/tasks-template.md\`
+1. Check for project template override at \`${wr}/templates/tasks-template.md\`
+2. If no project override, the global template is used automatically from \`${wr}/templates/tasks-template.md\`
 3. Convert design into atomic tasks (1-3 files each)
 4. Include file paths and requirement references
 5. **IMPORTANT**: Generate a _Prompt field for each task with:
@@ -247,7 +251,7 @@ flowchart TD
    - Start the prompt with "Implement the task for spec {issue-id}-{kebab-title}, first run spec-workflow-guide to get the workflow guide then implement the task:"
 6. (Optional) Add a **Recommended Agent** field to each task: Claude, Codex, Gemini, or Human
 7. Include a **File Touch Map** at the top of tasks.md listing all files the spec will CREATE, MODIFY, or TEST with brief scope notes
-8. Create \`tasks.md\` at \`.specflow/specs/{issue-id}-{kebab-title}/tasks.md\`
+8. Create \`tasks.md\` at \`${wr}/specs/{issue-id}-{kebab-title}/tasks.md\`
 7. Request approval using approvals tool with action:'request'
 8. Poll status using approvals with action:'status' until approved/needs-revision
 9. If needs-revision: update document using comments, create NEW approval, do NOT proceed
@@ -267,7 +271,7 @@ flowchart TD
 2. If UI changes are declared with prototype required:
    - Execute tasks 0.1–0.3 from tasks.md (these are the prototype gate tasks)
    - Task 0.1: Create visual mockup via \`ui-mockup\` skill (Stitch) or \`frontend-design\` skill
-   - Task 0.2: Build interactive prototype via \`playground\` skill — **save to \`.specflow/specs/{spec-name}/artifacts/playground.html\`**
+   - Task 0.2: Build interactive prototype via \`playground\` skill — **save to \`${wr}/specs/{spec-name}/artifacts/playground.html\`**
    - Task 0.3: Present to user, collect explicit visual approval
 3. If a reference HTML/mockup file path is listed in design.md, the prototype MUST use it as the baseline — do not ignore provided prototypes
 4. **Save all visual artifacts** (playground HTML, mockup screenshots, Stitch exports) to the spec's \`artifacts/\` folder
@@ -283,8 +287,8 @@ flowchart TD
 **Trigger**: This phase fires automatically after Phase 3 approval (and Phase 3.5 if applicable). It runs on EVERY spec — it is not conditional.
 
 **File Operations**:
-- Read specs: \`.specflow/specs/{issue-id}-{kebab-title}/requirements.md\`, \`design.md\`, \`tasks.md\`
-- Create report: \`.specflow/specs/{issue-id}-{kebab-title}/readiness-report.md\`
+- Read specs: \`${wr}/specs/{issue-id}-{kebab-title}/requirements.md\`, \`design.md\`, \`tasks.md\`
+- Create report: \`${wr}/specs/{issue-id}-{kebab-title}/readiness-report.md\`
 
 **Tools**:
 - approvals: Submit readiness report for dashboard review (actions: request, status, delete)
@@ -299,7 +303,7 @@ flowchart TD
    - **Prototype consistency**: If design.md references a prototype HTML file, verify it appears in task 0.1-0.3 artifacts and/or task \`_Leverage\` fields.
    - **File touch map validation**: Verify the File Touch Map in tasks.md covers all files mentioned in individual tasks.
    - **Test Design Coverage**: At least one task in tasks.md covers test authoring for new behavior (matching task title/description patterns: "test", "TDD", "verify", "write tests"). If no test task found → FAIL.
-   - **Release Hygiene**: Check \`.specflow/project-conventions.json\` (if exists):
+   - **Release Hygiene**: Check \`${wr}/project-conventions.json\` (if exists):
      - If version lock detected: verify a task covers version bump. Missing → FAIL.
      - If changelog detected: verify a task covers changelog entry. Missing → FAIL.
      - Verify a task covers DocVault documentation update. Missing → FAIL.
@@ -356,7 +360,7 @@ flowchart TD
 **Purpose**: Execute tasks systematically.
 
 **File Operations**:
-- Read specs: \`.specflow/specs/{issue-id}-{kebab-title}/*.md\` (if returning to work)
+- Read specs: \`${wr}/specs/{issue-id}-{kebab-title}/*.md\` (if returning to work)
 - Edit tasks.md to update status:
   - \`- [ ]\` = Pending task
   - \`- [-]\` = In-progress task
@@ -378,17 +382,17 @@ flowchart TD
      - Read design.md \`UI Impact Assessment\` section
      - If \`Prototype Required: Yes\`, confirm tasks 0.1–0.3 are marked \`[x]\` and \`Prototype Artifacts\` in design.md are populated
      - If prototype gate is incomplete, STOP — complete Phase 3.5 first
-     - **MANDATORY**: Include the playground file path (e.g., \`.specflow/specs/{spec-name}/artifacts/playground.html\`) in the subagent prompt so the implementer has the approved visual reference
+     - **MANDATORY**: Include the playground file path (e.g., \`${wr}/specs/{spec-name}/artifacts/playground.html\`) in the subagent prompt so the implementer has the approved visual reference
      - Tell the implementer explicitly: "Source your visual design from the prototype file. Do NOT re-read earlier spec documents and reinvent the design. The prototype IS the approved design."
      - The spec compliance reviewer (Stage 1) will compare implementation against the prototype — visual deviations are a FAIL
    - Edit tasks.md: Change \`[ ]\` to \`[-]\` for the task you're starting
    - **CRITICAL: BEFORE implementing, search existing implementation logs**:
-     - Implementation logs are in: \`.specflow/specs/{issue-id}-{kebab-title}/Implementation Logs/\`
+     - Implementation logs are in: \`${wr}/specs/{issue-id}-{kebab-title}/Implementation Logs/\`
      - **Option 1: Use grep for fast searches**:
-       - \`grep -r "api\|endpoint" .specflow/specs/{issue-id}-{kebab-title}/Implementation Logs/\` - Find API endpoints
-       - \`grep -r "component" .specflow/specs/{issue-id}-{kebab-title}/Implementation Logs/\` - Find UI components
-       - \`grep -r "function" .specflow/specs/{issue-id}-{kebab-title}/Implementation Logs/\` - Find utility functions
-       - \`grep -r "integration" .specflow/specs/{issue-id}-{kebab-title}/Implementation Logs/\` - Find integration patterns
+       - \`grep -r "api\|endpoint" ${wr}/specs/{issue-id}-{kebab-title}/Implementation Logs/\` - Find API endpoints
+       - \`grep -r "component" ${wr}/specs/{issue-id}-{kebab-title}/Implementation Logs/\` - Find UI components
+       - \`grep -r "function" ${wr}/specs/{issue-id}-{kebab-title}/Implementation Logs/\` - Find utility functions
+       - \`grep -r "integration" ${wr}/specs/{issue-id}-{kebab-title}/Implementation Logs/\` - Find integration patterns
      - **Option 2: Read markdown files directly** - Use Read tool to examine specific log files
      - Best practice: Search 2-3 different terms to discover comprehensively
      - This prevents: duplicate endpoints, reimplemented components, broken integrations
@@ -430,7 +434,7 @@ Never write implementation code in the main context — dispatch a subagent inst
 
 **Parallel Session** — If the plan has 10+ tasks, split into session-sized batches. Each session handles ~3-4 batches of 3 tasks. Use a handoff mechanism between sessions to relay context (spec name, completed tasks, next task).
 
-**Implementer template**: See \`.specflow/templates/implementer-prompt-template.md\` for the subagent dispatch template. Paste the full task text into the subagent prompt — don't make the subagent read the plan file.
+**Implementer template**: See \`${wr}/templates/implementer-prompt-template.md\` for the subagent dispatch template. Paste the full task text into the subagent prompt — don't make the subagent read the plan file.
 
 #### Two-Stage Review (after each task, BEFORE marking [x])
 
@@ -442,7 +446,7 @@ Dispatch a reviewer subagent to verify the implementer built what was requested 
 - Check for missing requirements, extra/unneeded work, misunderstandings
 - ✅ Pass = proceed to Stage 2
 - ❌ Fail = implementer fixes issues → dispatch reviewer again
-- Template: \`.specflow/templates/spec-reviewer-template.md\`
+- Template: \`${wr}/templates/spec-reviewer-template.md\`
 
 **Stage 2 — Code Quality Review:**
 Only dispatch AFTER Stage 1 passes. Verify the code is well-built and production-ready.
@@ -450,7 +454,7 @@ Only dispatch AFTER Stage 1 passes. Verify the code is well-built and production
 - Categorize issues: Critical (must fix) / Important (should fix) / Minor (nice to have)
 - ✅ Approved = proceed to log-implementation → mark [x]
 - Issues found = implementer fixes → dispatch reviewer again
-- Template: \`.specflow/templates/code-quality-reviewer-template.md\`
+- Template: \`${wr}/templates/code-quality-reviewer-template.md\`
 
 **Review loop:** If either reviewer finds issues, the implementer subagent fixes them, then the reviewer re-reviews. Repeat until approved. Never skip re-review — "it should be fine now" is not verification.
 
@@ -482,7 +486,7 @@ Phase 5 has three stages. The spec is NOT complete until all three are done.
 **Purpose**: Run the project's test suite to verify the implementation.
 
 **Process**:
-1. Check \`.specflow/project-conventions.json\` for the project's test command and framework.
+1. Check \`${wr}/project-conventions.json\` for the project's test command and framework.
 2. If conventions exist and specify a test command: run that command (e.g., \`npm test\`, \`npx vitest\`, \`pytest\`).
 3. If no conventions exist: check \`package.json\` for a \`test\` script. If found, run \`npm test\`. If not found, ask the user for the test command.
 4. If the project uses Browserbase/Stagehand (\`conventions.testing.hasBrowserbase\` is true):
@@ -541,7 +545,7 @@ Phase 5 has three stages. The spec is NOT complete until all three are done.
 ## Workflow Rules
 
 - Create documents directly at specified file paths
-- Read templates from \`.specflow/templates/\` directory
+- Templates are resolved automatically: project override (${wr}/templates/) → global → bundled fallback
 - Follow exact template structures
 - Get explicit user approval between phases (using approvals tool with action:'request')
 - Complete phases in sequence (no skipping)
@@ -565,31 +569,29 @@ Phase 5 has three stages. The spec is NOT complete until all three are done.
 - Steering docs are optional - only create when explicitly requested
 
 ## File Structure
+
+All specflow artifacts live in DocVault. The project root only has \`.specflow/config.json\`.
+
 \`\`\`
-.specflow/
-├── templates/           # Auto-populated on server start
-│   ├── requirements-template.md
-│   ├── design-template.md
-│   ├── tasks-template.md
-│   ├── product-template.md
-│   ├── tech-template.md
-│   └── structure-template.md
+${wr}/                               # DocVault/specflow/{project}/ (resolved via config.json)
+├── templates/                       # Project-level overrides ONLY (not copies of globals)
 ├── specs/
 │   └── {ISSUE-ID}-{kebab-title}/
 │       ├── requirements.md
 │       ├── design.md
 │       ├── tasks.md
-│       ├── readiness-report.md      # Phase 3.9 — NOT tasks.md
+│       ├── readiness-report.md      # Phase 3.9
 │       ├── artifacts/               # Visual source of truth for UI specs
-│       │   ├── playground.html      # Approved interactive prototype (Phase 3.5)
-│       │   └── *.png                # Mockup screenshots / Stitch exports
-│       └── Implementation Logs/     # Created automatically
+│       │   ├── playground.html
+│       │   └── *.png
+│       └── Implementation Logs/
 │           ├── task-1_timestamp_id.md
-│           ├── task-2_timestamp_id.md
 │           └── ...
-└── steering/
-    ├── product.md
-    ├── tech.md
-    └── structure.md
+├── steering/
+│   ├── product.md
+│   ├── tech.md
+│   └── structure.md
+├── approvals/                       # Approval records
+└── archive/specs/                   # Archived specs
 \`\`\``;
 }
