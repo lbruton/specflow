@@ -10,6 +10,9 @@ export interface Project {
   projectName: string;
   projectPath: string;
   instances: ProjectInstance[];
+  worktrees: string[];
+  pendingApprovals: number;
+  activeTasks: number;
 }
 
 interface ProjectContextType {

@@ -16,6 +16,7 @@ export interface ProjectContext {
   workflowRootPath: string;      // Original workflow root path for display/debugging
   projectName: string;
   instances: ProjectInstance[];  // Active MCP server instances for this project
+  worktrees: string[];           // Active worktree workspace paths
   parser: SpecParser;
   watcher: SpecWatcher;
   approvalStorage: ApprovalStorage;
@@ -116,6 +117,7 @@ export class ProjectManager extends EventEmitter {
             project.projectPath = PathUtils.translatePath(entry.workflowRootPath);
             project.workspacePath = PathUtils.translatePath(entry.projectPath);
             project.instances = entry.instances || [];
+            project.worktrees = entry.worktrees || [];
           }
         }
       }
@@ -128,7 +130,7 @@ export class ProjectManager extends EventEmitter {
       }
 
       // Emit projects update event
-      this.emit('projects-update', this.getProjectsList());
+      this.emit('projects-update', await this.getProjectsList());
     } catch (error) {
       console.error('Error syncing with registry:', error);
     }
@@ -140,7 +142,11 @@ export class ProjectManager extends EventEmitter {
   private async addProject(entry: ProjectRegistryEntry): Promise<void> {
     try {
       // Translate paths once at entry point (components should not know about Docker)
-      const translatedWorkspacePath = PathUtils.translatePath(entry.projectPath);
+      // Use first worktree as workspace path when available, otherwise fall back to projectPath
+      const workspacePath = (entry.worktrees && entry.worktrees.length > 0)
+        ? entry.worktrees[0]
+        : entry.projectPath;
+      const translatedWorkspacePath = PathUtils.translatePath(workspacePath);
       const translatedWorkflowRootPath = PathUtils.translatePath(entry.workflowRootPath);
 
       const parser = new SpecParser(translatedWorkflowRootPath);
@@ -180,6 +186,7 @@ export class ProjectManager extends EventEmitter {
         workflowRootPath: entry.workflowRootPath,
         projectName: entry.projectName,
         instances: entry.instances || [],       // Track MCP server instances
+        worktrees: entry.worktrees || [],       // Active worktree workspace paths
         parser,
         watcher,
         approvalStorage,
@@ -237,20 +244,56 @@ export class ProjectManager extends EventEmitter {
   }
 
   /**
-   * Get projects list for API
+   * Get projects list for API (enriched with approval/task counts and worktrees)
    */
-  getProjectsList(): Array<{
+  async getProjectsList(): Promise<Array<{
     projectId: string;
     projectName: string;
     projectPath: string;
     instances: ProjectInstance[];
-  }> {
-    return Array.from(this.projects.values()).map(p => ({
-      projectId: p.projectId,
-      projectName: p.projectName,
-      projectPath: p.originalProjectPath,  // Return original path for display
-      instances: p.instances
-    }));
+    worktrees: string[];
+    pendingApprovals: number;
+    activeTasks: number;
+  }>> {
+    const projects = Array.from(this.projects.values());
+    const results = await Promise.all(
+      projects.map(async (p) => {
+        let pendingApprovals = 0;
+        let activeTasks = 0;
+
+        // Get pending approval count
+        try {
+          const pending = await p.approvalStorage.getAllPendingApprovals();
+          pendingApprovals = pending.length;
+        } catch {
+          // Default to 0 on error
+        }
+
+        // Get active task count (pending + in-progress across all specs)
+        try {
+          const specs = await p.parser.getAllSpecs();
+          for (const spec of specs) {
+            if (spec.taskProgress) {
+              // pending = total - completed (pending includes both [ ] and [-] tasks)
+              activeTasks += spec.taskProgress.pending;
+            }
+          }
+        } catch {
+          // Default to 0 on error
+        }
+
+        return {
+          projectId: p.projectId,
+          projectName: p.projectName,
+          projectPath: p.originalProjectPath,  // Return original path for display
+          instances: p.instances,
+          worktrees: p.worktrees,
+          pendingApprovals,
+          activeTasks
+        };
+      })
+    );
+    return results;
   }
 
   /**

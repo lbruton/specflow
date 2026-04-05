@@ -11,10 +11,11 @@ export interface ProjectInstance {
 
 export interface ProjectRegistryEntry {
   projectId: string;
-  projectPath: string;       // Workspace path (identity)
+  projectPath: string;       // Canonical repo root (workflowRootPath)
   workflowRootPath: string;  // Path where .spec-workflow is stored (shared root)
   projectName: string;
   instances: ProjectInstance[];
+  worktrees: string[];       // Active worktree workspace paths
 }
 
 export interface RegisterProjectOptions {
@@ -111,7 +112,8 @@ export class ProjectRegistry {
           projectPath: normalizedProjectPath,
           workflowRootPath: normalizedWorkflowRootPath,
           projectName: entry.projectName || generateProjectDisplayName(normalizedProjectPath, normalizedWorkflowRootPath),
-          instances: Array.isArray(entry.instances) ? entry.instances : []
+          instances: Array.isArray(entry.instances) ? entry.instances : [],
+          worktrees: Array.isArray(entry.worktrees) ? entry.worktrees : []
         });
       }
 
@@ -199,16 +201,16 @@ export class ProjectRegistry {
    */
   async registerProject(projectPath: string, pid: number, options: RegisterProjectOptions = {}): Promise<string> {
     const workspacePath = resolve(projectPath);
+    const workflowRootPath = resolve(options.workflowRootPath || projectPath);
 
     // Skip registration for paths outside configured project root(s)
-    if (!this.isUnderProjectRoot(workspacePath)) {
-      return generateProjectId(workspacePath);
+    if (!this.isUnderProjectRoot(workflowRootPath)) {
+      return generateProjectId(workflowRootPath);
     }
 
     const registry = await this.readRegistry();
-    const workflowRootPath = resolve(options.workflowRootPath || projectPath);
-    const projectId = generateProjectId(workspacePath);
-    const projectName = options.projectName || generateProjectDisplayName(workspacePath, workflowRootPath);
+    const projectId = generateProjectId(workflowRootPath);
+    const projectName = options.projectName || basename(workflowRootPath);
 
     const existing = registry.get(projectId);
 
@@ -221,19 +223,30 @@ export class ProjectRegistry {
         liveInstances.push({ pid, registeredAt: new Date().toISOString() });
       }
 
+      // Track worktree paths (deduped)
+      if (workspacePath !== workflowRootPath && !existing.worktrees.includes(workspacePath)) {
+        existing.worktrees.push(workspacePath);
+      }
+
       // Update with live instances (no limit on number of instances)
-      existing.projectPath = workspacePath;
+      existing.projectPath = workflowRootPath;
       existing.workflowRootPath = workflowRootPath;
       existing.projectName = projectName;
       existing.instances = liveInstances;
       registry.set(projectId, existing);
     } else {
       // New project
+      const worktrees: string[] = [];
+      if (workspacePath !== workflowRootPath) {
+        worktrees.push(workspacePath);
+      }
+
       const entry: ProjectRegistryEntry = {
         projectId,
-        projectPath: workspacePath,
+        projectPath: workflowRootPath,
         workflowRootPath,
         projectName,
+        worktrees,
         instances: [{ pid, registeredAt: new Date().toISOString() }]
       };
       registry.set(projectId, entry);
@@ -251,14 +264,31 @@ export class ProjectRegistry {
   async unregisterProject(projectPath: string, pid?: number): Promise<void> {
     const registry = await this.readRegistry();
     const absolutePath = resolve(projectPath);
-    const projectId = generateProjectId(absolutePath);
 
-    const entry = registry.get(projectId);
+    // Try direct lookup first (path is the workflowRootPath)
+    let projectId = generateProjectId(absolutePath);
+    let entry = registry.get(projectId);
+
+    // If not found, the path might be a worktree — scan entries for a worktree match
+    if (!entry) {
+      for (const [id, e] of registry.entries()) {
+        if (e.worktrees.includes(absolutePath)) {
+          projectId = id;
+          entry = e;
+          break;
+        }
+      }
+    }
+
     if (!entry) return;
 
     if (pid !== undefined) {
       // Remove only this PID's instance
       entry.instances = entry.instances.filter(i => i.pid !== pid);
+
+      // Also remove the worktree path if present
+      entry.worktrees = entry.worktrees.filter(w => w !== absolutePath);
+
       if (entry.instances.length === 0) {
         registry.delete(projectId);
       } else {
@@ -295,8 +325,20 @@ export class ProjectRegistry {
   async getProject(projectPath: string): Promise<ProjectRegistryEntry | null> {
     const registry = await this.readRegistry();
     const absolutePath = resolve(projectPath);
+
+    // Try direct lookup (path is the workflowRootPath)
     const projectId = generateProjectId(absolutePath);
-    return registry.get(projectId) || null;
+    const direct = registry.get(projectId);
+    if (direct) return direct;
+
+    // Scan for worktree match
+    for (const entry of registry.values()) {
+      if (entry.worktrees.includes(absolutePath)) {
+        return entry;
+      }
+    }
+
+    return null;
   }
 
   /**
@@ -305,6 +347,87 @@ export class ProjectRegistry {
   async getProjectById(projectId: string): Promise<ProjectRegistryEntry | null> {
     const registry = await this.readRegistry();
     return registry.get(projectId) || null;
+  }
+
+  /**
+   * Migrate legacy registry entries that were created before worktree-aware keying.
+   * Groups entries by workflowRootPath and merges duplicates into a single canonical entry.
+   * Idempotent — returns false if no changes were made.
+   */
+  private async migrateDeduplicateEntries(registry: Map<string, ProjectRegistryEntry>): Promise<boolean> {
+    // Group entries by workflowRootPath
+    const groups = new Map<string, string[]>(); // workflowRootPath -> projectId[]
+    for (const [projectId, entry] of registry.entries()) {
+      const key = entry.workflowRootPath;
+      const existing = groups.get(key);
+      if (existing) {
+        existing.push(projectId);
+      } else {
+        groups.set(key, [projectId]);
+      }
+    }
+
+    let merged = false;
+
+    for (const [workflowRootPath, projectIds] of groups.entries()) {
+      if (projectIds.length <= 1) continue;
+
+      // Find the canonical entry — the one whose projectId matches the workflowRootPath hash
+      const canonicalId = generateProjectId(workflowRootPath);
+      let canonicalEntry = registry.get(canonicalId);
+
+      if (!canonicalEntry) {
+        // No correctly-keyed entry exists — create one from the first duplicate
+        const firstEntry = registry.get(projectIds[0])!;
+        canonicalEntry = {
+          projectId: canonicalId,
+          projectPath: workflowRootPath,
+          workflowRootPath,
+          projectName: basename(workflowRootPath),
+          instances: [],
+          worktrees: []
+        };
+        registry.set(canonicalId, canonicalEntry);
+      }
+
+      // Merge all duplicate entries into the canonical one
+      const seenPids = new Set(canonicalEntry.instances.map(i => i.pid));
+      const seenWorktrees = new Set(canonicalEntry.worktrees);
+
+      for (const dupId of projectIds) {
+        if (dupId === canonicalId) continue;
+
+        const dupEntry = registry.get(dupId)!;
+
+        // Merge instances (dedup by PID)
+        for (const instance of dupEntry.instances) {
+          if (!seenPids.has(instance.pid)) {
+            seenPids.add(instance.pid);
+            canonicalEntry.instances.push(instance);
+          }
+        }
+
+        // Merge worktrees (dedup)
+        for (const wt of dupEntry.worktrees) {
+          if (!seenWorktrees.has(wt)) {
+            seenWorktrees.add(wt);
+            canonicalEntry.worktrees.push(wt);
+          }
+        }
+
+        // Delete the non-canonical entry
+        registry.delete(dupId);
+      }
+
+      // Ensure canonical metadata is correct
+      canonicalEntry.projectPath = workflowRootPath;
+      canonicalEntry.projectName = basename(workflowRootPath);
+
+      console.error(`[ProjectRegistry] Migration: merged ${projectIds.length} entries for ${workflowRootPath}`);
+      merged = true;
+    }
+
+    return merged;
   }
 
   /**
@@ -333,6 +456,11 @@ export class ProjectRegistry {
       }
     }
 
+    // Deduplicate legacy entries that were keyed by worktree path instead of workflowRootPath
+    if (await this.migrateDeduplicateEntries(registry)) {
+      needsWrite = true;
+    }
+
     if (needsWrite) {
       await this.writeRegistry(registry);
       this.needsInitialization = false; // Reset flag after successful write
@@ -347,8 +475,19 @@ export class ProjectRegistry {
   async isProjectRegistered(projectPath: string): Promise<boolean> {
     const registry = await this.readRegistry();
     const absolutePath = resolve(projectPath);
+
+    // Direct lookup
     const projectId = generateProjectId(absolutePath);
-    return registry.has(projectId);
+    if (registry.has(projectId)) return true;
+
+    // Worktree scan
+    for (const entry of registry.values()) {
+      if (entry.worktrees.includes(absolutePath)) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   /**
