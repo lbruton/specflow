@@ -1,8 +1,0 @@
-{
-  "mcpServers": {
-    "specflow": {
-      "command": "npx",
-      "args": ["-y", "@lbruton/specflow", "."]
-    }
-  }
-}

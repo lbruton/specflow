@@ -150,27 +150,31 @@ Each agent reads the current spec state, advances the workflow, and writes the r
 
 ## Quick Start
 
-### Claude Code — Via Plugin Marketplace (recommended)
+### Claude Code
 
-The marketplace handles installation, updates, and skill registration automatically:
+**Step 1 — Install the MCP server** (provides tools and prompts):
+
+Add to your user-level settings (`~/.claude/settings.json`):
+
+```json
+{
+  "mcpServers": {
+    "specflow": {
+      "command": "npx",
+      "args": ["-y", "@lbruton/specflow@latest", "."]
+    }
+  }
+}
+```
+
+**Step 2 — Install the plugin** (optional — provides skills and slash commands):
 
 1. Open Claude Code
 2. Run `/install-plugin` or browse the marketplace
 3. Search for `specflow`
-4. Install — tools and skills are available immediately
+4. Install — skills like `/prime`, `/wrap`, `/spec` are available immediately
 
-### Claude Code — Manual Install
-
-```bash
-git clone https://github.com/lbruton/specflow.git
-cd specflow
-npm install && npm run build
-
-# Copy into Claude Code plugins directory
-cp -r . ~/.claude/plugins/marketplaces/specflow-marketplace/
-```
-
-> **Note:** The plugin directory is a copy, not a symlink. After updating the repo, re-copy to pick up changes. The compiled MCP server (`dist/`) in the cache auto-updates from npm on next Claude Code launch.
+> **Note:** The plugin provides skills and commands only — it does not start the MCP server. The MCP server must be installed separately via Step 1.
 
 ### Gemini CLI — Manual Install
 

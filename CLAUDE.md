@@ -11,8 +11,8 @@ MCP server plugin for spec-driven development with a real-time web dashboard. Po
 | Upstream | [Pimzino/spec-workflow-mcp](https://github.com/Pimzino/spec-workflow-mcp) |
 | Origin | [lbruton/specflow](https://github.com/lbruton/specflow) |
 | Branch | `main` (direct commits OK) |
-| Symlinked from | `~/.claude/plugins/marketplaces/specflow-marketplace/` |
-| MCP cache entry | `~/.claude/plugins/cache/specflow-marketplace/specflow-with-dashboard/.../.mcp.json` |
+| Plugin copy | `~/.claude/plugins/marketplaces/specflow-marketplace/` (skills/commands only) |
+| MCP install | User-level `~/.claude/settings.json` → `npx -y @lbruton/specflow@latest .` |
 | Dashboard port | 5051 |
 | Dashboard service | `com.spec-workflow.dashboard` (launchd) |
 | Issue prefix | `SWF` |
@@ -31,14 +31,16 @@ When making changes that affect documented behavior, run `/vault-update` before 
 
 ## Architecture
 
-This repo is the canonical source. The plugin directory at `~/.claude/plugins/marketplaces/specflow-marketplace/` is a **copy**, not a symlink — plugin skill files must be manually copied after edits (see gotcha below). The compiled `dist/` in the MCP cache auto-updates from npm on next Claude Code launch.
+This repo is the canonical source. The plugin directory at `~/.claude/plugins/marketplaces/specflow-marketplace/` is a **copy**, not a symlink — plugin skill files must be manually copied after edits (see gotcha below).
+
+The MCP server is **not bundled with the plugin**. It is installed separately in the user's `~/.claude/settings.json` and runs via `npx`. This avoids self-referencing conflicts when working inside the specflow repo itself.
 
 ```
 /Volumes/DATA/GitHub/specflow/              <-- you are here (canonical source)
-    copied to:
+    plugin (skills/commands) copied to:
 ~/.claude/plugins/marketplaces/specflow-marketplace/
-    loaded by MCP via:
-~/.claude/plugins/cache/.../dist/index.js
+    MCP server installed separately via:
+~/.claude/settings.json → npx -y @lbruton/specflow@latest .
 ```
 
 ## Source Structure
