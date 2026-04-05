@@ -224,8 +224,28 @@ async function handleRequestApproval(
 
     if (isMarkdownFile) {
       try {
-        const fullPath = join(validatedProjectPath, args.filePath);
-        markdownContent = await readFile(fullPath, 'utf-8');
+        // Try DocVault workflow root first, then project root (legacy fallback)
+        const workflowRoot = PathUtils.getWorkflowRoot(validatedProjectPath);
+        const candidates = [
+          join(workflowRoot, args.filePath),
+          join(validatedProjectPath, args.filePath),
+        ];
+        // Deduplicate (when no DocVault, workflowRoot is {project}/.specflow so both differ)
+        const uniqueCandidates = [...new Set(candidates)];
+
+        let readSuccess = false;
+        for (const candidate of uniqueCandidates) {
+          try {
+            markdownContent = await readFile(candidate, 'utf-8');
+            readSuccess = true;
+            break;
+          } catch {
+            // try next candidate
+          }
+        }
+        if (!readSuccess) {
+          throw new Error(`ENOENT: file not found at any candidate path: ${uniqueCandidates.join(', ')}`);
+        }
       } catch (fileError) {
         await approvalStorage.stop();
         const errorMessage = fileError instanceof Error ? fileError.message : String(fileError);
@@ -235,7 +255,7 @@ async function handleRequestApproval(
         };
       }
 
-      const mdxValidation = await validateMarkdownForMdx(markdownContent);
+      const mdxValidation = await validateMarkdownForMdx(markdownContent as string);
       if (!mdxValidation.valid) {
         await approvalStorage.stop();
         const formattedIssues = formatMdxValidationIssues(mdxValidation.issues);
@@ -262,7 +282,8 @@ async function handleRequestApproval(
 
     // Validate tasks.md format before allowing approval request
     if (args.filePath.endsWith('tasks.md')) {
-      const content = markdownContent ?? await readFile(join(validatedProjectPath, args.filePath), 'utf-8');
+      // markdownContent is already resolved via DocVault-aware candidates above
+      const content = markdownContent ?? await readFile(join(PathUtils.getWorkflowRoot(validatedProjectPath), args.filePath), 'utf-8');
       const validationResult = validateTasksMarkdown(content);
 
       if (!validationResult.valid) {

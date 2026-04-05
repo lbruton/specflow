@@ -24,6 +24,7 @@ import {
   DEFAULT_SECURITY_CONFIG
 } from '../core/security-utils.js';
 import { SecurityConfig } from '../types.js';
+import { loadConfig } from '../core/config-loader.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -636,10 +637,18 @@ export class MultiProjectDashboardServer {
         }
 
         if (!isAbsolutePath) {
-          // 3) Resolve against workflow root
+          // 3) Resolve against DocVault specflow root (if configured)
+          try {
+            const config = await loadConfig(project.workspacePath);
+            candidateSet.add(join(config.specflowRoot, p));
+          } catch {
+            // No DocVault config — skip this candidate
+          }
+
+          // 4) Resolve against workflow root
           candidateSet.add(join(project.projectPath, p));
 
-          // 4) Legacy fallback for historical paths
+          // 5) Legacy fallback for historical paths
           if (!p.includes('.specflow')) {
             candidateSet.add(join(project.projectPath, '.specflow', p));
           }
