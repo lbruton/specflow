@@ -7,6 +7,7 @@ import { SpecArchiveService } from '../core/archive-service.js';
 import { ProjectRegistry, ProjectRegistryEntry, ProjectInstance } from '../core/project-registry.js';
 import { PathUtils } from '../core/path-utils.js';
 import { resolveGitRoot, resolveGitWorkspaceRoot } from '../core/git-utils.js';
+import { loadConfig } from '../core/config-loader.js';
 
 export interface ProjectContext {
   projectId: string;
@@ -147,7 +148,17 @@ export class ProjectManager extends EventEmitter {
         ? entry.worktrees[0]
         : entry.projectPath;
       const translatedWorkspacePath = PathUtils.translatePath(workspacePath);
-      const translatedWorkflowRootPath = PathUtils.translatePath(entry.workflowRootPath);
+      let translatedWorkflowRootPath = PathUtils.translatePath(entry.workflowRootPath);
+
+      // Load DocVault config if available — use the DocVault specflow root instead of git root
+      // This ensures the dashboard reads specs/approvals/templates from DocVault, matching the MCP server
+      try {
+        const config = await loadConfig(translatedWorkspacePath);
+        translatedWorkflowRootPath = PathUtils.translatePath(config.specflowRoot);
+        console.error(`DocVault config loaded for ${entry.projectName}: ${config.specflowRoot}`);
+      } catch {
+        // No DocVault config — use legacy workflowRootPath (git root / .specflow)
+      }
 
       const parser = new SpecParser(translatedWorkflowRootPath);
       const watcher = new SpecWatcher(translatedWorkflowRootPath, parser);

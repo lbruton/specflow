@@ -3,7 +3,9 @@ import { promises as fs } from 'fs';
 import { join, isAbsolute, resolve, basename } from 'path';
 import chokidar from 'chokidar';
 import { diffLines, Change } from 'diff';
-import { PathUtils } from '../core/path-utils.js';
+// PathUtils import removed — approval-storage uses direct path joins
+// because PathUtils.getApprovalsPath() relies on a process-level DocVault
+// singleton that isn't initialized in the dashboard process.
 
 export interface ApprovalComment {
   type: 'selection' | 'general';
@@ -138,7 +140,10 @@ export class ApprovalStorage extends EventEmitter {
     // Relative approval file paths are resolved against workspace path by default.
     // Falls back to workflow root path when files only exist in shared .specflow root.
     this.fileResolutionPath = resolve(options.fileResolutionPath ?? translatedPath);
-    this.approvalsDir = PathUtils.getApprovalsPath(resolvedPath);
+    // Use direct path join — the caller passes the correct workflow root.
+    // PathUtils.getApprovalsPath() re-derives the root via a process-level singleton
+    // which isn't initialized in the dashboard process for DocVault projects.
+    this.approvalsDir = join(resolvedPath, 'approvals');
   }
 
   async start(): Promise<void> {
