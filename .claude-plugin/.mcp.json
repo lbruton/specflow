@@ -1,8 +1,8 @@
 {
   "mcpServers": {
     "specflow": {
-      "command": "node",
-      "args": ["/Users/lbruton/.claude/plugins/marketplaces/specflow-marketplace/dist/index.js", "."]
+      "command": "npx",
+      "args": ["-y", "@lbruton/specflow", "."]
     }
   }
 }
