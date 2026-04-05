@@ -256,7 +256,7 @@ export class JobScheduler {
       if (createdTime < cutoffTime) {
         try {
           // Delete spec directory
-          const specPath = join(projectPath, '.specflow', 'specs', spec.name);
+          const specPath = join(projectPath, 'specs', spec.name);
           await fs.rm(specPath, { recursive: true, force: true });
           deleted++;
         } catch (e) {
@@ -287,7 +287,7 @@ export class JobScheduler {
       if (createdTime < cutoffTime) {
         try {
           // Delete archived spec directory
-          const archivedPath = join(projectPath, '.specflow', 'archive', 'specs', spec.name);
+          const archivedPath = join(projectPath, 'archive', 'specs', spec.name);
           await fs.rm(archivedPath, { recursive: true, force: true });
           deleted++;
         } catch (e) {
