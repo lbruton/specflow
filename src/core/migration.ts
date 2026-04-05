@@ -6,7 +6,7 @@
  * Skips destinations that already contain files to prevent data loss.
  */
 
-import { readdir, cp, access } from 'fs/promises';
+import { readdir, cp, access, rm } from 'fs/promises';
 import { join } from 'path';
 import { constants } from 'fs';
 import type { ResolvedConfig } from './config-loader.js';
@@ -46,6 +46,17 @@ export async function needsMigration(
     const srcPath = join(localRoot, srcDir);
     if (await dirHasFiles(srcPath)) {
       return true;
+    }
+  }
+
+  // Also check for legacy dirs that need cleanup (e.g., templates/)
+  const legacyDirs = ['templates'];
+  for (const dir of legacyDirs) {
+    try {
+      await access(join(localRoot, dir), constants.F_OK);
+      return true; // Legacy dir exists and needs cleanup
+    } catch {
+      // Doesn't exist
     }
   }
 
@@ -99,10 +110,28 @@ export async function migrateToDocVault(
       await cp(srcPath, destPath, { recursive: true });
       console.error(`[migration] Copied ${srcDir}/ → ${destPath}`);
       result.migratedDirs.push(srcDir);
+
+      // Clean up local source after successful copy
+      await rm(srcPath, { recursive: true });
+      console.error(`[migration] Cleaned up local ${srcDir}/`);
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       console.error(`[migration] Error migrating ${srcDir}/: ${msg}`);
       result.errors.push(`${srcDir}: ${msg}`);
+    }
+  }
+
+  // Clean up legacy local directories that are no longer needed
+  // These were auto-created by old WorkspaceInitializer but are now in DocVault
+  const legacyCleanup = ['templates'];
+  for (const dir of legacyCleanup) {
+    const dirPath = join(localRoot, dir);
+    try {
+      await access(dirPath, constants.F_OK);
+      await rm(dirPath, { recursive: true });
+      console.error(`[migration] Cleaned up legacy local ${dir}/`);
+    } catch {
+      // Doesn't exist, nothing to clean
     }
   }
 

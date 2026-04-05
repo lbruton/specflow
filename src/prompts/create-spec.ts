@@ -1,6 +1,7 @@
 import { Prompt, PromptMessage } from '@modelcontextprotocol/sdk/types.js';
 import { PromptDefinition } from './types.js';
 import { ToolContext } from '../types.js';
+import { PathUtils } from '../core/path-utils.js';
 
 const prompt: Prompt = {
   name: 'create-spec',
@@ -37,6 +38,11 @@ async function handler(args: Record<string, any>, context: ToolContext): Promise
     throw new Error(`documentType must be one of: ${validDocTypes.join(', ')}`);
   }
 
+  // Resolve paths through PathUtils (DocVault-aware)
+  const workflowRoot = PathUtils.getWorkflowRoot(context.projectPath);
+  const templatesDir = `${workflowRoot}/templates`;
+  const specDir = `${workflowRoot}/specs/${specName}`;
+
   // Build context-aware messages
   const messages: PromptMessage[] = [
     {
@@ -53,17 +59,17 @@ ${description ? `- Description: ${description}` : ''}
 ${context.dashboardUrl ? `- Dashboard: ${context.dashboardUrl}` : ''}
 
 **Instructions:**
-1. First, read the template at: .specflow/templates/${documentType}-template.md
+1. First, read the template at: ${templatesDir}/${documentType}-template.md
 2. Follow the template structure exactly - this ensures consistency across the project
 3. Create comprehensive content that follows spec-driven development best practices
 4. Include all required sections from the template
 5. Use clear, actionable language
-6. Create the document at: .specflow/specs/${specName}/${documentType}.md
+6. Create the document at: ${specDir}/${documentType}.md
 7. After creating, use approvals tool with action:'request' to get user approval
 
 **File Paths:**
-- Template location: .specflow/templates/${documentType}-template.md
-- Document destination: .specflow/specs/${specName}/${documentType}.md
+- Template location: ${templatesDir}/${documentType}-template.md
+- Document destination: ${specDir}/${documentType}.md
 
 **Workflow Guidelines:**
 - Requirements documents define WHAT needs to be built

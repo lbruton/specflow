@@ -1,6 +1,7 @@
 import { Prompt, PromptMessage } from '@modelcontextprotocol/sdk/types.js';
 import { PromptDefinition } from './types.js';
 import { ToolContext } from '../types.js';
+import { PathUtils } from '../core/path-utils.js';
 
 const prompt: Prompt = {
   name: 'create-steering-doc',
@@ -32,6 +33,11 @@ async function handler(args: Record<string, any>, context: ToolContext): Promise
     throw new Error(`docType must be one of: ${validDocTypes.join(', ')}`);
   }
 
+  // Resolve paths through PathUtils (DocVault-aware)
+  const workflowRoot = PathUtils.getWorkflowRoot(context.projectPath);
+  const templatesDir = `${workflowRoot}/templates`;
+  const steeringDir = `${workflowRoot}/steering`;
+
   const messages: PromptMessage[] = [
     {
       role: 'user',
@@ -46,15 +52,15 @@ ${scope ? `- Scope: ${scope}` : ''}
 ${context.dashboardUrl ? `- Dashboard: ${context.dashboardUrl}` : ''}
 
 **Instructions:**
-1. First, read the template at: .specflow/templates/${docType}-template.md
-2. Check if steering docs exist at: .specflow/steering/
+1. First, read the template at: ${templatesDir}/${docType}-template.md
+2. Check if steering docs exist at: ${steeringDir}/
 3. Create comprehensive content following the template structure
-4. Create the document at: .specflow/steering/${docType}.md
+4. Create the document at: ${steeringDir}/${docType}.md
 5. After creating, use approvals tool with action:'request' to get user approval
 
 **File Paths:**
-- Template location: .specflow/templates/${docType}-template.md
-- Document destination: .specflow/steering/${docType}.md
+- Template location: ${templatesDir}/${docType}-template.md
+- Document destination: ${steeringDir}/${docType}.md
 
 **Steering Document Types:**
 - **product**: Defines project vision, goals, and user outcomes

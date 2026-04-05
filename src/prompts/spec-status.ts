@@ -1,6 +1,7 @@
 import { Prompt, PromptMessage } from '@modelcontextprotocol/sdk/types.js';
 import { PromptDefinition } from './types.js';
 import { ToolContext } from '../types.js';
+import { PathUtils } from '../core/path-utils.js';
 
 const prompt: Prompt = {
   name: 'spec-status',
@@ -25,6 +26,7 @@ async function handler(args: Record<string, any>, context: ToolContext): Promise
 
   const scope = specName ? `the "${specName}" feature` : 'all specifications in the project';
   const detailLevel = detailed ? 'detailed' : 'summary';
+  const workflowRoot = PathUtils.getWorkflowRoot(context.projectPath);
 
   const messages: PromptMessage[] = [
     {
@@ -42,9 +44,9 @@ ${context.dashboardUrl ? `- Dashboard: ${context.dashboardUrl}` : ''}
 **Instructions:**
 ${specName ? 
   `1. Use the spec-status tool with specName "${specName}" to get status information
-2. If you need detailed task information, read the tasks.md file directly at .specflow/specs/${specName}/tasks.md
+2. If you need detailed task information, read the tasks.md file directly at ${workflowRoot}/specs/${specName}/tasks.md
 3. Check for any pending approvals using approvals tool with action:'status'` :
-  `1. List directory .specflow/specs/ to see all specifications
+  `1. List directory ${workflowRoot}/specs/ to see all specifications
 2. Use the spec-status tool to get status for each specification
 3. Provide a consolidated overview of project progress`}
 

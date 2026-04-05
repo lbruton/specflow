@@ -29,7 +29,10 @@ export class WorkspaceInitializer {
 
       await this.initializeDocVaultDirectories();
       await this.initializeGlobalTemplates();
-      await this.initializeTemplates();
+      // NOTE: Do NOT call initializeTemplates() here — global templates
+      // are in DocVault/specflow/templates/ and project overrides come
+      // from migration (user-templates/ → templates/). We don't duplicate
+      // globals into the project folder.
       await this.initializeIndexFiles();
     } else {
       // Legacy mode: preserve existing behavior exactly
