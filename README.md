@@ -123,7 +123,7 @@ SpecFlow works as an MCP server, which means any agent that speaks the MCP proto
 
 | Agent | MCP Loading | Spec Lifecycle | Skills |
 |-------|------------|----------------|--------|
-| **Claude Code** | Plugin marketplace or manual | Full | 60+ skills via SKILL.md |
+| **Claude Code** | MCP via npm, plugin via git clone | Full | 60+ skills via SKILL.md |
 | **Gemini CLI** | Manual MCP config | Full | Via GEMINI.md instructions |
 | **Codex CLI** | Manual MCP config | Full | Via CODEX.md instructions |
 
@@ -169,10 +169,12 @@ Add to your user-level settings (`~/.claude/settings.json`):
 
 **Step 2 — Install the plugin** (optional — provides skills and slash commands):
 
-1. Open Claude Code
-2. Run `/install-plugin` or browse the marketplace
-3. Search for `specflow`
-4. Install — skills like `/prime`, `/wrap`, `/spec` are available immediately
+```bash
+git clone https://github.com/lbruton/specflow.git
+cp -r specflow/plugin/ ~/.claude/plugins/marketplaces/specflow-marketplace/
+```
+
+Skills like `/prime`, `/wrap`, `/spec` are available immediately after restarting Claude Code.
 
 > **Note:** The plugin provides skills and commands only — it does not start the MCP server. The MCP server must be installed separately via Step 1.
 

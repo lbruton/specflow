@@ -21,6 +21,20 @@ async function selectProject(page: Page, projectId: string): Promise<void> {
   await expect(page.getByTestId('project-dropdown-menu')).toBeHidden();
 }
 
+/**
+ * With --no-shared-worktree-specs each worktree uses its own workflowRootPath
+ * (workflowRootPath === workspacePath), so generateProjectId() produces a
+ * distinct projectId per worktree.  The registry dedup logic (SWF-67) only
+ * merges entries that share the same workflowRootPath, which does NOT apply
+ * here — therefore 2 worktrees correctly appear as 2 separate projects in
+ * the dashboard dropdown.
+ *
+ * In default mode (without --no-shared-worktree-specs), workflowRootPath
+ * resolves to the shared git root and all worktrees collapse into one
+ * project entry.  That path is covered by unit tests in project-registry
+ * rather than this e2e suite, since it requires a running dashboard and
+ * real git worktrees with a shared root.
+ */
 test.describe.serial('No-shared worktree dashboard separation', () => {
   test.setTimeout(180000);
 
@@ -55,6 +69,8 @@ test.describe.serial('No-shared worktree dashboard separation', () => {
     }
   });
 
+  // With --no-shared-worktree-specs, each worktree has its own projectId.
+  // Expect 2 separate dropdown items (no merging).
   test('shows separate worktree projects in dropdown without aggregated main project', async ({ page }) => {
     const projectA = getProjectByPathSuffix(registeredProjects, 'wt-a');
     const projectB = getProjectByPathSuffix(registeredProjects, 'wt-b');

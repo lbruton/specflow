@@ -159,7 +159,7 @@ export class JobScheduler {
     let error: string | undefined;
 
     try {
-      const projects = this.projectManager.getProjectsList();
+      const projects = await this.projectManager.getProjectsList();
 
       for (const project of projects) {
         const projectContext = this.projectManager.getProject(project.projectId);

@@ -43,7 +43,7 @@ describe('MultiProjectDashboardServer approvals content resolution', () => {
     await fs.mkdir(workflowRootPath, { recursive: true });
 
     process.env[SPEC_WORKFLOW_HOME_ENV] = join(tempDir, '.global-state');
-    projectId = generateProjectId(workspacePath);
+    projectId = generateProjectId(workflowRootPath);
     realFetch = globalThis.fetch;
 
     const registry = new ProjectRegistry();

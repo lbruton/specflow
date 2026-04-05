@@ -21,7 +21,7 @@ MCP server plugin for spec-driven development with a real-time web dashboard. Po
 
 Technical documentation lives in **DocVault** at `/Volumes/DATA/GitHub/DocVault/Projects/SpecFlow/`. mem0 supplements with session context and past decisions. Read both before discussing architecture or planning changes.
 
-Key pages: `Overview.md`, `Architecture.md`, `Tools & Prompts.md`, `Dashboard.md`, `Fork Divergence.md`, `Lifecycle Compliance.md`, `Spec Flow Lifecycle.canvas`.
+Key pages: Start at `/Volumes/DATA/GitHub/DocVault/Projects/SpecFlow/_Index.md` and follow the index.
 
 ```
 Read /Volumes/DATA/GitHub/DocVault/Projects/SpecFlow/Overview.md
@@ -62,6 +62,15 @@ plugin/
     audit/         # On-demand project health check
     migrate-skill/ # Skill migration checklist
 ```
+
+## Steering Documents
+
+Project-level guidance lives in `.spec-workflow/steering/`:
+- `product.md` — vision, target users, principles, success metrics
+- `tech.md` — stack decisions, architecture rationale, known limitations
+- `structure.md` — directory layout, naming conventions, module boundaries
+
+Reference these when planning new features or making architectural decisions.
 
 ## Two Parsers - Keep in Sync
 

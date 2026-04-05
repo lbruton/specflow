@@ -205,12 +205,16 @@ export class MultiProjectDashboardServer {
         }
 
         // Send projects list
-        socket.send(
-          JSON.stringify({
-            type: 'projects-update',
-            data: { projects: self.projectManager.getProjectsList() }
-          })
-        );
+        self.projectManager.getProjectsList().then(projects => {
+          socket.send(
+            JSON.stringify({
+              type: 'projects-update',
+              data: { projects }
+            })
+          );
+        }).catch(error => {
+          console.error('Error getting projects list for WebSocket:', error);
+        });
 
         // Handle client disconnect
         const cleanup = () => {
@@ -389,7 +393,7 @@ export class MultiProjectDashboardServer {
 
     // Projects list
     this.app.get('/api/projects/list', async () => {
-      return this.projectManager.getProjectsList();
+      return await this.projectManager.getProjectsList();
     });
 
     // Add project manually
