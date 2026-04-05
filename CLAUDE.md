@@ -7,7 +7,7 @@ MCP server plugin for spec-driven development with a real-time web dashboard. Po
 | Field | Value |
 |-------|-------|
 | Package | `@lbruton/specflow` |
-| Version | `3.3.0` |
+| Version | `3.4.0` |
 | Upstream | [Pimzino/spec-workflow-mcp](https://github.com/Pimzino/spec-workflow-mcp) |
 | Origin | [lbruton/specflow](https://github.com/lbruton/specflow) |
 | Branch | `main` (direct commits OK) |
@@ -72,6 +72,18 @@ Project-level guidance lives in `.spec-workflow/steering/`:
 
 Reference these when planning new features or making architectural decisions.
 
+## Templates — Three-Tier System
+
+| Tier | Path | Behavior |
+|------|------|----------|
+| Bundled | `src/markdown/templates/` → `dist/markdown/templates/` | Shipped in npm, copied to projects on startup (always overwrites) |
+| Project | `.spec-workflow/templates/` | Copied from bundled on every MCP startup — always fresh |
+| User | `.spec-workflow/user-templates/` | Generated once from conventions, never auto-overwritten |
+
+**Warning:** The bundled `tasks-template.md` body contains upstream Pimzino's TypeScript/React/Express sample (SWF-70 tracks rewrite). The closing tasks section is correctly genericized by `template-generator.ts` convention detection.
+
+`writeUserTemplates()` in `src/core/template-generator.ts` has a guard clause (line 239) that returns early if user-templates exist — template fixes in new versions never propagate to existing projects.
+
 ## Two Parsers - Keep in Sync
 
 - `src/core/parser.ts` -- used by MCP tools (spec-status, spec-list, etc.)
@@ -134,6 +146,10 @@ The compiled MCP server (`dist/`) auto-updates from npm on next Claude Code laun
 1. Create `src/prompts/my-prompt.ts` -- export a `PromptDefinition`
 2. Register in `src/prompts/index.ts`
 3. `npm run build`
+
+## DocVault Index Rule
+
+Every DocVault folder must have `_Index.md`. When creating, deleting, or moving files in DocVault, update the folder's `_Index.md` and parent indexes in the same commit. Run `/vault-reconcile` to detect drift.
 
 ## Consumers
 
