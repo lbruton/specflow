@@ -2,6 +2,9 @@ import { Prompt, PromptMessage } from '@modelcontextprotocol/sdk/types.js';
 import { PromptDefinition } from './types.js';
 import { ToolContext } from '../types.js';
 import { PathUtils } from '../core/path-utils.js';
+import { access } from 'fs/promises';
+import { join } from 'path';
+import { constants } from 'fs';
 
 const prompt: Prompt = {
   name: 'create-spec',
@@ -42,6 +45,60 @@ async function handler(args: Record<string, any>, context: ToolContext): Promise
   const workflowRoot = PathUtils.getWorkflowRoot(context.projectPath);
   const templatesDir = `${workflowRoot}/templates`;
   const specDir = `${workflowRoot}/specs/${specName}`;
+
+  // --- HARD GATE: Enforce phase ordering ---
+  // design requires approved requirements, tasks requires approved design
+  const prerequisites: Record<string, { requires: string; label: string }> = {
+    design: { requires: 'requirements', label: 'Requirements' },
+    tasks: { requires: 'design', label: 'Design' },
+  };
+
+  const prereq = prerequisites[documentType];
+  if (prereq) {
+    const prereqPath = join(specDir, `${prereq.requires}.md`);
+    let prereqExists = false;
+    try {
+      await access(prereqPath, constants.F_OK);
+      prereqExists = true;
+    } catch {
+      // file doesn't exist
+    }
+
+    if (!prereqExists) {
+      throw new Error(
+        `PHASE GATE: Cannot create ${documentType} — ${prereq.label} document does not exist yet.\n` +
+        `Expected: ${prereqPath}\n` +
+        `You must create and get approval for ${prereq.requires}.md before proceeding to ${documentType}.`
+      );
+    }
+
+    // Check if the prerequisite has been through the approval flow
+    // Look for approval snapshots with trigger:"approved" for the prerequisite doc
+    const snapshotDir = join(workflowRoot, 'approvals', specName, '.snapshots', `${prereq.requires}.md`);
+    let hasApprovedSnapshot = false;
+    try {
+      await access(snapshotDir, constants.F_OK);
+      // Snapshot dir exists — read metadata to check for approved trigger
+      const { readFile } = await import('fs/promises');
+      const metadataPath = join(snapshotDir, 'metadata.json');
+      const metadata = JSON.parse(await readFile(metadataPath, 'utf-8'));
+      // Check if any snapshot has trigger "approved"
+      hasApprovedSnapshot = metadata.snapshots?.some(
+        (s: { trigger: string }) => s.trigger === 'approved'
+      ) ?? false;
+    } catch {
+      // No snapshots found — prerequisite hasn't been through approval
+    }
+
+    if (!hasApprovedSnapshot) {
+      throw new Error(
+        `PHASE GATE: Cannot create ${documentType} — ${prereq.label} has not been approved yet.\n` +
+        `The ${prereq.requires}.md document exists but has no approval record.\n` +
+        `Submit it for approval first: use the approvals tool with action:"request" for ${prereq.requires}.md,\n` +
+        `then wait for approval before creating ${documentType}.`
+      );
+    }
+  }
 
   // Build context-aware messages
   const messages: PromptMessage[] = [
