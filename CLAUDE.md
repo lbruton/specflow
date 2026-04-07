@@ -155,15 +155,35 @@ Never leave uncommitted source changes. `dist/` is gitignored -- if you build wi
 # 7. Verify: npm view @lbruton/specflow version
 ```
 
-## Gotcha: Plugin Skill Files
+## Gotcha: Plugin Skills vs Production Skills — NEVER Symlink
 
-Plugin skill files (`plugin/skills/*/SKILL.md`) are NOT symlinked — they are copied to the plugin directory. After editing a skill in this repo, you must manually copy it:
+**Two intentionally separate file sets:**
+
+| Location | Audience | Purpose |
+|---|---|---|
+| `~/.claude/skills/<name>/SKILL.md` | lbruton only | Daily-driver production skills, may contain personal customization |
+| `plugin/skills/<name>/SKILL.md` (this repo) | npm consumers | Sanitized public release copy that ships in the npm package |
+
+**The two are NOT symlinked and must NOT be symlinked.** Production skills may diverge from shipped skills. We do not ship lbruton-customized skills in the public release. After editing one, **explicitly decide** whether the change belongs in the other and manually copy it across — there is no automatic sync, by design.
+
+If you find a symlink between these locations, it's a bug — replace it with a real file copy:
+
+```bash
+rm ~/.claude/skills/<name>/SKILL.md
+cp plugin/skills/<name>/SKILL.md ~/.claude/skills/<name>/SKILL.md
+```
+
+After editing a plugin skill, also copy to the marketplace cache so it picks up immediately:
 
 ```bash
 cp plugin/skills/<name>/SKILL.md ~/.claude/plugins/marketplaces/specflow-marketplace/plugin/skills/<name>/SKILL.md
 ```
 
 The compiled MCP server (`dist/`) auto-updates from npm on next Claude Code launch.
+
+## Gotcha: mem0 Reader Pattern (SWF-90)
+
+mem0 cloud v1 API does NOT persist top-level `agent_id` — it's `null` on every record. Project tag lives in `metadata.project`. **Never** filter mem0 reads with `filters: {AND: [{agent_id: <tag>}]}` — fetch unfiltered, then post-filter on `metadata.project` case-insensitively (legacy records have inconsistent casing like `SpecFlow` vs `specflow`). Canonical pattern: `~/.claude/hooks/mem0-session-start.py:83-140`. Full reference: `DocVault/Architecture/mem0-configuration.md` § Schema Reality.
 
 ## Adding a New Tool
 
