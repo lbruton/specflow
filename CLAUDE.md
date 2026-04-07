@@ -100,17 +100,35 @@ Project-level guidance lives in `DocVault/specflow/{project}/steering/`:
 
 Reference these when planning new features or making architectural decisions.
 
-## Templates — Three-Tier Precedence
+## Templates — Source of Truth Hierarchy (post-INC-002 recovery)
+
+```
+DocVault/Projects/SpecFlow/Templates/{name}-guide.md   ← EDIT HERE (canonical, human-readable)
+            ↓ /publish-templates skill
+src/markdown/templates/{name}.md                        ← machine source (compiled into npm)
+            ↓ npm run build
+dist/markdown/templates/{name}.md                       ← bundled distribution
+            ↓ npm publish (passkey — manual)
+@lbruton/specflow on npm                                ← consumed via npx
+            ↓ MCP server boot — workspace-initializer.copyTemplate()
+DocVault/specflow/{project}/templates/{name}.md         ← runtime copies (overwritten on every boot until SWF-95)
+```
+
+**Editable layer:** `DocVault/Projects/SpecFlow/Templates/` only. Each guide page embeds the full template content as a fenced markdown codeblock — that codeblock IS the canonical source.
+
+**Read-only layers:** Everything below. Do NOT edit `src/markdown/templates/` directly without also updating the matching guide page in DocVault. Do NOT edit `DocVault/specflow/{project}/templates/` runtime copies — they're overwritten on every MCP boot.
+
+**Project overrides** at `DocVault/specflow/{project}/templates/` should be ADDITIVE only (project-specific content that extends the global, not replaces it). Currently only StakTrakr has legitimate overrides — all other projects inherit clean from global. See `DocVault/Projects/SpecFlow/recovered-templates-2026-04-07/` for the audit history.
 
 | Tier | Path | Behavior |
 |------|------|----------|
-| Project override | `DocVault/specflow/{project}/templates/` | User-authored overrides — NEVER auto-populated |
-| Global | `DocVault/specflow/templates/` | Bundled templates copied here on startup (always overwrites) |
-| Bundled fallback | `dist/markdown/templates/` | Emergency fallback if DocVault unavailable |
+| **Canonical (editable)** | `DocVault/Projects/SpecFlow/Templates/{name}-guide.md` | Edit here. Run `/publish-templates` to propagate. |
+| Machine source | `src/markdown/templates/{name}.md` | Read-only — synced from canonical via `/publish-templates` |
+| Bundled distribution | `dist/markdown/templates/{name}.md` | Build artifact — gitignored |
+| Project override | `DocVault/specflow/{project}/templates/` | Additive only. NEVER duplicate global content. |
+| Runtime mirror | `DocVault/specflow/{project}/templates/` | Auto-overwritten on MCP boot from npm-bundled `dist/` |
 
-**Key rule:** Project templates dir is for user overrides ONLY. Do NOT copy globals into it.
-
-**Warning:** The bundled `tasks-template.md` body contains upstream Pimzino's TypeScript/React/Express sample (SWF-70 tracks rewrite).
+**Edit/upgrade procedure:** Use the `/publish-templates` skill. It handles backup-before-edit, codeblock extraction, build/test, version bump, commit, push, and stops before `npm publish` for manual passkey auth.
 
 ## Two Parsers - Keep in Sync
 
@@ -145,15 +163,21 @@ Never leave uncommitted source changes. `dist/` is gitignored -- if you build wi
 
 ## Publishing
 
+**For template-only changes:** Use the `/publish-templates` skill. It automates the full pipeline including backup-before-edit and stops at the manual `npm publish` step.
+
+**For code/MCP/dashboard changes:**
+
 ```bash
 # 1. Edit package.json version
 # 2. npm run build
 # 3. npm test
 # 4. git add package.json package-lock.json && git commit && git push
-# 5. npm publish --access public   (requires npm OTP/web auth)
+# 5. npm publish --access public   (PASSKEY AUTH — manual user step, Claude cannot run this)
 # 6. Clear npx cache: find ~/.npm/_npx -path "*/specflow/package.json" -exec dirname {} \; | xargs rm -rf
 # 7. Verify: npm view @lbruton/specflow version
 ```
+
+**npm publish constraint:** lbruton uses passkey authentication for npm. Claude CANNOT run `npm login` or `npm publish` directly — both fail with 401 at the auth step. Always hand off step 5 to the user and wait for confirmation before running step 6 verification. See mem0 `feedback_npm_publish_passkey.md` for the rationale.
 
 ## Gotcha: Plugin Skills vs Production Skills — NEVER Symlink
 
