@@ -67,11 +67,10 @@ Every session learns from the previous. This is the single biggest differentiato
 Every non-trivial feature follows the same path. Approvals required at each gate.
 
 ```
-/prime (start) → /chat → /discover → /spec → Design → Implement → /audit (health) → /wrap (close)
-
-Bug fast path: /systematic-debugging → issue → fix (skip discovery/spec)
-Casual path:   /gsd — no issue, no spec, chore: PR
+/prime (start) → [/chat → /discover]* → /spec → Design → Implement → /audit (health) → /wrap (close)
 ```
+
+The plugin ships `/prime`, `/wrap`, `/audit`, `/retro`, `/spec`, `/publish-templates`, and `/migrate-skill`. Phases 0–1 (`/chat`, `/discover`) are marked `*` because they are work in progress — being ported from the author's personal skill library. `/systematic-debugging` (bug fast path) and `/gsd` (casual fixes) also live in the author's personal library and are not shipped yet.
 
 ### Parallel Subagent Dispatch
 
@@ -138,12 +137,10 @@ Claude Code                    Codex CLI                      Gemini CLI
 ────────────                   ─────────                      ──────────
 /issue create                  @spec resume                   @spec resume
   → creates SWF-65               → reads spec from disk         → reads spec from disk
-/discover SWF-65                 → runs Phase 3 (Tasks)          → runs Phase 4 (Implement)
-  → discovery brief               → generates task list            → implements tasks
-/spec SWF-65                     → writes tasks.md                → commits code
-  → Phase 1 (Requirements)      → awaits approval                → logs implementation
-  → Phase 2 (Design)
-  → awaits approval
+/spec SWF-65                     → runs Phase 3 (Tasks)          → runs Phase 4 (Implement)
+  → Phase 1 (Requirements)       → generates task list            → implements tasks
+  → Phase 2 (Design)             → writes tasks.md                → commits code
+  → awaits approval              → awaits approval                → logs implementation
 ```
 
 Each agent reads the current spec state, advances the workflow, and writes the result back to disk. The dashboard shows progress regardless of which agent is driving. Use whichever agent is best suited for each phase — Claude for discovery and design, Codex for implementation, Gemini for review.
@@ -262,16 +259,19 @@ npx @lbruton/specflow@latest --dashboard --port 5051
 
 ## MCP Prompts
 
+Five workflow prompts plus two injection prompts (seven total):
+
 | Prompt | Description |
 |--------|-------------|
 | `create-spec` | Create a new spec from requirements |
-| `implement-task` | Generate implementation plan for a task |
 | `create-steering-doc` | Create project steering documentation |
+| `implement-task` | Generate implementation plan for a task |
 | `refresh-tasks` | Re-sync task state from spec files |
-| `wrap` | End-of-session orchestrator (cleanup, documentation, retro, digest) |
-| `prime` | Fast session quick-start (~15s) with optional deep mode |
-| `audit` | On-demand project health check (code, security, drift, issues) |
-| + 3 injection prompts | Context injection for guides |
+| `spec-status` | Phase and completion summary for a spec |
+| `inject-spec-workflow-guide` | Inject the spec workflow guide into the session |
+| `inject-steering-guide` | Inject the steering doc guide into the session |
+
+**Note:** `/wrap`, `/prime`, and `/audit` are lifecycle **skills** (shipped as markdown in `skills/`), not MCP prompts. They run in the agent's context without crossing the MCP boundary. See the skills directory for their full definitions.
 
 > **v3.1.0 note:** `/wrap` replaces the standalone `/goodnight` and `/digest-session` skills, which are now deprecated.
 
