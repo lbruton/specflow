@@ -498,9 +498,9 @@
         <p>Self-hosted Milvus vector database indexes every codebase. Agents search code by meaning, not just keywords. Forked from Zilliz, hardened with timeouts and stability fixes.</p>
       </div>
       <div class="feature-card">
-        <div class="tag amber">Skill System &mdash; 60+ Skills</div>
+        <div class="tag amber">Skill System &mdash; 6 shipped skills</div>
         <h3>Procedural knowledge routing</h3>
-        <p>CLAUDE.md stays tiny &mdash; a routing table to skills. Each skill encodes a full workflow: debugging, deployment, PR resolution, infrastructure management.</p>
+        <p>CLAUDE.md stays tiny &mdash; a routing table to skills. Ships with 6 lifecycle skills (<code>/prime</code>, <code>/wrap</code>, <code>/audit</code>, <code>/retro</code>, <code>/publish-templates</code>, <code>/migrate-skill</code>) and 11 commands (7 slash commands plus 4 MCP prompt helpers). Designed to compose with your own library &mdash; the author runs ~70 personal skills on top of these defaults.</p>
       </div>
     </div>
   </div>
@@ -516,20 +516,20 @@
       <div class="feature-card">
         <div class="tag accent">Claude Code</div>
         <h3>Plugin marketplace</h3>
-        <p>One-click install via the Claude Code marketplace. Full skill system with 60+ workflows, session lifecycle, and parallel subagent dispatch.</p>
+        <p>One-click install via the Claude Code marketplace. Ships 6 lifecycle skills, 11 commands (7 slash + 4 MCP prompt helpers), 6 workflow prompts plus 2 injection prompts, and parallel subagent dispatch.</p>
       </div>
       <div class="feature-card">
         <div class="tag green">Gemini CLI</div>
-        <h3>Manual MCP config</h3>
-        <p>Add SpecFlow as an MCP server in Gemini&rsquo;s settings. Full access to spec tools, DocVault, and the approval dashboard. Uses GEMINI.md for agent-specific behavior.</p>
+        <h3>MCP server + slash commands</h3>
+        <p>Add SpecFlow as an MCP server in Gemini&rsquo;s settings. Full access to spec tools, DocVault, and the approval dashboard. Uses GEMINI.md for agent-specific behavior. Tested end-to-end; formal onboarding prompts in progress.</p>
       </div>
       <div class="feature-card">
         <div class="tag amber">Codex CLI</div>
-        <h3>Manual MCP config</h3>
-        <p>Configure in Codex&rsquo;s TOML config. Same MCP tools, same workflow, same dashboard. Uses CODEX.md for agent-specific behavior.</p>
+        <h3>MCP server + plugin reuse</h3>
+        <p>Configure in Codex&rsquo;s TOML config. Same MCP tools, same workflow, same dashboard. Codex reuses the same skill/plugin structure as Claude Code. Uses CODEX.md for agent-specific behavior.</p>
       </div>
     </div>
-    <p class="dim" style="margin-top: 1.5rem; text-align: center;">All three agents share the same DocVault knowledge base, spec workflow state, and dashboard &mdash; work started in one agent can be continued in another.</p>
+    <p class="dim" style="margin-top: 1.5rem; text-align: center;">All three agents share the same DocVault knowledge base, spec workflow state, and dashboard &mdash; work started in one agent can be continued in another. SpecFlow is verified end-to-end on Claude Code, Gemini CLI, and Codex CLI; dedicated onboarding skills for Gemini and Codex are in progress.</p>
 
     <div class="code-block" style="margin-top: 2rem;">
       <div class="code-header">
@@ -674,6 +674,7 @@ The dashboard tracks progress regardless of which agent is driving.</span></div>
         <div class="phase-name">/retro</div>
       </div>
     </div>
+    <p class="dim" style="text-align: center; margin-top: 1rem; font-size: 0.85rem;">SpecFlow ships <code>/spec</code> (Phases 2&ndash;4), plus <code>/audit</code>, <code>/wrap</code>, <code>/prime</code>, and <code>/retro</code>. Phases 0&ndash;1 (<code>/chat</code>, <code>/discover</code>) are work in progress &mdash; being ported from the author&rsquo;s personal skill library.</p>
 
     <div class="code-block">
       <div class="code-header">
@@ -796,7 +797,7 @@ The dashboard tracks progress regardless of which agent is driving.</span></div>
       <span class="file">Overview.md, Architecture.md, Data Model.md, API.md...</span>
     <span class="dir">HexTrackr/</span>
       <span class="file">Overview.md, Architecture.md, Database.md, WebSocket.md...</span>
-    <span class="dir">spec-workflow-mcp/</span>
+    <span class="dir">specflow/</span>
       <span class="file">Overview.md, Tools &amp; Prompts.md, Dashboard.md...</span>
   <span class="dir">Infrastructure/</span>
     <span class="file">Host Inventory.md</span>   <span class="note">&larr; every IP, port, and DNS record</span>
@@ -958,15 +959,24 @@ The dashboard tracks progress regardless of which agent is driving.</span></div>
   <span class="cmd">log-implementation</span>     <span class="output">Record artifacts (functions, endpoints, tests)</span>
   <span class="cmd">spec-list</span>              <span class="output">List all specs with status</span>
 
-<span class="highlight">Prompts (10)</span>
-  <span class="cmd">create-spec</span>            <span class="output">Create requirements, design, or tasks doc</span>
-  <span class="cmd">create-steering-doc</span>    <span class="output">Create product/tech/structure steering</span>
-  <span class="cmd">implement-task</span>         <span class="output">Dispatch implementation to subagents</span>
-  <span class="cmd">refresh-tasks</span>          <span class="output">Re-sync task state from spec files</span>
-  <span class="cmd">wrap</span>                   <span class="output">End-of-session orchestrator (cleanup, docs, retro, digest)</span>
-  <span class="cmd">prime</span>                  <span class="output">Fast session quick-start (~15s, optional deep mode)</span>
-  <span class="cmd">audit</span>                  <span class="output">On-demand project health check</span>
-  <span class="cmd">+ 3 injection prompts</span>  <span class="output">Context injection for guides</span></div>
+<span class="highlight">MCP Prompts (6 workflow + 2 injection)</span>
+  <span class="cmd">create-spec</span>                  <span class="output">Create requirements, design, or tasks doc</span>
+  <span class="cmd">create-steering-doc</span>          <span class="output">Create product/tech/structure steering</span>
+  <span class="cmd">implement-task</span>               <span class="output">Dispatch implementation to subagents</span>
+  <span class="cmd">refresh-tasks</span>                <span class="output">Re-sync task state from spec files</span>
+  <span class="cmd">spec-status</span>                  <span class="output">Phase and completion summary</span>
+  <span class="cmd">inject-spec-workflow-guide</span>   <span class="output">Inject the spec workflow guide into the session</span>
+  <span class="cmd">inject-steering-guide</span>        <span class="output">Inject the steering doc guide into the session</span>
+
+<span class="highlight">Commands &amp; Skills (11 commands / 6 skills &mdash; /spec is command-only; the others map 1:1)</span>
+  <span class="cmd">/spec</span>                  <span class="output">Phase 2-4 orchestrator (Requirements → Design → Tasks → Implement)</span>
+  <span class="cmd">/prime</span>                 <span class="output">Fast session quick-start (~15s, optional deep mode)</span>
+  <span class="cmd">/wrap</span>                  <span class="output">End-of-session orchestrator (cleanup, docs, retro, digest)</span>
+  <span class="cmd">/audit</span>                 <span class="output">On-demand project health check</span>
+  <span class="cmd">/retro</span>                 <span class="output">Prescriptive lesson extraction to mem0</span>
+  <span class="cmd">/publish-templates</span>     <span class="output">Promote a battle-tested template into the plugin</span>
+  <span class="cmd">/migrate-skill</span>         <span class="output">Port a user-level skill into the plugin</span>
+  <span class="cmd">+ 4 utility commands</span>   <span class="output">create-spec, create-steering-doc, implement-task, refresh-tasks</span></div>
     </div>
 
     <div class="code-block">
@@ -1022,6 +1032,40 @@ The dashboard tracks progress regardless of which agent is driving.</span></div>
 </section>
 
 <!-- ─── Roadmap ─── -->
+<!-- ─── Stack Composition ─── -->
+<section id="stack">
+  <div class="container">
+    <h2>The stack &mdash; required, recommended, compatible</h2>
+    <p class="dim">SpecFlow is the orchestrator, not the whole system. These components work together &mdash; remove a required one and the self-healing loop breaks.</p>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span></span><span></span><span></span></div>
+        Stack composition
+      </div>
+      <div class="code-body"><span class="highlight">Required &mdash; the framework does not work without these</span>
+  <span class="cmd">specflow</span>              <span class="output">This plugin &mdash; spec workflow, dashboard, MCP tools</span>
+  <span class="cmd">DocVault</span>              <span class="output">Obsidian vault &mdash; shared knowledge across all agents</span>
+  <span class="cmd">mem0</span>                  <span class="output">Cross-session memory &mdash; powers retro learnings, pretool hooks, self-healing loop</span>
+  <span class="cmd">claude-context (fork)</span> <span class="output">Our hardened fork &mdash; semantic code search via self-hosted Milvus</span>
+  <span class="cmd">code-graph-context</span>    <span class="output">Structural code graph &mdash; callers, imports, dead code (Neo4j)</span>
+  <span class="cmd">codex plugin</span>          <span class="output">Peer reviews, /codex:rescue, second-opinion code review</span>
+
+<span class="highlight">Recommended &mdash; used on every spec run, major UX wins</span>
+  <span class="cmd">playground</span>            <span class="output">Interactive HTML prototyping for UI mockups</span>
+  <span class="cmd">context7</span>              <span class="output">Up-to-date library documentation lookup</span>
+  <span class="cmd">obsidian-mcp + CLI</span>     <span class="output">Vault operations: create, query, wikilink (skills in testing)</span>
+
+<span class="highlight">Compatible &mdash; optional integrations that extend the stack</span>
+  <span class="cmd">Codacy</span>                <span class="output">Code quality + security gate (used by /audit)</span>
+  <span class="cmd">Infisical</span>             <span class="output">Self-hosted secrets manager for API keys</span>
+  <span class="cmd">firecrawl</span>             <span class="output">Self-hosted web scraping for research workflows</span></div>
+    </div>
+
+    <p class="dim" style="text-align: center; margin-top: 1rem; font-size: 0.9rem;">All required components are open source and self-hostable. Nothing in the required tier phones home to a vendor.</p>
+  </div>
+</section>
+
 <section id="roadmap" style="background: #0d1117;">
   <div class="container">
     <h2>Where this is going</h2>
@@ -1034,16 +1078,19 @@ The dashboard tracks progress regardless of which agent is driving.</span></div>
       </div>
       <div class="code-body"><span class="success">&#x2713;</span> <span class="output">SpecFlow MCP server — spec lifecycle + dashboard</span>           <span class="success">shipped</span>
 <span class="success">&#x2713;</span> <span class="output">DocVault — cross-project knowledge vault</span>                    <span class="success">shipped</span>
-<span class="success">&#x2713;</span> <span class="output">Code Context — semantic search (Milvus, self-hosted)</span>        <span class="success">shipped</span>
-<span class="success">&#x2713;</span> <span class="output">Code Graph Context — structural search (Neo4j, local)</span>       <span class="success">shipped</span>
-<span class="success">&#x2713;</span> <span class="output">60+ skills — procedural knowledge routing</span>                   <span class="success">shipped</span>
-<span class="success">&#x2713;</span> <span class="output">Memory pipeline — session digests (local Ollama or cloud LLM)</span>           <span class="success">shipped</span>
+<span class="success">&#x2713;</span> <span class="output">Claude Context fork — semantic search (Milvus, self-hosted)</span>  <span class="success">shipped</span>
+<span class="success">&#x2713;</span> <span class="output">6 lifecycle skills + 11 slash commands</span>                      <span class="success">shipped</span>
+<span class="success">&#x2713;</span> <span class="output">Memory pipeline — /wrap inline + /batch-digest catch-up</span>     <span class="success">shipped</span>
+<span class="success">&#x2713;</span> <span class="output">Readiness-report gate — hard phase gate (SWF-86)</span>            <span class="success">shipped</span>
+<span class="success">&#x2713;</span> <span class="output">DocVault consolidation — single vault, not nested .specflow (SWF-2)</span>  <span class="success">shipped</span>
+<span class="success">&#x2713;</span> <span class="output">TDD template rewrite + mandatory quality gates (SWF-70)</span>    <span class="success">shipped</span>
+<span class="success">&#x2713;</span> <span class="output">/publish-templates + /migrate-skill plugin skills</span>           <span class="success">shipped</span>
+<span class="success">&#x2713;</span> <span class="output">SPEC_WORKFLOW_PROJECT_ROOT multi-repo filter (SWF-41)</span>       <span class="success">shipped</span>
 
-<span class="highlight">&#x25cb;</span> <span class="output">Rebrand Code Context — merge into SpecFlow plugin</span>           <span class="highlight">next</span>
+<span class="highlight">&#x25cb;</span> <span class="output">Formal Gemini + Codex onboarding skills</span>                     <span class="highlight">next</span>
 <span class="highlight">&#x25cb;</span> <span class="output">Self-host mem0 — fork + local deployment</span>                    <span class="highlight">planned</span>
-<span class="highlight">&#x25cb;</span> <span class="output">Self-host CGC — fork + local Neo4j bundle</span>                   <span class="highlight">planned</span>
 <span class="highlight">&#x25cb;</span> <span class="output">Unified Docker container — all services in one stack</span>        <span class="highlight">planned</span>
-<span class="highlight">&#x25cb;</span> <span class="output">Rebrand + package — one-command install for any project</span>     <span class="highlight">future</span></div>
+<span class="highlight">&#x25cb;</span> <span class="output">One-command install for any project</span>                         <span class="highlight">future</span></div>
     </div>
 
     <p style="text-align: center; margin-top: 24px;">
@@ -1056,7 +1103,7 @@ The dashboard tracks progress regardless of which agent is driving.</span></div>
 <section class="cta-section">
   <div class="container">
     <h2>Stop re-explaining your project every session</h2>
-    <p>SpecFlow is open source. The core workflow runs entirely on your machine. Cloud integrations (mem0, embeddings, session digests) are optional and configurable &mdash; use local models or cloud APIs based on your preference and hardware.</p>
+    <p>SpecFlow is open source and runs on your own infrastructure. mem0, Claude Context (our fork), and Code Graph Context are <strong>required components</strong> &mdash; the self-healing loop, retro learnings, pretool-use hooks, and semantic code search all depend on them. Embedding generation can use a local model (Ollama) or a cloud API; the rest of the stack is yours to host.</p>
     <div class="hero-ctas">
       <a href="https://github.com/lbruton/specflow" class="btn btn-primary">
         Star on GitHub
