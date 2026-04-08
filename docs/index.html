@@ -479,7 +479,7 @@
 <section id="how">
   <div class="container">
     <h2>Four systems, one workflow</h2>
-    <p class="dim"><strong class="accent">SpecFlow</strong> structures <em>how</em> work gets done. <strong class="purple">DocVault</strong> structures <em>what the agent knows</em>. <strong class="green">Code Context</strong> gives it <em>semantic understanding of your code</em>. Together, they replace the bloated CLAUDE.md + ad-hoc prompting pattern.</p>
+    <p class="dim"><strong class="accent">SpecFlow</strong> structures <em>how</em> work gets done. <strong class="purple">DocVault</strong> structures <em>what the agent knows</em>. <strong class="green">Claude Context</strong> gives it <em>semantic understanding of your code</em>. Together, they replace the bloated CLAUDE.md + ad-hoc prompting pattern.</p>
 
     <div class="feature-grid">
       <div class="feature-card">
@@ -493,7 +493,7 @@
         <p>One Obsidian vault serves 8+ repos. Architecture, infrastructure, decisions, issues &mdash; all in structured markdown with graph visualization and wikilinks.</p>
       </div>
       <div class="feature-card">
-        <div class="tag green">Code Context &mdash; Semantic Search</div>
+        <div class="tag green">Claude Context &mdash; Semantic Search</div>
         <h3>Vector-indexed code intelligence</h3>
         <p>Self-hosted Milvus vector database indexes every codebase. Agents search code by meaning, not just keywords. Forked from Zilliz, hardened with timeouts and stability fixes.</p>
       </div>
@@ -592,7 +592,7 @@ The dashboard tracks progress regardless of which agent is driving.</span></div>
 <section id="intelligence">
   <div class="container">
     <h2>Code intelligence, self-hosted</h2>
-    <p class="dim">Agents shouldn't grep blindly through your codebase. Code Context gives them semantic understanding &mdash; search by meaning, not string matching. Backed by a self-hosted Milvus vector database. Embedding generation uses a cloud API or local model via Ollama.</p>
+    <p class="dim">Agents shouldn't grep blindly through your codebase. Claude Context gives them semantic understanding &mdash; search by meaning, not string matching. Backed by a self-hosted Milvus vector database. Embedding generation uses a cloud API or local model via Ollama.</p>
 
     <div class="feature-grid">
       <div class="feature-card">
@@ -626,7 +626,7 @@ The dashboard tracks progress regardless of which agent is driving.</span></div>
 <span class="cmd">code-graph-context</span>  <span class="output">→ Neo4j &mdash; "what calls this function?"</span>
 
 <span class="comment"># Tier 2: Semantic search (meaning-based)</span>
-<span class="cmd">code-context</span>        <span class="output">→ Milvus &mdash; "find code related to payment processing"</span>
+<span class="cmd">claude-context</span>      <span class="output">→ Milvus &mdash; "find code related to payment processing"</span>
 
 <span class="comment"># Tier 3: Literal search (exact strings)</span>
 <span class="cmd">grep / glob</span>         <span class="output">→ Filesystem &mdash; "find all files matching *.test.ts"</span>
@@ -722,7 +722,7 @@ The dashboard tracks progress regardless of which agent is driving.</span></div>
 <span class="comment">└─────────────────────────────────────────────────────────┘</span>
 
 <span class="highlight">Morning — /prime boots you up</span>
-<span class="output">  Indexes codebase (Code Context + Code Graph)</span>
+<span class="output">  Indexes codebase (Claude Context + Code Graph)</span>
 <span class="output">  Reads recent session digests from DocVault</span>
 <span class="output">  Pulls relevant memories from mem0</span>
 <span class="output">  Checks open issues + git status</span>
@@ -944,7 +944,7 @@ The dashboard tracks progress regardless of which agent is driving.</span></div>
 <section>
   <div class="container">
     <h2>What ships in the box</h2>
-    <p class="dim">SpecFlow is an MCP server that works with any MCP-compatible agent &mdash; Claude Code, Gemini CLI, and Codex CLI verified. DocVault is an Obsidian vault. Code Context is a semantic search engine. Together, they replace the bloated instruction file + ad-hoc prompting pattern.</p>
+    <p class="dim">SpecFlow is an MCP server that works with any MCP-compatible agent &mdash; Claude Code, Gemini CLI, and Codex CLI verified. DocVault is an Obsidian vault. Claude Context is a semantic search engine. Together, they replace the bloated instruction file + ad-hoc prompting pattern.</p>
 
     <div class="code-block">
       <div class="code-header">
@@ -1118,7 +1118,7 @@ The dashboard tracks progress regardless of which agent is driving.</span></div>
 <!-- ─── Footer ─── -->
 <footer>
   <div class="container">
-    <p>SpecFlow &mdash; built by <a href="https://github.com/lbruton">lbruton</a> &bull; MIT License &bull; Components forked from <a href="https://github.com/Pimzino/spec-workflow-mcp">Pimzino/spec-workflow-mcp</a> and <a href="https://github.com/zilliztech/mcp-server-milvus">Zilliz/claude-context</a></p>
+    <p>SpecFlow &mdash; built by <a href="https://github.com/lbruton">lbruton</a> &bull; MIT License &bull; Components forked from <a href="https://github.com/Pimzino/spec-workflow-mcp">Pimzino/spec-workflow-mcp</a> and <a href="https://github.com/zilliztech/claude-context">zilliztech/claude-context</a></p>
   </div>
 </footer>
 
