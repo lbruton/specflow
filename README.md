@@ -30,7 +30,7 @@ Built on [Pimzino/spec-workflow-mcp](https://github.com/Pimzino/spec-workflow-mc
 |--------|-------------|
 | **SpecFlow** (MCP Server) | Spec-driven lifecycle: Requirements → Design → Tasks → Implementation with dashboard approvals at every gate. 6 tools, 10 prompts. |
 | **DocVault** (Obsidian Vault) | Cross-project knowledge base. One vault serves 8+ repos -- architecture, infrastructure, decisions, issues. Graph visualization + wikilinks. |
-| **Code Context** (Milvus) | Semantic code search via self-hosted vector database. Search by meaning, not keywords. Forked from [Zilliz/claude-context](https://github.com/zilliztech/mcp-server-milvus), hardened with timeouts and pinned versions. |
+| **Claude Context** (Milvus) | Semantic code search via self-hosted vector database. Search by meaning, not keywords. Forked from [zilliztech/claude-context](https://github.com/zilliztech/claude-context), hardened with timeouts and pinned versions. Requires a running Milvus instance (Docker or otherwise). |
 | **Skill System** (60+ Skills) | CLAUDE.md stays tiny -- a routing table to skills. Each skill encodes a full workflow: debugging, deployment, PR resolution, infrastructure management. |
 
 ## Three-Tier Memory Architecture
@@ -96,11 +96,11 @@ Agents shouldn't grep blindly through your codebase. Four search tiers, cheapest
 | Tier | Engine | Query Style |
 |------|--------|-------------|
 | 1 | Code Graph Context (Neo4j) | Structural: "what calls this function?" |
-| 2 | Code Context (Milvus) | Semantic: "find code related to payment processing" |
+| 2 | Claude Context (Milvus) | Semantic: "find code related to payment processing" |
 | 3 | Grep / Glob | Literal: exact strings, filenames, identifiers |
 | 4 | Code Oracle Agent | Deep analysis: combines all sources + AI reasoning |
 
-Code Context is a [hardened fork](https://github.com/lbruton/claude-context) of Zilliz's MCP server -- self-hosted Milvus, 30s timeouts, pinned npm versions. No collection limits, full data sovereignty. Embedding generation requires a cloud API (OpenAI or compatible) or a local model via Ollama.
+Claude Context is a [hardened fork](https://github.com/lbruton/claude-context) of Zilliz's [zilliztech/claude-context](https://github.com/zilliztech/claude-context) -- self-hosted Milvus, 30s timeouts, pinned npm versions. No collection limits, full data sovereignty. Embedding generation requires a cloud API (OpenAI or compatible) or a local model via Ollama. Requires a running Milvus instance alongside (Docker recommended).
 
 ## Comparison
 
@@ -283,7 +283,7 @@ The core spec workflow works out of the box with Node.js. Extended features use 
 |-----------|---------|------|
 | [Obsidian](https://obsidian.md) | DocVault knowledge base | [obsidian.md](https://obsidian.md) |
 | [mem0](https://github.com/mem0ai/mem0) | Cross-session episodic memory (cloud API; self-hosted fork planned) | [mem0.ai](https://mem0.ai) |
-| [Milvus](https://milvus.io) | Self-hosted vector DB for Code Context | [milvus.io](https://milvus.io) |
+| [Milvus](https://milvus.io) | Self-hosted vector DB for Claude Context | [milvus.io](https://milvus.io) |
 | [Claude Code](https://claude.ai/claude-code) | CLI agent that consumes MCP servers | [docs](https://docs.anthropic.com/en/docs/claude-code) |
 
 ## Architecture
@@ -304,11 +304,11 @@ src/
 
 - [x] SpecFlow MCP server -- spec lifecycle + dashboard
 - [x] DocVault -- cross-project knowledge vault
-- [x] Code Context -- semantic search (Milvus, self-hosted)
+- [x] Claude Context -- semantic search (Milvus, self-hosted)
 - [x] Code Graph Context -- structural search (Neo4j, local)
 - [x] 60+ skills -- procedural knowledge routing
 - [x] Memory pipeline -- session digests (configurable: local Ollama or cloud models like Haiku/Sonnet/Opus)
-- [ ] Rebrand Code Context -- merge into SpecFlow plugin
+- [ ] Merge Claude Context fork into SpecFlow plugin distribution
 - [ ] Self-host mem0 -- fork + local deployment
 - [ ] Self-host CGC -- fork + local Neo4j bundle
 - [ ] Unified Docker container -- all services in one stack
@@ -338,7 +338,7 @@ Core functionality docs from Pimzino's project:
 
 **[theDakshJaitly/mex](https://github.com/theDakshJaitly/mex)** inspired several planned features: documentation drift detection with a scoring system, deterministic pattern files promoted from session learnings, and post-commit staleness hooks. mex's per-repo memory scaffold and GROW learning loop showed what disciplined context engineering looks like -- SpecFlow's multi-project approach builds on those ideas.
 
-**[Zilliz/claude-context](https://github.com/zilliztech/mcp-server-milvus)** provides the semantic code search engine that Code Context is forked from.
+**[zilliztech/claude-context](https://github.com/zilliztech/claude-context)** provides the semantic code search engine that the Claude Context fork is built from. Zilliz's upstream is designed for their cloud Milvus; the fork adds self-hosting support, hardening, and runs against a local Milvus instance.
 
 ## License
 
