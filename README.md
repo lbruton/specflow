@@ -172,17 +172,20 @@ The npm package contains the MCP server, dashboard, and the 9 spec templates (re
 git clone https://github.com/lbruton/specflow.git ~/specflow-source
 cp -r ~/specflow-source/skills/* ~/.claude/skills/
 cp -r ~/specflow-source/commands/* ~/.claude/commands/
+cp -r ~/specflow-source/agents/* ~/.claude/agents/
 ```
 
-Or, if you prefer not to clone the repo, [download the latest ZIP](https://github.com/lbruton/specflow/archive/refs/heads/main.zip), unpack it, and copy the `skills/` and `commands/` directories into your `~/.claude/` directory.
+Or, if you prefer not to clone the repo, [download the latest ZIP](https://github.com/lbruton/specflow/archive/refs/heads/main.zip), unpack it, and copy the `skills/`, `commands/`, and `agents/` directories into your `~/.claude/` directory.
 
-After restarting Claude Code, the new skills (`/prime`, `/wrap`, `/spec`, `/audit`, `/publish-templates`, `/migrate-skill`) and the slash commands they invoke will be available.
+After restarting Claude Code, the shipped skills (`/prime`, `/wrap`, `/audit`, `/spec`, `/chat`, `/discover`, `/codacy-resolve`, `/retro`, `/publish-templates`, `/migrate-skill`), their slash commands, and the background subagents they dispatch (`prime-status`, `session-digest`, `code-oracle`, `session-oracle`) will all be available.
+
+> **Path convention:** The shipped skills and agents assume **DocVault sits as a sibling directory next to the project** (i.e. they reference `../DocVault/...` from the project root). If your vault lives elsewhere, set `docvault` in `.claude/project.json` to override.
 
 > **Architecture:** The two install steps are independent and serve different purposes:
 > - **The npm package** (`@lbruton/specflow`) ships the MCP server, dashboard, and bundled spec templates. It is the engine.
-> - **The GitHub repo** (`specflow/skills/` and `specflow/commands/`) ships the markdown skills and slash commands that Claude reads directly. They are the user-facing workflows.
+> - **The GitHub repo** (`specflow/skills/`, `specflow/commands/`, and `specflow/agents/`) ships the markdown skills, slash commands, and background subagent definitions that Claude reads directly. They are the user-facing workflows.
 >
-> Skills are NEVER bundled into the npm package — they are plain markdown installed by copying. See [`CLAUDE.md`](./CLAUDE.md) § "Architecture & Distribution Model" for the full pipeline diagram.
+> Skills, commands, and agents are NEVER bundled into the npm package — they are plain markdown installed by copying. See [`CLAUDE.md`](./CLAUDE.md) § "Architecture & Distribution Model" for the full pipeline diagram.
 
 ### Gemini CLI — Manual Install
 

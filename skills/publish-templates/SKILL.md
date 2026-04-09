@@ -39,7 +39,7 @@ If you find drift between a guide page and `src/`, the guide page is canonical.
 DATE=$(date +%Y-%m-%d_%H%M%S)
 BACKUP_DIR=~/Nextcloud/Backups/specflow-templates
 mkdir -p "$BACKUP_DIR"
-cd /Volumes/DATA/GitHub/specflow
+cd "$(git rev-parse --show-toplevel)"  # the specflow repo
 zip -r "$BACKUP_DIR/specflow-templates-$DATE.zip" src/markdown/templates/
 ```
 
@@ -52,7 +52,7 @@ For each of the 9 guide pages, extract the content between ` ```markdown ` and `
 ### Step 3 — Diff check
 
 ```bash
-cd /Volumes/DATA/GitHub/specflow
+cd "$(git rev-parse --show-toplevel)"  # the specflow repo
 git diff --stat src/markdown/templates/
 ```
 

@@ -67,7 +67,7 @@ Extract:
 Read the issue file from DocVault:
 
 ```bash
-cat /Volumes/DATA/GitHub/DocVault/Projects/{project}/Issues/{ISSUE-ID}.md
+cat ../DocVault/Projects/{project}/Issues/{ISSUE-ID}.md
 ```
 
 Extract: title, description, priority, status, tags from frontmatter.
@@ -497,7 +497,7 @@ If no user-facing behavior changed (pure refactor, config-only), this gate can b
 Dispatch a subagent with:
 - All implementation logs for this spec
 - The `vault-update` skill
-- The DocVault repo path: `/Volumes/DATA/GitHub/DocVault`
+- The DocVault repo path: `../DocVault`
 - Instructions: "Review the implementation logs. Identify which DocVault pages are affected by these changes. Update the affected pages to reflect the new behavior, architecture, or API changes. Commit changes directly to main."
 
 The agent reads the implementation logs, cross-references the DocVault pages, and updates affected pages.
@@ -537,9 +537,9 @@ Check the vault issue's `github_issue` frontmatter field:
 
 ```bash
 # If github_issue is populated:
-gh issue close {github_issue} --repo lbruton/{repo}
+gh issue close {github_issue} --repo {owner}/{repo}
 # Verify:
-gh issue view {github_issue} --repo lbruton/{repo} --json state
+gh issue view {github_issue} --repo {owner}/{repo} --json state
 ```
 
 If `scope: internal` or `github_issue` is empty, skip this step.

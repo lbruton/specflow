@@ -51,7 +51,7 @@ cat ~/.claude/skills/<name>/SKILL.md
 ls ~/.claude/skills/_deprecated/<name>/ 2>/dev/null
 
 # 2c. Check if an MCP prompt exists for this command
-ls /Volumes/DATA/GitHub/specflow/src/prompts/<name>.ts 2>/dev/null
+ls src/prompts/<name>.ts  # run from specflow repo root 2>/dev/null
 ```
 
 If an MCP prompt file exists (2c), read it — the prompt text contains the workflow logic
@@ -74,7 +74,7 @@ Build the plugin skill by merging content from all sources:
 Write the combined skill to:
 
 ```
-/Volumes/DATA/GitHub/specflow/skills/<name>/SKILL.md
+skills/<name>/SKILL.md  # in the specflow repo
 ```
 
 Requirements for the file:
@@ -116,7 +116,7 @@ The `shim-` prefix distinguishes it from any legacy pre-shim versions already in
 ## Step 6: Build, Commit, Push
 
 ```bash
-cd /Volumes/DATA/GitHub/specflow
+cd "$(git rev-parse --show-toplevel)"  # the specflow repo
 npm run build
 git add skills/<name>/SKILL.md
 git add src/prompts/ # if MCP prompt was removed
