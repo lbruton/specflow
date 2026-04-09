@@ -123,7 +123,7 @@ Run these checks (all instant, run in parallel):
 docker ps --filter "name=cgc" --format "{{.Names}}" 2>/dev/null | grep -q cgc && echo "hasCGC=true" || echo "hasCGC=false"
 
 # Has security reviews?
-[ -d "/Volumes/DATA/GitHub/DocVault/Projects/<name>/Security Reviews" ] && echo "hasSecurityReviews=true" || echo "hasSecurityReviews=false"
+[ -d "../DocVault/Projects/<name>/Security Reviews" ] && echo "hasSecurityReviews=true" || echo "hasSecurityReviews=false"
 
 # Codacy configured? (check if MCP server responds)
 # hasCodacy is true if the codacy MCP tools are available in this session
@@ -134,7 +134,7 @@ Also extract the git remote to derive `owner` and `repo` for Codacy API calls:
 
 ```bash
 git remote get-url origin 2>/dev/null
-# Parse: git@github.com:lbruton/<repo>.git → owner=lbruton, repo=<repo>
+# Parse: git@github.com:<owner>/<repo>.git → owner=<owner>, repo=<repo>
 ```
 
 Store all values for agent dispatch.
@@ -146,7 +146,7 @@ in DocVault and contain structured session summaries with goals, decisions, and 
 
 ```bash
 # Find the most recent digest for this project
-DIGEST_DIR="/Volumes/DATA/GitHub/DocVault/Daily Digests/<tag>"
+DIGEST_DIR="../DocVault/Daily Digests/<tag>"
 LATEST_DIGEST=$(ls "$DIGEST_DIR"/*.md 2>/dev/null | grep -v _Index | sort -r | head -1)
 if [ -n "$LATEST_DIGEST" ]; then
   echo "latest_digest=$LATEST_DIGEST"
@@ -185,7 +185,7 @@ Store the list of undigested log files.
 
 ```bash
 # Find most recent prime report for this project
-PRIME_DIR="/Volumes/DATA/GitHub/DocVault/Projects/<name>/prime"
+PRIME_DIR="../DocVault/Projects/<name>/prime"
 LATEST_PRIME=$(ls "$PRIME_DIR"/*.md 2>/dev/null | grep -v _Index | sort -r | head -1)
 if [ -n "$LATEST_PRIME" ]; then
   echo "latest_prime=$LATEST_PRIME"
@@ -251,7 +251,7 @@ keyword-targeted searches to produce the final "Where We Left Off" section.
 Read the central expiration tracker page to surface anything expiring soon:
 
 ```bash
-TRACKER="/Volumes/DATA/GitHub/DocVault/Infrastructure/Expiration Tracker.md"
+TRACKER="../DocVault/Infrastructure/Expiration Tracker.md"
 if [ -f "$TRACKER" ]; then
   cat "$TRACKER"
 fi
@@ -301,13 +301,13 @@ cd <workingDir> && git log --oneline --since="<last_prime_date> <last_prime_time
 cd <workingDir> && git status --short
 
 # Open PRs (may have changed)
-gh pr list --repo lbruton/<repo> --state open --json number,title,headRefName,isDraft
+gh pr list --repo <owner>/<repo> --state open --json number,title,headRefName,isDraft
 
 # New/changed vault issues since last prime (if issuePrefix exists)
-find /Volumes/DATA/GitHub/DocVault/Projects/<name>/Issues/ -name "*.md" -newer "<latest_prime_file>" 2>/dev/null
+find ../DocVault/Projects/<name>/Issues/ -name "*.md" -newer "<latest_prime_file>" 2>/dev/null
 
 # New security reviews since last prime (if hasSecurityReviews)
-find "/Volumes/DATA/GitHub/DocVault/Projects/<name>/Security Reviews/" -name "*.md" -newer "<latest_prime_file>" 2>/dev/null
+find "../DocVault/Projects/<name>/Security Reviews/" -name "*.md" -newer "<latest_prime_file>" 2>/dev/null
 ```
 
 ### Step I.3: Summarize new security reviews
@@ -355,7 +355,7 @@ If the post-filtered results are sparse, run a second unfiltered search and merg
 Write the delta report to DocVault at the same path as full reports:
 
 ```
-/Volumes/DATA/GitHub/DocVault/Projects/<name>/prime/<YYYY-MM-DD>-<HHMMSS>.md
+../DocVault/Projects/<name>/prime/<YYYY-MM-DD>-<HHMMSS>.md
 ```
 
 Use the **Delta Report Template** below. Display the **Delta Terminal Summary** to the user.
@@ -611,7 +611,7 @@ CGC MCP runs via `docker exec -i cgc-server cgc mcp start`. Restarting the conta
 kills the MCP connection — never restart CGC containers during a session.
 
 The CGC workspace path is `/workspace/<name>` (not the host path), because the Docker
-volume mounts `/Volumes/DATA/GitHub` as `/workspace`.
+volume mounts the projects parent directory as `/workspace`.
 
 First, check if the project is indexed:
 
@@ -714,7 +714,7 @@ all agents.
 Write the full report to:
 
 ```
-/Volumes/DATA/GitHub/DocVault/Projects/<name>/prime/<YYYY-MM-DD>-<HHMMSS>.md
+../DocVault/Projects/<name>/prime/<YYYY-MM-DD>-<HHMMSS>.md
 ```
 
 Where `<name>` is the project name from `project.json` and the timestamp uses local time.
@@ -963,7 +963,7 @@ Not every project has every capability. Handle missing pieces:
 - **The full Forge-layout report renders in BOTH the terminal AND DocVault** — same content, both places. The user wants the dense dashboard in their terminal, not a stripped summary.
 - The Terminal Summary Template (below) is **DEPRECATED** — kept in this file for reference only. Do NOT use it. Render the Full Report Template in the terminal as-is.
 - Always `mkdir -p` the prime/ subdirectory before writing — it may not exist on first run
-- DocVault path is ALWAYS `/Volumes/DATA/GitHub/DocVault/Projects/<name>/prime/` — use the project name from `project.json`, not the tag
+- DocVault path is ALWAYS `../DocVault/Projects/<name>/prime/` — use the project name from `project.json`, not the tag
 - Timestamp format for filenames: `YYYY-MM-DD-HHMMSS` (local time, no colons — filesystem safe)
 - After presenting the terminal summary, the session is ready for work — do not prompt for /prime again
 

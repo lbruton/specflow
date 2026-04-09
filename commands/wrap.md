@@ -141,7 +141,7 @@ Save each to mem0 with:
 
 ### 4.2: Session Digest (DocVault)
 
-Write to: `/Volumes/DATA/GitHub/DocVault/Daily Digests/<ProjectFolder>/<YYYY-MM-DD>.md`
+Write to: `../DocVault/Daily Digests/<ProjectFolder>/<YYYY-MM-DD>.md`
 
 If file exists, append a new `## <HH:MM AM/PM>` section. Content (200-300 words):
 - What was the goal? What was accomplished?

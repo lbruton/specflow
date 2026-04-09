@@ -52,7 +52,7 @@ Also gather these (parallel with above):
 **Vault Issues** — if `issuePrefix` exists, scan the vault issues folder:
 ```bash
 # List open issues (scan frontmatter for status != done)
-grep -rl "status: backlog\|status: todo\|status: in-progress" /Volumes/DATA/GitHub/DocVault/Projects/<name>/Issues/*.md 2>/dev/null | head -20
+grep -rl "status: backlog\|status: todo\|status: in-progress" ../DocVault/Projects/<name>/Issues/*.md 2>/dev/null | head -20
 ```
 For each file found, extract just the title and status from frontmatter (read first 10 lines).
 
@@ -63,7 +63,7 @@ For each spec, check if tasks.md has any `[-]` (in-progress) or `[ ]` (pending) 
 **Today's Digest** — check if a session digest was written today or yesterday:
 ```bash
 # Find most recent digest for this project
-ls -t "/Volumes/DATA/GitHub/DocVault/Daily Digests/<ProjectFolder>/"*.md 2>/dev/null | head -1
+ls -t "../DocVault/Daily Digests/<ProjectFolder>/"*.md 2>/dev/null | head -1
 ```
 If found and from today/yesterday, read it for context on where we left off.
 
@@ -150,7 +150,7 @@ If stale (>24h), trigger a re-index.
 ### Deep Report
 When agents return, present extended results and archive to DocVault:
 ```
-/Volumes/DATA/GitHub/DocVault/Projects/<name>/prime/<YYYY-MM-DD>-<HHMMSS>.md
+../DocVault/Projects/<name>/prime/<YYYY-MM-DD>-<HHMMSS>.md
 ```
 
 ---

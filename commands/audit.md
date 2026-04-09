@@ -89,7 +89,7 @@ If stale (>24h), trigger re-index.
 
 Wait for all scans to complete. Present terminal summary (<40 lines) and write full report to:
 ```
-/Volumes/DATA/GitHub/DocVault/Projects/<name>/audit/<YYYY-MM-DD>-<HHMMSS>.md
+../DocVault/Projects/<name>/audit/<YYYY-MM-DD>-<HHMMSS>.md
 ```
 
 Commit to DocVault directly.
