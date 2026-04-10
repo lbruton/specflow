@@ -1,9 +1,9 @@
 ---
 name: wrap
 description: >
-  End-of-session orchestrator — autonomously verifies session work, captures retro lessons
-  to mem0, writes a template-enforced session digest to DocVault, and reports a soft
-  Session Health block at the end. Replaces /goodnight and /digest-session.
+  End-of-session orchestrator — verifies session work, writes a template-enforced session
+  digest to DocVault, and saves a curated summary to mem0. Run after /retro (or
+  /pr-cleanup → /retro if a PR was merged). Replaces /goodnight and /digest-session.
   Triggers: "wrap", "wrap up", "close session", "end of session", "done for the night",
   "finish up", "closing time".
 ---
@@ -13,9 +13,20 @@ description: >
 End-of-session orchestrator. Run the entire flow autonomously without asking the user
 for permission between steps. The user invoked `/wrap` once — that is the permission.
 
+## Recommended end-of-session flow
+
+```
+With PR merged this session:   /pr-cleanup → /retro → /wrap
+Without PR:                    /retro → /wrap
+Quick re-orient only:          /start  (no wrap needed)
+```
+
+`/wrap` focuses on the session digest and mem0 summary. Retro lessons are captured by
+`/retro`. If `/retro` was NOT run before `/wrap`, wrap will run retro inline automatically.
+
 ## Arguments
 
-- **handoff**: Pass `--handoff` if work continues in a new terminal. Adds a `Handoff Notes`
+- **--handoff**: Pass `--handoff` if work continues in a new terminal. Adds a `Handoff Notes`
   section to the digest with a required Continue Issue ID.
 
 ---
@@ -91,7 +102,25 @@ Do not ask permission — this is a correctness fix, not a judgment call.
 
 If no spec-workflow tasks were touched this session, skip.
 
-### Step 3 — Retro lessons (autonomous)
+### Step 3 — Retro check (autonomous)
+
+Check whether `/retro` was already run this session by querying mem0 for recent
+`retro-learning` entries:
+
+```
+mcp__mem0__search_memories(
+  query: "retro-learning",
+  user_id: "<your-mem0-user-id>",
+  filters: { "metadata.type": "retro-learning" },
+  limit: 5
+)
+```
+
+Inspect the `created_at` timestamps. If any `retro-learning` entries were added within
+the last 60 minutes, retro was already run — **skip this step** and note "Retro already
+completed via /retro" in the digest's Retro Lessons section.
+
+If no recent retro entries are found, run retro inline now:
 
 Scan the conversation for high-signal lessons and save them to mem0. Target 3-8 entries.
 
@@ -213,6 +242,7 @@ commit hashes, issue IDs, version numbers, file paths.>
 - [<category>] <one-sentence prescriptive lesson>
 - ...
 _(write `_(none — chat-only session)_` if no lessons were saved)_
+_(write `_(completed via /retro)_` if /retro was run before /wrap)_
 
 ### Git State
 - **Branch:** <current branch>

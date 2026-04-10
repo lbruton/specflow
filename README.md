@@ -48,18 +48,22 @@ Not everything belongs in one file. Each tier has a purpose and a source of trut
 Every session learns from the previous. This is the single biggest differentiator.
 
 ```
-/prime (session start)         /wrap (session end)
-  ├─ Index codebase (~15s)       ├─ Cleanup (stale branches, uncommitted work)
-  ├─ Read recent digests         ├─ /vault-update (documentation sync)
-  ├─ Pull mem0 memories          ├─ /retro (prescriptive lessons → mem0)
-  ├─ Check issues + git          └─ /digest-session (JSONL → DocVault + mem0)
-  ├─ Optional: --deep mode
-  └─ "Here's where you left off"
-                                 /audit (on-demand health check)
-  Tomorrow's /prime reads          ├─ Code quality + security scan
-  today's digest + retro           ├─ Documentation drift detection
-  lessons automatically            ├─ Issue staleness check
-                                   └─ Actionable remediation report
+/start (quick resume)          End-of-session flow:
+  ├─ Read last session digest
+  ├─ Git log + status          [/pr-cleanup] (if PR merged)
+  └─ 5 most recent issues        ├─ Prune remote refs
+                                 ├─ Remove merged worktrees
+/prime (full boot)               └─ Pull main fast-forward
+  ├─ Index codebase (~15s)
+  ├─ Read recent digests       /retro
+  ├─ Pull mem0 memories          └─ Prescriptive lessons → mem0
+  ├─ Check issues + git
+  └─ "Here's where you left off" /wrap
+                                 ├─ Retro check (skip if /retro already ran)
+/audit (on-demand health)        ├─ Session digest → DocVault
+  ├─ Code quality + security     └─ Summary → mem0
+  ├─ Documentation drift
+  └─ Actionable report
 ```
 
 ## Spec Workflow Lifecycle
@@ -70,7 +74,7 @@ Every non-trivial feature follows the same path. Approvals required at each gate
 /prime (start) → [/chat → /discover]* → /spec → Design → Implement → /audit (health) → /wrap (close)
 ```
 
-The plugin ships `/prime`, `/wrap`, `/audit`, `/retro`, `/spec`, `/publish-templates`, and `/migrate-skill`. Phases 0–1 (`/chat`, `/discover`) are marked `*` because they are work in progress — being ported from the author's personal skill library. `/systematic-debugging` (bug fast path) and `/gsd` (casual fixes) also live in the author's personal library and are not shipped yet.
+The plugin ships `/prime`, `/start`, `/wrap`, `/pr-cleanup`, `/retro`, `/audit`, `/issue`, `/spec`, `/publish-templates`, and `/migrate-skill`. Phases 0–1 (`/chat`, `/discover`) are marked `*` because they are work in progress — being ported from the author's personal skill library. `/systematic-debugging` (bug fast path) and `/gsd` (casual fixes) also live in the author's personal library and are not shipped yet.
 
 ### Parallel Subagent Dispatch
 
@@ -176,7 +180,7 @@ cp -r ~/specflow-source/commands/* ~/.claude/commands/
 
 Or, if you prefer not to clone the repo, [download the latest ZIP](https://github.com/lbruton/specflow/archive/refs/heads/main.zip), unpack it, and copy the `skills/` and `commands/` directories into your `~/.claude/` directory.
 
-After restarting Claude Code, the new skills (`/prime`, `/wrap`, `/spec`, `/audit`, `/publish-templates`, `/migrate-skill`) and the slash commands they invoke will be available.
+After restarting Claude Code, the new skills (`/prime`, `/start`, `/wrap`, `/pr-cleanup`, `/retro`, `/issue`, `/spec`, `/audit`, `/publish-templates`, `/migrate-skill`) and the slash commands they invoke will be available.
 
 > **Architecture:** The two install steps are independent and serve different purposes:
 > - **The npm package** (`@lbruton/specflow`) ships the MCP server, dashboard, and bundled spec templates. It is the engine.
@@ -274,6 +278,7 @@ Five workflow prompts plus two injection prompts (seven total):
 **Note:** `/wrap`, `/prime`, and `/audit` are lifecycle **skills** (shipped as markdown in `skills/`), not MCP prompts. They run in the agent's context without crossing the MCP boundary. See the skills directory for their full definitions.
 
 > **v3.1.0 note:** `/wrap` replaces the standalone `/goodnight` and `/digest-session` skills, which are now deprecated.
+> **v3.6.0 note:** End-of-session flow decomposed into `/pr-cleanup` → `/retro` → `/wrap`. Added `/start` as a lightweight alternative to `/prime` for same-day resume. Added `/issue` for vault-based issue management.
 
 ## Prerequisites
 

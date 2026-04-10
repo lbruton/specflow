@@ -131,8 +131,19 @@ plainly rather than producing an empty report.
 
 ## When to run
 
-- At natural session end before closing the terminal (called automatically by `/wrap`)
-- After a spec completes (capture implementation lessons)
+**Standard end-of-session flow:**
+
+```
+With PR merged:   /pr-cleanup → /retro → /wrap
+Without PR:       /retro → /wrap
+```
+
+Run `/retro` before `/wrap`. The `/wrap` skill checks whether retro was already run
+(via mem0 timestamp) and skips its inline retro if you did. Running retro first gives
+you a chance to review the lessons before the digest is written.
+
+**Also useful standalone:**
+- After a spec completes (capture implementation lessons mid-session)
 - After a debugging session that required backtracking
 - Anytime you find yourself thinking "I should remember this for next time"
 
@@ -144,3 +155,6 @@ pattern is a session-start hook that searches recent mem0 entries tagged
 conversation. A PreToolUse hook can also surface relevant retro lessons before skill
 execution. Hook scripts are not shipped with the plugin — users are expected to wire these
 up themselves using Claude Code's standard hooks system (SessionStart, PreToolUse).
+
+`/wrap` detects recent retro-learning entries in mem0 (within 60 minutes) and skips
+its inline retro step automatically — no duplication.
