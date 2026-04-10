@@ -1,5 +1,5 @@
 import { readFile, readdir, access, stat } from 'fs/promises';
-import { join } from 'path';
+import { join, basename } from 'path';
 // PathUtils import removed — parser uses direct joins because PathUtils
 // relies on a process-level DocVault singleton not initialized in the dashboard.
 import { SpecData, SteeringStatus, TaskInfo } from '../types.js';
@@ -67,6 +67,8 @@ export class SpecParser {
   }
 
   async getSpec(name: string): Promise<ParsedSpec | null> {
+    // Sanitize name to prevent path traversal from API input
+    name = basename(name);
     try {
       const specDir = join(this.projectPath, 'specs', name);
       await access(specDir);
@@ -183,6 +185,8 @@ export class SpecParser {
   }
 
   async getArchivedSpec(name: string): Promise<ParsedSpec | null> {
+    // Sanitize name to prevent path traversal from API input
+    name = basename(name);
     try {
       const specDir = join(this.projectPath, 'archive', 'specs', name);
       await access(specDir);
