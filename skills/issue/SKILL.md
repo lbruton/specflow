@@ -92,7 +92,7 @@ tags:
 ```
 
 **Field rules:**
-- `id`: **MUST be quoted** — `"SWF-63"` not `SWF-63` (YAML parses unquoted as number)
+- `id`: **MUST be quoted** — `"SWF-63"` not `SWF-63` (Obsidian Bases requires consistent string type for filtering; unquoted values with mixed alphanumeric content are valid YAML strings but Bases may mishandle them)
 - `title`: **MUST be quoted** — contains special characters
 - `created` / `updated`: **MUST be quoted** — `"2026-04-04"` not `2026-04-04` (YAML parses unquoted as date object)
 - `type`: `feature` | `bug` | `chore` | `spike`
@@ -233,6 +233,10 @@ Given an issue ID (e.g., `SWF-42`):
 
 **Preferred: Obsidian CLI property:set** (if Obsidian is running):
 
+> **macOS only** — the path below is the standard macOS install location. On other
+> platforms locate your Obsidian binary manually (e.g. `which obsidian` or check your
+> applications directory). If Obsidian is not installed, use the Fallback below.
+
 ```bash
 OBS='/Applications/Obsidian.app/Contents/MacOS/obsidian'
 $OBS vault="DocVault" property:set name="status" value="done" path="Projects/{project}/Issues/{ISSUE-ID}.md"
@@ -271,6 +275,8 @@ grep -rl 'status:.*in-progress' {DOCVAULT_ROOT}/Projects/{project}/Issues/
 ### Preferred: Obsidian CLI base:query (structured JSON)
 
 If Obsidian is running, use the CLI for structured issue queries — much richer than grep:
+
+> **macOS only** — adjust `OBS` path for your platform if needed.
 
 ```bash
 OBS='/Applications/Obsidian.app/Contents/MacOS/obsidian'

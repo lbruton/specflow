@@ -82,12 +82,14 @@ Find the 5 most recently updated open issues from the vault:
 
 ```bash
 ISSUES_DIR="../DocVault/Issues"
-# List .md files, exclude _Index.md, sort by modification time, take 5
-ls -t "$ISSUES_DIR"/*.md 2>/dev/null | grep -v '_Index' | head -5
+# Filter open issues first, then sort by modification time, take 5
+# (truncating before filtering can return zero results if the top 5 are all closed)
+grep -rl 'status:.*\(backlog\|todo\|in-progress\|in-review\)' "$ISSUES_DIR" 2>/dev/null \
+  | grep -v '_Index' | xargs ls -t 2>/dev/null | head -5
 ```
 
 For each file, read the frontmatter to extract: `id`, `title`, `status`, `updated`.
-Display as a compact list — skip files where `status` is `closed`, `done`, or `canceled`.
+Display as a compact list.
 
 If there is no vault Issues directory or no open issues, note it briefly and move on.
 Also check the project-specific Issues path if the global one is empty:

@@ -107,18 +107,27 @@ If no spec-workflow tasks were touched this session, skip.
 Check whether `/retro` was already run this session by querying mem0 for recent
 `retro-learning` entries:
 
+First detect the current project tag:
+
+```bash
+cat .claude/project.json 2>/dev/null | grep -o '"issueTag"[^,}]*' | cut -d'"' -f4 \
+  || basename $(git rev-parse --show-toplevel 2>/dev/null) | tr '[:upper:]' '[:lower:]'
+```
+
+Then search mem0, scoped to this project:
+
 ```
 mcp__mem0__search_memories(
   query: "retro-learning",
   user_id: "<your-mem0-user-id>",
-  filters: { "metadata.type": "retro-learning" },
+  filters: { "metadata.type": "retro-learning", "metadata.project": "<project-tag>" },
   limit: 5
 )
 ```
 
-Inspect the `created_at` timestamps. If any `retro-learning` entries were added within
-the last 60 minutes, retro was already run — **skip this step** and note "Retro already
-completed via /retro" in the digest's Retro Lessons section.
+Inspect the `created_at` timestamps. If any `retro-learning` entries for **this project**
+were added within the last 60 minutes, retro was already run — **skip this step** and note
+`_(completed via /retro)_` in the digest's Retro Lessons section.
 
 If no recent retro entries are found, run retro inline now:
 

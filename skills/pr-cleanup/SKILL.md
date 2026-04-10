@@ -40,7 +40,7 @@ git worktree list
 git log --oneline @{u}..HEAD 2>/dev/null   # commits ahead of origin
 git log --oneline HEAD..@{u} 2>/dev/null   # commits behind origin
 gh pr list --author "@me" --state merged \
-  --search "merged:>=$(date -v-1d +%Y-%m-%d)" \
+  --search "merged:>=$(date -v-1d +%Y-%m-%d 2>/dev/null || date -d 'yesterday' +%Y-%m-%d)" \
   --json number,title,headRefName,mergedAt 2>/dev/null
 ```
 
@@ -65,8 +65,13 @@ For each entry in `git worktree list` (excluding the main worktree):
 After worktree removal, run:
 
 ```bash
-git branch -vv | grep '\[gone\]' | awk '{print $1}'
+git for-each-ref --format='%(refname:short) %(upstream:track)' refs/heads \
+  | awk '$2 == "[gone]" {print $1}'
 ```
+
+This uses `git for-each-ref` rather than parsing `git branch -vv` — the latter outputs `*`
+for the current branch, which causes `git branch -d *` to shell-expand to filenames in the
+working directory. `git for-each-ref` always prints the real branch name.
 
 For each `[gone]` branch:
 - `git branch -d <branch>` (safe delete — refuses if unmerged)
