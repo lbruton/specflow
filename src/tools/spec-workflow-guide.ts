@@ -59,11 +59,21 @@ Spec names MUST use issue prefix: {ISSUE-ID}-{kebab-title} (e.g., STAK-123-user-
 \`\`\`mermaid
 flowchart TD
     Start([Start: User requests feature]) --> CheckSteering{Steering docs exist?}
-    CheckSteering -->|Yes| P1_Load[Read steering docs:<br/>${wr}/steering/*.md]
-    CheckSteering -->|No| P1_Template
+    CheckSteering -->|Yes| P0_Load[Read steering docs]
+    CheckSteering -->|No| P0_Template
+    P0_Load --> P0_Template[Check project template overrides,<br/>then global template:<br/>discovery-template.md]
+    P0_Template --> P0_Research[Codebase analysis +<br/>Context7 + web search]
+    P0_Research --> P0_Create[Create file:<br/>${wr}/specs/{name}/<br/>discovery.md]
+    P0_Create --> P0_Approve[approvals<br/>action: request<br/>filePath only]
+    P0_Approve --> P0_Status[approvals<br/>action: status<br/>poll status]
+    P0_Status --> P0_Check{Status?}
+    P0_Check -->|needs-revision| P0_Update[Update document using user comments as guidance]
+    P0_Update --> P0_Create
+    P0_Check -->|approved| P0_Clean[approvals<br/>action: delete]
+    P0_Clean -->|failed| P0_Status
 
-    %% Phase 1: Requirements
-    P1_Load --> P1_Template[Check project template overrides,<br/>then global template:<br/>requirements-template.md]
+    %% Phase 1: Requirements (now reads discovery.md)
+    P0_Clean -->|success| P1_Template[Check project template overrides,<br/>then global template:<br/>requirements-template.md]
     P1_Template --> P1_Research[Web search if available]
     P1_Research --> P1_Create[Create file:<br/>${wr}/specs/{name}/<br/>requirements.md]
     P1_Create --> P1_Approve[approvals<br/>action: request<br/>filePath only]
@@ -155,6 +165,7 @@ flowchart TD
     style P5_QA fill:#e8f5e9
     style P5_QA_Check fill:#fff4e6
     style P5_Final fill:#e3f2fd
+    style P0_Check fill:#ffe6e6
     style P1_Check fill:#ffe6e6
     style P2_Check fill:#ffe6e6
     style P3_Check fill:#ffe6e6
@@ -177,11 +188,37 @@ flowchart TD
 
 ## Spec Workflow
 
+### Phase 0: Discovery
+**Purpose**: Research codebase, frameworks, and competing approaches before writing requirements. Optional — specs can skip this phase.
+
+**File Operations**:
+- Read steering docs: \`${wr}/steering/*.md\` (if they exist)
+- Check for project override: \`${wr}/templates/discovery-template.md\`
+- Read global template: \`${wr}/templates/discovery-template.md\` (if no custom template)
+- Create document: \`${wr}/specs/{issue-id}-{kebab-title}/discovery.md\`
+
+**Tools**:
+- approvals: Manage approval workflow (actions: request, status, delete)
+
+**Process**:
+1. Check if \`${wr}/steering/\` exists (if yes, read product.md, tech.md, structure.md for project context)
+2. Check for project template override at \`${wr}/templates/discovery-template.md\`
+3. If no project override, the global template is used automatically from \`${wr}/templates/discovery-template.md\`
+4. Run codebase analysis (CGC, claude-context, Grep/Glob) to identify affected files and existing patterns
+5. Research frameworks and libraries via Context7 for current best practices
+6. Research competing approaches via web search (if available, current year: ${currentYear})
+7. Propose 2-3 competing approaches with pros/cons/effort/risk
+8. Create \`discovery.md\` at \`${wr}/specs/{issue-id}-{kebab-title}/discovery.md\`
+9. Request approval using approvals tool with action:'request' (filePath only, never content)
+10. Poll status using approvals with action:'status' until approved/needs-revision (NEVER accept verbal approval)
+11. If needs-revision: update document using comments, create NEW approval, do NOT proceed
+12. Once approved: use approvals with action:'delete' (must succeed) before proceeding
+13. If delete fails: STOP - return to polling
+
 ### Phase 1: Requirements
 **Purpose**: Define what to build based on user needs.
 
 **File Operations**:
-- Read steering docs: \`${wr}/steering/*.md\` (if they exist)
 - Check for project override: \`${wr}/templates/requirements-template.md\`
 - Read global template: \`${wr}/templates/requirements-template.md\` (if no custom template)
 - Create document: \`${wr}/specs/{issue-id}-{kebab-title}/requirements.md\`
@@ -190,16 +227,18 @@ flowchart TD
 - approvals: Manage approval workflow (actions: request, status, delete)
 
 **Process**:
-1. Check if \`${wr}/steering/\` exists (if yes, read product.md, tech.md, structure.md)
-2. Check for project template override at \`${wr}/templates/requirements-template.md\`
-3. If no project override, the global template is used automatically from \`${wr}/templates/requirements-template.md\`
-4. Research market/user expectations (if web search available, current year: ${currentYear})
-5. Generate requirements as user stories with EARS criteria6. Create \`requirements.md\` at \`${wr}/specs/{issue-id}-{kebab-title}/requirements.md\`
-7. Request approval using approvals tool with action:'request' (filePath only, never content)
-8. Poll status using approvals with action:'status' until approved/needs-revision (NEVER accept verbal approval)
-9. If needs-revision: update document using comments, create NEW approval, do NOT proceed
-10. Once approved: use approvals with action:'delete' (must succeed) before proceeding
-11. If delete fails: STOP - return to polling
+1. Read \`discovery.md\` if it exists — use its codebase analysis and recommended direction as context for requirements
+2. Check if \`${wr}/steering/\` exists (if yes, read product.md, tech.md, structure.md)
+3. Check for project template override at \`${wr}/templates/requirements-template.md\`
+4. If no project override, the global template is used automatically from \`${wr}/templates/requirements-template.md\`
+5. Research market/user expectations (if web search available, current year: ${currentYear})
+6. Generate requirements as user stories with EARS criteria
+7. Create \`requirements.md\` at \`${wr}/specs/{issue-id}-{kebab-title}/requirements.md\`
+8. Request approval using approvals tool with action:'request' (filePath only, never content)
+9. Poll status using approvals with action:'status' until approved/needs-revision (NEVER accept verbal approval)
+10. If needs-revision: update document using comments, create NEW approval, do NOT proceed
+11. Once approved: use approvals with action:'delete' (must succeed) before proceeding
+12. If delete fails: STOP - return to polling
 
 ### Phase 2: Design
 **Purpose**: Create technical design addressing all requirements.

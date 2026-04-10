@@ -21,7 +21,7 @@ function SpecModal({ spec, isOpen, onClose, isArchived }: { spec: any; isOpen: b
   const [confirmCloseModalOpen, setConfirmCloseModalOpen] = useState<boolean>(false);
 
   const phases = spec?.phases || {};
-  const availableDocs = ['requirements', 'design', 'tasks'].filter(doc => 
+  const availableDocs = ['discovery', 'requirements', 'design', 'tasks'].filter(doc =>
     phases[doc] && phases[doc].exists
   );
 

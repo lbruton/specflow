@@ -69,6 +69,7 @@ export class WorkspaceInitializer {
       : join(PathUtils.getWorkflowRoot(this.projectPath), 'templates');
     
     const templates = [
+      'discovery-template',
       'requirements-template',
       'design-template',
       'tasks-template',
@@ -110,6 +111,7 @@ export class WorkspaceInitializer {
     if (!this.config) return;
 
     const templates = [
+      'discovery-template',
       'requirements-template',
       'design-template',
       'tasks-template',

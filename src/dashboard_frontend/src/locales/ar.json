@@ -230,6 +230,7 @@
       "docSelectAria": "اختر نوع الوثيقة"
     },
     "documents": {
+      "discovery": "الاستكشاف",
       "requirements": "المتطلبات",
       "design": "التصميم",
       "tasks": "المهام"

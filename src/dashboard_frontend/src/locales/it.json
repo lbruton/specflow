@@ -230,6 +230,7 @@
       "docSelectAria": "Seleziona tipo documento"
     },
     "documents": {
+      "discovery": "Esplorazione",
       "requirements": "Requisiti",
       "design": "Design",
       "tasks": "Task"

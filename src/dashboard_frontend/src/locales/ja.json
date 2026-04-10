@@ -230,6 +230,7 @@
       "docSelectAria": "ドキュメント種類を選択"
     },
     "documents": {
+      "discovery": "調査",
       "requirements": "要件",
       "design": "設計",
       "tasks": "タスク"

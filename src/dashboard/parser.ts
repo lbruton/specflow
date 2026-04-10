@@ -77,6 +77,7 @@ export class SpecParser {
         createdAt: '',
         lastModified: '',
         phases: {
+          discovery: { exists: false },
           requirements: { exists: false },
           design: { exists: false },
           tasks: { exists: false },
@@ -91,10 +92,24 @@ export class SpecParser {
       spec.lastModified = dirStats.mtime.toISOString();
 
       // Check each phase
+      const discoveryPath = join(specDir, 'discovery.md');
       const requirementsPath = join(specDir, 'requirements.md');
       const designPath = join(specDir, 'design.md');
       const tasksPath = join(specDir, 'tasks.md');
       const readinessReportPath = join(specDir, 'readiness-report.md');
+
+      // Check discovery
+      try {
+        await access(discoveryPath);
+        spec.phases.discovery.exists = true;
+        spec.phases.discovery.approved = await this.isPhaseApproved(name, 'discovery.md');
+        const discStats = await stat(discoveryPath);
+        spec.phases.discovery.lastModified = discStats.mtime.toISOString();
+
+        if (discStats.mtime > new Date(spec.lastModified)) {
+          spec.lastModified = discStats.mtime.toISOString();
+        }
+      } catch {}
 
       // Check requirements
       try {
@@ -178,6 +193,7 @@ export class SpecParser {
         createdAt: '',
         lastModified: '',
         phases: {
+          discovery: { exists: false },
           requirements: { exists: false },
           design: { exists: false },
           tasks: { exists: false },
@@ -192,10 +208,24 @@ export class SpecParser {
       spec.lastModified = dirStats.mtime.toISOString();
 
       // Check each phase
+      const discoveryPath = join(specDir, 'discovery.md');
       const requirementsPath = join(specDir, 'requirements.md');
       const designPath = join(specDir, 'design.md');
       const tasksPath = join(specDir, 'tasks.md');
       const readinessReportPath = join(specDir, 'readiness-report.md');
+
+      // Check discovery
+      try {
+        await access(discoveryPath);
+        spec.phases.discovery.exists = true;
+        spec.phases.discovery.approved = await this.isPhaseApproved(name, 'discovery.md');
+        const discStats = await stat(discoveryPath);
+        spec.phases.discovery.lastModified = discStats.mtime.toISOString();
+
+        if (discStats.mtime > new Date(spec.lastModified)) {
+          spec.lastModified = discStats.mtime.toISOString();
+        }
+      } catch {}
 
       // Check requirements
       try {

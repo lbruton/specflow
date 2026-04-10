@@ -230,6 +230,7 @@
       "docSelectAria": "문서 유형 선택"
     },
     "documents": {
+      "discovery": "탐색",
       "requirements": "요구사항",
       "design": "설계",
       "tasks": "태스크"

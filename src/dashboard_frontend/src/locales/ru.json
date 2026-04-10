@@ -232,6 +232,7 @@
       "docSelectAria": "Выбрать тип документа"
     },
     "documents": {
+      "discovery": "Исследование",
       "requirements": "Требования",
       "design": "Дизайн",
       "tasks": "Задачи"

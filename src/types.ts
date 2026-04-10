@@ -67,6 +67,7 @@ export interface SpecData {
   createdAt: string;
   lastModified: string;
   phases: {
+    discovery: PhaseStatus;
     requirements: PhaseStatus;
     design: PhaseStatus;
     tasks: PhaseStatus;

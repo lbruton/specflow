@@ -230,6 +230,7 @@
       "docSelectAria": "选择文档类型"
     },
     "documents": {
+      "discovery": "探索",
       "requirements": "需求",
       "design": "设计",
       "tasks": "任务"

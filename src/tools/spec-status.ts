@@ -67,7 +67,13 @@ export async function specStatusHandler(args: any, context: ToolContext): Promis
     let currentPhase = 'not-started';
     let overallStatus = 'not-started';
     
-    if (!spec.phases.requirements.exists) {
+    if (!spec.phases.discovery.exists && !spec.phases.requirements.exists) {
+      currentPhase = 'discovery';
+      overallStatus = 'discovery-needed';
+    } else if (spec.phases.discovery.exists && !spec.phases.discovery.approved && !spec.phases.requirements.exists) {
+      currentPhase = 'discovery';
+      overallStatus = 'discovery-in-progress';
+    } else if (!spec.phases.requirements.exists) {
       currentPhase = 'requirements';
       overallStatus = 'requirements-needed';
     } else if (!spec.phases.design.exists) {
@@ -113,6 +119,11 @@ export async function specStatusHandler(args: any, context: ToolContext): Promis
 
     // Phase details
     const phaseDetails = [
+      {
+        name: 'Discovery',
+        status: spec.phases.discovery.exists ? (spec.phases.discovery.approved ? 'approved' : 'created') : 'missing',
+        lastModified: spec.phases.discovery.lastModified
+      },
       {
         name: 'Requirements',
         status: spec.phases.requirements.exists ? (spec.phases.requirements.approved ? 'approved' : 'created') : 'missing',
@@ -179,6 +190,11 @@ export async function specStatusHandler(args: any, context: ToolContext): Promis
     const wr = workflowRoot;
     const nextSteps = [];
     switch (currentPhase) {
+      case 'discovery':
+        nextSteps.push(`Read template: ${wr}/templates/discovery-template.md`);
+        nextSteps.push(`Create: ${wr}/specs/{name}/discovery.md`);
+        nextSteps.push('Request approval');
+        break;
       case 'requirements':
         nextSteps.push(`Read template: ${wr}/templates/requirements-template.md`);
         nextSteps.push(`Create: ${wr}/specs/{name}/requirements.md`);

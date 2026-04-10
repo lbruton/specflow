@@ -230,6 +230,7 @@
       "docSelectAria": "Dokumenttyp auswählen"
     },
     "documents": {
+      "discovery": "Erkundung",
       "requirements": "Anforderungen",
       "design": "Design",
       "tasks": "Aufgaben"
