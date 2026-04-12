@@ -7,7 +7,7 @@ MCP server plugin for spec-driven development with a real-time web dashboard. Po
 | Field | Value |
 |-------|-------|
 | Package | `@lbruton/specflow` |
-| Version | `3.6.0` |
+| Version | `3.6.1` |
 | Upstream | [Pimzino/spec-workflow-mcp](https://github.com/Pimzino/spec-workflow-mcp) |
 | Origin | [lbruton/specflow](https://github.com/lbruton/specflow) |
 | Branch | `main` (PR required, signed commits, status checks) |
@@ -64,6 +64,7 @@ flowchart LR
 
 **Hard rules:**
 - There is NO `plugin/` directory. If you see one, it's an orphan from before the 2026-04-07 reconciliation — delete it, do not edit it.
+- There is NO `.claude-plugin/` directory. Removed in v3.6.0 (PR #12) — `marketplace.json` referenced the dead `plugin/` source. If it reappears, delete it.
 - There is NO marketplace directory under `~/.claude/plugins/marketplaces/`. If one exists, it's stale — delete it.
 - **Never symlink** the user-level skill to the repo copy. They are intentionally separate so user-level can iterate without dirtying the shipped version.
 - Promotion is a manual `cp` after the user-level version has been tested. Long-term we may automate this, but today it's a deliberate human step.
@@ -280,6 +281,18 @@ After `npm publish`, before telling the user it's done:
 5. Verify migration ran: local `.specflow/` should contain only `config.json`
 6. Verify templates: project templates dir should have overrides only, not globals
 7. Run a test spec or `spec-status` to confirm MCP tools work with DocVault paths
+
+## Gotcha: Version Bump Checklist
+
+When bumping `package.json` version, also update:
+1. `CLAUDE.md` Quick Reference table (Version field)
+2. Run `npm run build` to propagate to `dist/`
+
+Both files were out of sync prior to v3.6.0 — the CLAUDE.md version field is not auto-synced.
+
+## Gotcha: Squash Merge Branch Cleanup
+
+GitHub squash-merges PRs by default. After merge, `git branch -d <branch>` fails with "not fully merged" because the squash commit has a different SHA than the branch commits. The branch IS merged — the `[gone]` tracking status confirms it. Use `git branch -D <branch>` for branches confirmed `[gone]` after a squash merge.
 
 ## Gotcha: Prompt Path References
 
