@@ -21,24 +21,8 @@ End-to-end spec-driven development: fetch an issue, create or resume a spec-work
 
 **Does NOT:** brainstorm or explore open-ended design (that's `/chat` → `/discover` → `/spec`).
 **Does NOT:** claim a version lock or create a worktree (that's `/release patch`).
-**Does NOT:** push code or create PRs mid-spec (PR is the FINAL Step 6 action, after ALL tasks + gates pass).
+**Does NOT:** push code or create PRs (that's `/release`).
 **Does NOT:** create steering documents (that's the `steering-guide` MCP tool).
-**Does NOT:** write spec files inside the project directory. ALL spec artifacts go in DocVault.
-
-<HARD-GATE>
-**SPEC FILES LIVE IN DOCVAULT — NEVER IN THE PROJECT.**
-
-Specs, templates, steering docs, approvals, and implementation logs are stored in DocVault at the workflow root resolved from `.specflow/config.json`. The ONLY file inside the project is `.specflow/config.json` itself.
-
-**NEVER** write `requirements.md`, `design.md`, `tasks.md`, or any spec artifact to:
-- `.specflow/specs/` (WRONG — obsolete pre-consolidation path)
-- The project's working directory (WRONG — project is for source code)
-- Any path that does not start with the resolved DocVault workflow root
-
-**ALWAYS** resolve the workflow root from `.specflow/config.json` first (Step 0), then write to `{workflowRoot}/specs/{specName}/`.
-
-If you catch yourself writing to `.specflow/specs/` or anywhere inside the project directory for spec artifacts, STOP and fix the path.
-</HARD-GATE>
 
 ---
 
@@ -50,7 +34,7 @@ Resuming a spec does NOT mean "wing it." It means:
 
 1. **Call `spec-workflow-guide`** — load the workflow. Every time. Even if you think you know the workflow.
 2. **Call `spec-status`** — check which phase the spec is in and what's been completed.
-3. **Read the template** for the current phase from `{workflowRoot}/templates/`. Do not write spec documents from memory or by guessing the format.
+3. **Read the template** for the current phase (from `$SPECFLOW_ROOT/templates/` first, then `$SPECFLOW_GLOBAL/templates/`). Do not write spec documents from memory or by guessing the format.
 4. **Use `approvals`** — request dashboard approval after writing each document. Never accept verbal approval. Never skip the approval → poll → delete cycle.
 5. **Use `log-implementation`** — log every task completion with full artifacts. Never mark `[x]` without a successful log call.
 6. **Use `spec-list`** — find the existing spec by issue ID before assuming a spec name or directory structure.
@@ -80,50 +64,42 @@ If any answer is "no," STOP and do the missing step first.
 
 ### Project detection
 
-Read `.claude/project.json` (in the current working directory):
+Read both config files to resolve all paths:
 
 ```bash
 cat .claude/project.json
-```
-
-Extract:
-- `issuePrefix` → used for issue file lookups
-- `name` → display label
-
-### Resolve workflow root (MANDATORY — all file paths depend on this)
-
-Read `.specflow/config.json` to find the DocVault-based workflow root:
-
-```bash
 cat .specflow/config.json
 ```
 
-From the config, resolve the **workflow root** — the directory where all spec artifacts live:
+From `.claude/project.json` extract:
+- `issuePrefix` → used for issue file lookups
+- `name` → display label
 
+From `.specflow/config.json` extract and resolve:
+- `docvault` → relative path to DocVault (e.g. `../DocVault`)
+- `project` → project name for specflow paths
+
+**Resolve the specflow root path** — this is used for ALL subsequent file reads (templates, specs, steering, discovery):
+
+```bash
+DOCVAULT=$(cd "$(pwd)/$(python3 -c "import json; print(json.load(open('.specflow/config.json')).get('docvault','../DocVault'))")" && pwd)
+PROJECT=$(python3 -c "import json; print(json.load(open('.specflow/config.json')).get('project',''))")
+SPECFLOW_ROOT="$DOCVAULT/specflow/$PROJECT"
+SPECFLOW_GLOBAL="$DOCVAULT/specflow"
 ```
-{project_directory}/{docvault_relative_path}/specflow/{project_name}
-```
 
-Example: if config says `"docvault": "../DocVault"` and `"project": "StakTrakr"`, the workflow root is `../DocVault/specflow/StakTrakr` (relative) or the absolute equivalent.
-
-Store this as `{workflowRoot}` — ALL subsequent file paths in this workflow use it:
-- Templates: `{workflowRoot}/templates/`
-- Specs: `{workflowRoot}/specs/{specName}/`
-- Steering: `{workflowRoot}/steering/`
-- Approvals: resolved automatically by MCP tools
-
-<HARD-GATE>
-If `.specflow/config.json` does not exist, STOP. The project has not been onboarded to specflow.
-Do NOT fall back to `.specflow/specs/` — that path is obsolete post-DocVault consolidation.
-</HARD-GATE>
+Store these variables for the entire session:
+- `SPECFLOW_ROOT` → `{docvault}/specflow/{project}` (project-specific: specs, templates, steering, approvals)
+- `SPECFLOW_GLOBAL` → `{docvault}/specflow` (global templates fallback)
+- `DOCVAULT` → absolute DocVault root (for issue lookups, vault-update)
 
 ### Fetch issue from vault
 
 Read the issue file from DocVault:
 
 ```bash
-cat /Volumes/DATA/GitHub/DocVault/Projects/{project}/Issues/{ISSUE-ID}.md 2>/dev/null || \
-cat /Volumes/DATA/GitHub/DocVault/Projects/{project}/Issues/Closed/{ISSUE-ID}.md
+cat "$DOCVAULT/Projects/$PROJECT/Issues/{ISSUE-ID}.md" 2>/dev/null || \
+cat "$DOCVAULT/Projects/$PROJECT/Issues/Closed/{ISSUE-ID}.md"
 ```
 
 Extract: title, description, priority, status, tags from frontmatter.
@@ -171,7 +147,7 @@ spec-list query: "{kebab-title keywords}"
 ### Legacy fallback: directory listing
 
 ```bash
-ls {workflowRoot}/specs/{specName}/ 2>/dev/null
+ls "$SPECFLOW_ROOT/specs/{specName}/" 2>/dev/null
 ```
 
 ### Decision
@@ -180,7 +156,7 @@ ls {workflowRoot}/specs/{specName}/ 2>/dev/null
 - Call `spec-status` with the matched `specName` to see phase progress
 - Display current state (phase, task completion counts, pending approvals)
 - **MANDATORY before resuming any phase:** Call `spec-workflow-guide` to reload the full workflow procedure. Do NOT rely on memory of how the workflow works.
-- **MANDATORY before writing/editing any phase document:** Read the template for that phase from `{workflowRoot}/templates/`. Do NOT write from memory.
+- **MANDATORY before writing/editing any phase document:** Read the template for that phase from `$SPECFLOW_ROOT/templates/` (preferred) or `$SPECFLOW_GLOBAL/templates/` (fallback). Do NOT write from memory.
 - If `--resume` flag was passed, jump directly to the current phase (but still load guide + template first)
 - Otherwise ask: "Resume at current phase, or restart from scratch?"
 - If Phase 4 in progress, jump to Step 5 (Implementation)
@@ -193,9 +169,9 @@ ls {workflowRoot}/specs/{specName}/ 2>/dev/null
 
 | Resuming Phase | Required MCP calls before any edits |
 |---|---|
-| Phase 1 (Requirements) | `spec-workflow-guide` → `spec-status` → read `{workflowRoot}/templates/requirements-template.md` |
-| Phase 2 (Design) | `spec-workflow-guide` → `spec-status` → read `{workflowRoot}/templates/design-template.md` → read existing `requirements.md` |
-| Phase 3 (Tasks) | `spec-workflow-guide` → `spec-status` → read `{workflowRoot}/templates/tasks-template.md` → read existing `requirements.md` + `design.md` |
+| Phase 1 (Requirements) | `spec-workflow-guide` → `spec-status` → read `user-templates/requirements-template.md` or `templates/requirements-template.md` |
+| Phase 2 (Design) | `spec-workflow-guide` → `spec-status` → read `user-templates/design-template.md` or `templates/design-template.md` → read existing `requirements.md` |
+| Phase 3 (Tasks) | `spec-workflow-guide` → `spec-status` → read `user-templates/tasks-template.md` or `templates/tasks-template.md` → read existing `requirements.md` + `design.md` |
 | Phase 4 (Implementation) | `spec-workflow-guide` → `spec-status` → read existing `tasks.md` → check Implementation Logs directory |
 
 Skipping any of these calls is a workflow violation.
@@ -213,7 +189,7 @@ Skipping any of these calls is a workflow violation.
 
 2. **Read requirements template (MANDATORY — do NOT write from memory):**
    ```bash
-   cat {workflowRoot}/templates/requirements-template.md
+   cat "$SPECFLOW_ROOT/templates/requirements-template.md" 2>/dev/null || cat "$SPECFLOW_GLOBAL/templates/requirements-template.md"
    ```
 
 3. **Search mem0 for prior context:**
@@ -225,17 +201,16 @@ Skipping any of these calls is a workflow violation.
 
 4. **Check for existing discovery brief:**
    ```bash
-   ls /Volumes/DATA/GitHub/DocVault/specflow/{project}/discovery/{ISSUE-ID}.md 2>/dev/null
+   ls $SPECFLOW_ROOT/discovery/{ISSUE-ID}.md 2>/dev/null
    ```
    If a `/discover` brief exists for this issue, read it. The discovery findings inform requirements — user stories, edge cases, and technical constraints that were surfaced during exploration.
 
 5. **Ask clarifying questions** — one at a time, grounded in the issue description and any discovery findings.
 
-6. **Write requirements.md** (include YAML frontmatter — the template has it):
+6. **Write requirements.md** (include YAML frontmatter from the template):
    ```
-   {workflowRoot}/specs/{specName}/requirements.md
+   $SPECFLOW_ROOT/specs/{specName}/requirements.md
    ```
-   Create the directory if it doesn't exist: `mkdir -p {workflowRoot}/specs/{specName}`
 
 7. **Request dashboard approval:**
    ```
@@ -246,7 +221,6 @@ Skipping any of these calls is a workflow violation.
      category: "spec"
      categoryName: "{specName}"
    ```
-   Note: `filePath` is relative to the workflow root — the MCP tool resolves it automatically. Do NOT pass absolute paths or paths with `../`.
 
 8. **Poll for approval:**
    ```
@@ -271,7 +245,7 @@ Skipping any of these calls is a workflow violation.
 
 2. **Read design template (MANDATORY — do NOT write from memory):**
    ```bash
-   cat {workflowRoot}/templates/design-template.md
+   cat "$SPECFLOW_ROOT/templates/design-template.md" 2>/dev/null || cat "$SPECFLOW_GLOBAL/templates/design-template.md"
    ```
 
 3. **Discovery Research (MANDATORY — before any design decisions):**
@@ -280,9 +254,9 @@ Skipping any of these calls is a workflow violation.
 
    a. **Read steering documents** for this project:
       ```bash
-      cat {workflowRoot}/steering/product.md 2>/dev/null
-      cat {workflowRoot}/steering/tech.md 2>/dev/null
-      cat {workflowRoot}/steering/structure.md 2>/dev/null
+      cat "$SPECFLOW_ROOT/steering/product.md" 2>/dev/null
+      cat "$SPECFLOW_ROOT/steering/tech.md" 2>/dev/null
+      cat "$SPECFLOW_ROOT/steering/structure.md" 2>/dev/null
       ```
 
    b. **Run codebase-search** — invoke the `codebase-search` skill. Produce a Codebase Impact Report:
@@ -304,9 +278,9 @@ Skipping any of these calls is a workflow violation.
 
 6. **Present design in sections**, get user feedback after each section.
 
-7. **Write design.md** (include YAML frontmatter — the template has it):
+7. **Write design.md:**
    ```
-   {workflowRoot}/specs/{specName}/design.md
+   $SPECFLOW_ROOT/specs/{specName}/design.md
    ```
 
 8. **Request dashboard approval** (same pattern as Step 2 — request → poll → delete on approval).
@@ -324,9 +298,9 @@ Skipping any of these calls is a workflow violation.
    spec-workflow-guide
    ```
 
-2. **Read tasks template (MANDATORY — may have project-specific gates):**
+2. **Read tasks template (MANDATORY — the user-template has project-specific gates):**
    ```bash
-   cat {workflowRoot}/templates/tasks-template.md
+   cat "$SPECFLOW_ROOT/templates/tasks-template.md" 2>/dev/null || cat "$SPECFLOW_GLOBAL/templates/tasks-template.md"
    ```
 
 3. **Reference requirements.md + design.md.**
@@ -338,9 +312,9 @@ Skipping any of these calls is a workflow violation.
    - **Recommended Agent** — Claude / Codex / Gemini / Human
    - **File Touch Map** — CREATE / MODIFY / TEST with file paths
 
-5. **Write tasks.md** (include YAML frontmatter — the template has it):
+5. **Write tasks.md:**
    ```
-   {workflowRoot}/specs/{specName}/tasks.md
+   $SPECFLOW_ROOT/specs/{specName}/tasks.md
    ```
 
 6. **Request dashboard approval** (same pattern as Steps 2–3).
@@ -351,11 +325,7 @@ Skipping any of these calls is a workflow violation.
 
 ## Step 5: Phase 4 — Implementation
 
-<HARD-GATE>
-**NO PR CREATION DURING IMPLEMENTATION.** Do NOT create a pull request, push to remote, run Codacy scans, run Codex peer review, or perform final validation loops during this phase. Those happen AFTER the spec is complete — at the very end, in Step 6. The PR is the FINAL artifact of a completed spec, not an intermediate step.
-
-If you feel the urge to create a PR after implementing tasks — STOP. Check: are ALL tasks `[x]`? Has Step 5.5 (post-implementation gate) passed? Has Step 6 run? If not, you are not done.
-</HARD-GATE>
+> **NO PRs DURING IMPLEMENTATION.** Do not create a PR, push code, run Codacy, or run Codex peer review here. The PR is the FINAL action in Step 6 — after ALL tasks pass, Step 5.5 gates clear, and issues close.
 
 > **SESSION BOUNDARY RULE:** If you are entering this phase from a handoff or new session, you MUST:
 > 1. Call `spec-workflow-guide`
@@ -410,37 +380,28 @@ For each pending task (or parallel batch of independent tasks):
 
    #### b) Check prior implementation logs
    ```bash
-   ls "{workflowRoot}/specs/{specName}/Implementation Logs/" 2>/dev/null
+   ls "$SPECFLOW_ROOT/specs/{specName}/Implementation Logs/" 2>/dev/null
    ```
 
    #### c) Dispatch implementer subagent
-
-   Check the task's **Recommended Agent** field from tasks.md:
-
-   - **Codex** → dispatch via `subagent_type: "codex:codex-rescue"` with `run_in_background: true`
-     - Prompt must include the full `_Prompt`, `_Leverage` paths, and "After implementation: commit all changes, log-implementation, mark task [x]"
-     - If Codex is unavailable (plugin not installed), fall back to `subagent_type: "general-purpose"` and note the fallback in the implementation log
-   - **Gemini** → dispatch via `subagent_type: "general-purpose"` (Gemini CLI runs in terminal; print prompt to user via Option 2 instead when Gemini is preferred)
-   - **Claude** or unspecified → dispatch via `subagent_type: "general-purpose"`
-
-   All agent dispatches include:
+   Use the Agent tool with:
    - The full `_Prompt` text from the task
    - All `_Leverage` file paths
-   - Reference: `{workflowRoot}/templates/implementer-prompt-template.md` (if exists)
+   - Reference: `.specflow/templates/implementer-prompt-template.md` (if exists)
    - **Inject specialized role context** based on the task's File Touch Map (see Specialized Agent Roles below)
    - Subagent implements, tests, commits, and self-reviews
    - **Main context does NOT write implementation code**
 
    #### d) Dispatch spec compliance reviewer
    Use the Agent tool with:
-   - Reference: `{workflowRoot}/templates/spec-reviewer-template.md` (if exists)
+   - Reference: `.specflow/templates/spec-reviewer-template.md` (if exists)
    - Reads actual code changes vs task requirements
    - If fail → dispatch implementer again to fix → re-review
    - Must pass before proceeding
 
    #### e) Dispatch code quality reviewer
    Use the Agent tool with:
-   - Reference: `{workflowRoot}/templates/code-quality-reviewer-template.md` (if exists)
+   - Reference: `.specflow/templates/code-quality-reviewer-template.md` (if exists)
    - Checks architecture, error handling, testing, production readiness
    - If Critical or Important issues found → fix → re-review
    - Must pass before proceeding
@@ -598,7 +559,7 @@ If no user-facing behavior changed (pure refactor, config-only), this gate can b
 Dispatch a subagent with:
 - All implementation logs for this spec
 - The `vault-update` skill
-- The DocVault repo path: `/Volumes/DATA/GitHub/DocVault`
+- The DocVault repo path: `$DOCVAULT`
 - Instructions: "Review the implementation logs. Identify which DocVault pages are affected by these changes. Update the affected pages to reflect the new behavior, architecture, or API changes. Commit changes directly to main."
 
 The agent reads the implementation logs, cross-references the DocVault pages, and updates affected pages.
@@ -616,65 +577,9 @@ After test coverage is verified and documentation is updated:
 
 ---
 
-## Step 5.75: Draft PR for Human Review (MANDATORY)
-
-After Step 5.5 passes (all tasks `[x]`, tests authored, DocVault updated), create a **draft PR** and stop for human review.
-
-1. **Verify worktree branch** — all commits should be on the feature branch, not main/master.
-   If commits are on main, STOP and alert the user — do not create the PR.
-
-2. **Create draft PR:**
-   ```bash
-   gh pr create --draft \
-     --title "{specName}: {issue title}" \
-     --body "Spec: {specName}
-   Issue: {ISSUE-ID}
-   Tasks: X/X complete
-   
-   ## Changes
-   {brief summary from implementation logs}
-   
-   ## Review checklist
-   - [ ] Implementation matches spec requirements
-   - [ ] Tests pass
-   - [ ] DocVault updated
-   
-   /cc @lbruton — ready for review"
-   ```
-
-3. **Print the PR URL** and stop:
-   ```
-   ## Draft PR Created — Waiting for Review
-
-   PR:       {PR URL}
-   Branch:   {branch}
-   Commits:  {commit count}
-
-   Review the PR. When satisfied, close the spec:
-     /spec {ISSUE-ID} --resume   (to run Step 6 — close issues)
-   ```
-
-<HARD-GATE>
-STOP HERE. Do NOT close issues, do NOT merge, do NOT continue to Step 6.
-The human must review the draft PR first. Step 6 runs ONLY after the user explicitly resumes.
-</HARD-GATE>
-
----
-
 ## Step 6: Close Issues & Completion
 
-> **Only reach here via explicit `/spec {ISSUE-ID} --resume` AFTER the human has reviewed the draft PR from Step 5.75.**
-
-### a) Run quality gates on the PR
-
-1. Run Codacy scan on the PR (if Codacy MCP available)
-2. Resolve any Critical/Important findings before proceeding
-
-<HARD-GATE>
-The PR must pass all status checks before closing issues.
-</HARD-GATE>
-
-### b) Close vault issue
+### a) Close vault issue
 
 Update the vault issue file in DocVault:
 
@@ -685,7 +590,7 @@ Update the vault issue file in DocVault:
 #   updated: {today's date}
 ```
 
-Edit the issue markdown file at `DocVault/Projects/{project}/Issues/{ISSUE-ID}.md`.
+Edit the issue markdown file at `$DOCVAULT/Projects/$PROJECT/Issues/{ISSUE-ID}.md`.
 If the issue has sub-issues, close those too (update each sub-issue file's status to `done`).
 
 ### b) Close GitHub issue (if user-facing)
@@ -694,9 +599,9 @@ Check the vault issue's `github_issue` frontmatter field:
 
 ```bash
 # If github_issue is populated:
-gh issue close {github_issue} --repo lbruton/{repo}
+gh issue close {github_issue} --repo {owner}/{repo}
 # Verify:
-gh issue view {github_issue} --repo lbruton/{repo} --json state
+gh issue view {github_issue} --repo {owner}/{repo} --json state
 ```
 
 If `scope: internal` or `github_issue` is empty, skip this step.
@@ -713,9 +618,8 @@ Tasks:    X/X complete
 Logs:     X implementation logs filed
 Tests:    {test results summary}
 DocVault: X pages updated
-PR:       {PR URL} (draft — ready to mark ready for review)
 
-Next: mark PR ready → /release patch to version bump
+Next: /release patch to version bump and create PR
 ```
 
 <HARD-GATE>
