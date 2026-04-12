@@ -61,7 +61,7 @@
 
 {/* MANDATORY GATES — These gates appear verbatim in every generated tasks.md. Do NOT treat as placeholders.
 
-VERSION CHECKOUT GATE — INTERACTIVE: */}
+VERSION CHECKOUT GATE — INTERACTIVE:
 Before implementing ANY task below, check the project's version management:
 1. IF the project has `devops/version.lock`:
    - Run `/release patch` to claim a version and create a worktree
