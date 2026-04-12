@@ -1,3 +1,9 @@
+---
+tags: [tasks, spec]
+created: {{YYYY-MM-DD}}
+updated: {{YYYY-MM-DD}}
+---
+
 # Tasks Document
 
 ## References

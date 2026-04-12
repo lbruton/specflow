@@ -1,3 +1,9 @@
+---
+tags: [design, spec]
+created: {{YYYY-MM-DD}}
+updated: {{YYYY-MM-DD}}
+---
+
 # Design Document
 
 ## References

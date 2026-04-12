@@ -1,3 +1,9 @@
+---
+tags: [requirements, spec]
+created: {{YYYY-MM-DD}}
+updated: {{YYYY-MM-DD}}
+---
+
 # Requirements Document
 
 ## References
