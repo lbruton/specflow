@@ -329,6 +329,8 @@ src/
 npm install        # Install dependencies
 npm run build      # Compile TypeScript + build dashboard frontend
 npm run dev        # Development mode with hot reload
+pre-commit install # Install git hooks (includes gitleaks)
+pre-commit run --all-files # Run hooks manually across repo
 ```
 
 ## Upstream Documentation
