@@ -40,8 +40,9 @@ Not everything belongs in one file. Each tier has a purpose and a source of trut
 | Tier | System | Role |
 |------|--------|------|
 | **1** | DocVault | Ground truth. Human-curated Obsidian vault. Wins all conflicts. |
-| **2** | File Memory | Session context. Project-scoped markdown at `~/.claude/projects/*/memory/`. |
-| **3** | mem0 | Episodic recall. Semantic retrieval from session digests. Never authoritative. Cloud API by default; self-hosted fork planned. |
+| **2** | session-rag | Verbatim session history. Indexes JSONL transcripts into Milvus Lite, semantic search with date filtering. Primary context source for `/start` and `/prime`. |
+| **3** | mem0 | Curated episodic memory. Retro learnings, cross-session decisions, handoffs. Cloud API. |
+| **4** | File Memory | Session context. Project-scoped markdown at `~/.claude/projects/*/memory/`. |
 
 ## Continuous Learning Loop
 
@@ -49,21 +50,20 @@ Every session learns from the previous. This is the single biggest differentiato
 
 ```
 /start (quick resume)          End-of-session flow:
-  ├─ Read last session digest
-  ├─ Git log + status          [/pr-cleanup] (if PR merged)
-  └─ 5 most recent issues        ├─ Prune remote refs
-                                 ├─ Remove merged worktrees
-/prime (full boot)               └─ Pull main fast-forward
-  ├─ Index codebase (~15s)
-  ├─ Read recent digests       /retro
-  ├─ Pull mem0 memories          └─ Prescriptive lessons → mem0
-  ├─ Check issues + git
-  └─ "Here's where you left off" /wrap
-                                 ├─ Retro check (skip if /retro already ran)
-/audit (on-demand health)        ├─ Session digest → DocVault
-  ├─ Code quality + security     └─ Summary → mem0
-  ├─ Documentation drift
-  └─ Actionable report
+  ├─ session-rag (recent turns)
+  ├─ mem0 (curated memories)   [/pr-cleanup] (if PR merged)
+  ├─ Git log + status            ├─ Prune remote refs
+  └─ 5 most recent issues       ├─ Remove merged worktrees
+                                 └─ Pull main fast-forward
+/prime (full boot)
+  ├─ session-rag + mem0        /wrap (retro folded in)
+  ├─ Index codebase (~15s)       ├─ Retrospective lessons → mem0
+  ├─ Check issues + git          └─ Curated summary → mem0
+  └─ "Here's where you left off"
+                               /audit (on-demand health)
+                                 ├─ Code quality + security
+                                 ├─ Documentation drift
+                                 └─ Actionable report
 ```
 
 ## Spec Workflow Lifecycle
