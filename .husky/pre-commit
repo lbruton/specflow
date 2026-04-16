@@ -1,0 +1,4 @@
+npx lint-staged
+
+# Chain gitleaks via pre-commit framework (if installed)
+command -v pre-commit >/dev/null 2>&1 && pre-commit run --hook-type pre-commit

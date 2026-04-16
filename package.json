@@ -31,6 +31,9 @@
     "test:e2e:worktree": "playwright test -c playwright.worktree.config.ts",
     "test:e2e:ui": "playwright test --ui",
     "test:generate-approvals": "node scripts/generate-test-approvals.cjs",
+    "prepare": "husky || true",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "prepublishOnly": "npm run build",
     "validate:mdx": "tsx scripts/validate-mdx.ts"
   },
@@ -95,11 +98,17 @@
     "@types/ws": "^8.5.13",
     "@vitejs/plugin-react": "^4.3.3",
     "@vitest/coverage-v8": "^4.0.15",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.4.0",
+    "prettier": "^3.8.3",
     "rimraf": "^6.0.1",
     "tailwindcss": "^4.1.13",
     "tsx": "^4.7.0",
     "typescript": "^5.7.2",
     "vite": "^7.2.7",
     "vitest": "^4.0.15"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,cjs,mjs,json,css,html}": "prettier --write"
   }
 }

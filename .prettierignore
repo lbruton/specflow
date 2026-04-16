@@ -1,0 +1,18 @@
+# Build output
+dist/
+coverage/
+
+# Package artifacts
+*.tgz
+node_modules/
+
+# Authored markdown — intentionally formatted, users copy verbatim
+skills/
+commands/
+src/markdown/templates/
+
+# Obsidian / DocVault artifacts
+.specflow/
+
+# Generated
+package-lock.json
