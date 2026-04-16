@@ -586,8 +586,8 @@ The dashboard tracks progress regardless of which agent is driving.</span></div>
       <div class="tier tier-4">
         <div class="tier-label">Tier 4</div>
         <div class="tier-content">
-          <h3>File Memory <span class="dim">&mdash; Session context</span></h3>
-          <p>Project-scoped markdown files at <code>~/.claude/projects/*/memory/</code>. Agent-curated, human-reviewable. Loaded at session start. Stores user preferences, feedback, project state, and external references.</p>
+          <h3>Claude Context <span class="dim">&mdash; Semantic code search</span></h3>
+          <p>Self-hosted Milvus vector database indexing your entire codebase. Search by meaning, not keywords. Forked from <a href="https://github.com/zilliztech/claude-context" target="_blank" rel="noopener">zilliztech/claude-context</a>, hardened with timeouts and pinned versions. Cross-project code intelligence.</p>
         </div>
       </div>
     </div>
@@ -865,7 +865,7 @@ The dashboard tracks progress regardless of which agent is driving.</span></div>
           <td>tasks.json</td>
           <td>Scaffold files</td>
           <td>Steering docs</td>
-          <td class="accent">4-tier: DocVault + session-rag + mem0 + file</td>
+          <td class="accent">4-tier: DocVault + session-rag + mem0 + Claude Context</td>
         </tr>
         <tr>
           <td>Session learning</td>

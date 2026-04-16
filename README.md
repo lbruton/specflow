@@ -42,7 +42,7 @@ Not everything belongs in one file. Each tier has a purpose and a source of trut
 | **1** | DocVault | Ground truth. Human-curated Obsidian vault. Wins all conflicts. |
 | **2** | session-rag | Verbatim session history. Indexes JSONL transcripts into Milvus Lite, semantic search with date filtering. Primary context source for `/start` and `/prime`. |
 | **3** | mem0 | Curated episodic memory. Retro learnings, cross-session decisions, handoffs. Cloud API. |
-| **4** | File Memory | Session context. Project-scoped markdown at `~/.claude/projects/*/memory/`. |
+| **4** | Claude Context | Semantic code search. Self-hosted Milvus vector DB indexing your entire codebase. Cross-project code intelligence. |
 
 ## Continuous Learning Loop
 
