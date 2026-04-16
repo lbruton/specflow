@@ -14,7 +14,7 @@ Issues are markdown files with YAML frontmatter stored in DocVault. No external 
 
 ## Schema Reference
 
-Full schema, field definitions, and valid values: `DocVault/Templates/issue-schema.md`
+Full schema, field definitions, and valid values: `${DOCVAULT_PATH}/Templates/issue-schema.md`
 
 ## Prefix Registry
 
@@ -67,7 +67,7 @@ ${DOCVAULT_PATH}/Projects/{project}/Issues/{PREFIX}-{NUM}.md
 
 ```yaml
 ---
-id: "{PREFIX}-{NUM}"
+id: "{PREFIX}-{NUM}"  # id must be quoted for Obsidian Bases compatibility
 title: "Issue title here"
 description: "One-sentence summary of the issue"
 project: "{project_name}"
@@ -76,7 +76,7 @@ scope: internal
 status: backlog
 priority: 3
 github_issue:
-assignee: # your-username
+assignee: "$USER"
 created: "{YYYY-MM-DD}"
 updated: "{YYYY-MM-DD}"
 completed:
@@ -160,7 +160,7 @@ After writing the issue file, **read it back** and verify against the template. 
 
 **Read the file back and check ALL of these:**
 
-1. **All required fields present:** `id`, `title`, `project`, `type`, `scope`, `status`, `priority`, `github_issue`, `assignee`, `created`, `updated`, `completed`, `due`, `tags`
+1. **All required fields present:** `id`, `title`, `description`, `project`, `type`, `scope`, `status`, `priority`, `github_issue`, `assignee`, `created`, `updated`, `completed`, `due`, `tags`
 2. **Quoting correct:**
    - `id` value is quoted: `id: "SWF-63"` (NOT `id: SWF-63`)
    - `created` value is quoted: `created: "2026-04-04"` (NOT `created: 2026-04-04`)

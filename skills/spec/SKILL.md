@@ -315,7 +315,7 @@ Skipping any of these calls is a workflow violation.
    - `_Prompt` — Role, Task, Restrictions, Success criteria
    - `_Leverage` — files and utilities to use
    - `_Requirements` — which requirements this task implements
-   - **Recommended Agent** — model affinity tag from the template's Model Affinity Guide (if the loaded template has one). Use the guide's decision table to assign the cheapest capable model. Default to `GLM` when unsure. Escalate to `CODEX` for tricky edge cases, `OPUS` for architectural judgment, `OPUS-1M` only when full codebase context is genuinely needed. Include a one-line justification after the tag.
+   - **Recommended Agent** — model affinity tag from the template's Model Affinity Guide (if the loaded template has one). Use the guide's decision table to assign the cheapest capable model. Default to `Claude` when unsure. Escalate to `CODEX` for tricky edge cases, `OPUS` for architectural judgment, `OPUS-1M` only when full codebase context is genuinely needed. Include a one-line justification after the tag.
    - **File Touch Map** — CREATE / MODIFY / TEST with file paths
 
 5. **Write tasks.md:**

@@ -69,7 +69,10 @@ loss (CLAUDE.md deleted when main tracked it but dev had gitignored it).
 Instead, fast-forward main in-place:
 
 ```bash
-git fetch origin main:main
+# Only fast-forward main if not currently on it
+if [ "$(git branch --show-current)" != "main" ]; then
+  git fetch origin main:main
+fi
 ```
 
 If this fails with "not a fast-forward", add a red warning:
@@ -151,7 +154,7 @@ No mid-flow interruptions.
   permitted exclusively when: (a) `git branch -d` refused, AND (b) the branch name matches
   a confirmed merged PR in `gh pr list --state merged`. All other refusals → warn and skip.
 - **`git pull --ff-only` only.** If it fails, warn and stop — do not attempt merge.
-- **NEVER `git checkout main`.** Use `git fetch origin main:main` to update main in-place.
+- **NEVER `git checkout main`.** Use `git fetch origin main:main` (guarded — skip if already on main) to update main in-place.
   Branch switching can silently delete gitignored files when the two branches have different
   tracking state for the same file — this has caused real data loss.
 
