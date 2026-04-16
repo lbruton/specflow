@@ -302,6 +302,10 @@ export class ApprovalStorage extends EventEmitter {
       const categoryNames = await fs.readdir(this.approvalsDir, { withFileTypes: true });
       for (const categoryName of categoryNames) {
         if (categoryName.isDirectory()) {
+          // Validate id doesn't contain path traversal characters
+          if (id.includes('/') || id.includes('\\') || id.includes('..')) {
+            return null;
+          }
           const approvalPath = join(this.approvalsDir, categoryName.name, `${id}.json`);
           try {
             await fs.access(approvalPath);
@@ -325,6 +329,10 @@ export class ApprovalStorage extends EventEmitter {
     annotations?: string,
     comments?: ApprovalComment[],
   ): Promise<void> {
+    // Validate id doesn't contain path traversal characters
+    if (id.includes('/') || id.includes('\\') || id.includes('..')) {
+      throw new Error('Invalid approval ID');
+    }
     const approval = await this.getApproval(id);
     if (!approval) {
       throw new Error(`Approval ${id} not found`);
@@ -335,13 +343,13 @@ export class ApprovalStorage extends EventEmitter {
       try {
         await this.captureSnapshot(id, 'revision_requested');
       } catch (error) {
-        console.warn(`Failed to capture revision snapshot for approval ${id}:`, error);
+        console.warn('Failed to capture revision snapshot for approval %s:', id, error);
       }
     } else if (status === 'approved' || status === 'concerns') {
       try {
         await this.captureSnapshot(id, 'approved');
       } catch (error) {
-        console.warn(`Failed to capture approval snapshot for approval ${id}:`, error);
+        console.warn('Failed to capture approval snapshot for approval %s:', id, error);
       }
     }
 

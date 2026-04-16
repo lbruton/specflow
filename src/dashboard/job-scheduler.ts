@@ -138,14 +138,14 @@ export class JobScheduler {
             lastRun: startTime.toISOString(),
           });
         } catch (error) {
-          console.error(`[JobScheduler] Execution failed for "${job.name}":`, error);
+          console.error('[JobScheduler] Execution failed for "%s":', job.name, error);
         }
       });
 
       this.scheduledJobs.set(job.id, task);
-      console.error(`[JobScheduler] Scheduled job "${job.name}" with cron: ${job.schedule}`);
+      console.error('[JobScheduler] Scheduled job "%s" with cron: %s', job.name, job.schedule);
     } catch (error) {
-      console.error(`[JobScheduler] Failed to schedule job "${job.name}":`, error);
+      console.error('[JobScheduler] Failed to schedule job "%s":', job.name, error);
     }
   }
 

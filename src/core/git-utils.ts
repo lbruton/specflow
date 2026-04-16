@@ -22,7 +22,11 @@ export function resolveGitWorkspaceRoot(projectPath: string): string {
       ...GIT_EXEC_OPTIONS,
     }).trim();
 
-    return workspaceRoot || projectPath;
+    // Validate git output is an absolute path (not tainted by injection)
+    if (!workspaceRoot || !workspaceRoot.startsWith('/')) {
+      return projectPath;
+    }
+    return workspaceRoot;
   } catch {
     return projectPath;
   }
@@ -63,7 +67,12 @@ export function resolveGitRoot(projectPath: string): string {
       // If path is already absolute (Unix or Windows style), return as-is
       // Otherwise, resolve relative to projectPath
       const isAbsolute = mainRepoPath.startsWith('/') || /^[A-Za-z]:[\\/]/.test(mainRepoPath);
-      return isAbsolute ? mainRepoPath : resolve(projectPath, mainRepoPath);
+      const resolvedPath = isAbsolute ? mainRepoPath : resolve(projectPath, mainRepoPath);
+      // Validate resolved path doesn't escape via traversal
+      if (resolvedPath.includes('..')) {
+        return projectPath;
+      }
+      return resolvedPath;
     }
 
     return projectPath;

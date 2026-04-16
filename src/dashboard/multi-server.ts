@@ -1240,9 +1240,12 @@ export class MultiProjectDashboardServer {
             logs = logs.filter((log) => log.taskId === query.taskId);
           }
           if (query.search) {
-            // Validate search input to prevent regex injection
-            const sanitizedSearch = String(query.search).slice(0, 200);
-            logs = await logManager.searchLogs(sanitizedSearch);
+            // Validate search input — only allow word chars, spaces, hyphens, dots, slashes
+            const searchStr = String(query.search).slice(0, 200);
+            if (!/^[\w\s\-./]+$/i.test(searchStr)) {
+              return reply.code(400).send({ error: 'Invalid search query characters' });
+            }
+            logs = await logManager.searchLogs(searchStr);
           }
 
           return { entries: logs };
