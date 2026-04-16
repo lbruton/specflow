@@ -110,7 +110,7 @@ new content is coming from. The source can be:
 - A project override (e.g., `DocVault/specflow/StakTrakr/templates/{name}.md`)
 - A direct edit already made to `src/markdown/templates/{name}.md`
 
-Confirm with the user which template name (one of the 9 canonical templates) and what
+Confirm with the user which template name (one of the 10 canonical templates) and what
 the change is, in one sentence. The canonical 9 are:
 
 ```

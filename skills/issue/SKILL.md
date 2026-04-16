@@ -254,6 +254,7 @@ $OBS vault="DocVault" property:set name="completed" value="$(date +%Y-%m-%d)" pa
 **Close-move rule:** When status changes to `done`, `canceled`, or `superseded`, move the file to `Closed/`:
 
 ```bash
+ISSUE_FILE="${DOCVAULT_PATH}/Projects/{project}/Issues/{ISSUE-ID}.md"
 ISSUE_DIR=$(dirname "$ISSUE_FILE")
 CLOSED_DIR="$ISSUE_DIR/Closed"
 mkdir -p "$CLOSED_DIR"
