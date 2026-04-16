@@ -293,7 +293,7 @@
 
 ```typescript
 {
-  docType: 'tech'; // Returns only technical steering
+  docType: 'tech', // Returns only technical steering
 }
 ```
 

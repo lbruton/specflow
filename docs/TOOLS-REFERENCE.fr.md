@@ -293,7 +293,7 @@ Spec Workflow MCP fournit des outils spécialisés pour le développement logici
 
 ```typescript
 {
-  docType: 'tech'; // Retourne uniquement la direction technique
+  docType: 'tech', // Retourne uniquement la direction technique
 }
 ```
 

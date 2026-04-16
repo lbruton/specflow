@@ -13,6 +13,7 @@ node_modules/
 # Authored markdown — intentionally formatted, users copy verbatim
 skills/
 commands/
+agents/
 src/markdown/templates/
 
 # Obsidian / DocVault artifacts

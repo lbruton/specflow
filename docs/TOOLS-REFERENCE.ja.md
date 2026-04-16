@@ -293,7 +293,7 @@ Spec Workflow MCPは、構造化されたソフトウェア開発のための専
 
 ```typescript
 {
-  docType: 'tech'; // テクニカルステアリングのみを返す
+  docType: 'tech', // テクニカルステアリングのみを返す
 }
 ```
 

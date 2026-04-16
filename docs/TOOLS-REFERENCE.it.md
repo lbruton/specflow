@@ -293,7 +293,7 @@ Spec Workflow MCP fornisce strumenti specializzati per lo sviluppo software stru
 
 ```typescript
 {
-  docType: 'tech'; // Ritorna solo steering tecnico
+  docType: 'tech', // Ritorna solo steering tecnico
 }
 ```
 

@@ -293,7 +293,7 @@ Spec Workflow MCP provides specialized tools for structured software development
 
 ```typescript
 {
-  docType: 'tech'; // Returns only technical steering
+  docType: 'tech', // Returns only technical steering
 }
 ```
 

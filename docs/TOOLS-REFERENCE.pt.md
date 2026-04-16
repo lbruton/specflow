@@ -293,7 +293,7 @@ Spec Workflow MCP fornece ferramentas especializadas para desenvolvimento estrut
 
 ```typescript
 {
-  docType: 'tech'; // Retorna apenas direcionamento técnico
+  docType: 'tech', // Retorna apenas direcionamento técnico
 }
 ```
 

@@ -183,9 +183,9 @@ Show top 10 files by change frequency. Helps identify active areas of the codeba
 Phase is determined by which files exist:
 
 - Only requirements.md = Phase 1 (Requirements)
-- - design.md = Phase 2 (Design)
-- - tasks.md = Phase 3 (Tasks)
-- - Implementation Logs/ with files = Phase 4 (Implementation)
+- + design.md = Phase 2 (Design)
+- + tasks.md = Phase 3 (Tasks)
+- + Implementation Logs/ with files = Phase 4 (Implementation)
 - All tasks [x] and log count matches = "Complete (ready to archive)"
 
 #### Pending Approvals

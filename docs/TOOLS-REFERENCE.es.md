@@ -293,7 +293,7 @@ Spec Workflow MCP proporciona herramientas especializadas para desarrollo de sof
 
 ```typescript
 {
-  docType: 'tech'; // Retorna solo orientación técnica
+  docType: 'tech', // Retorna solo orientación técnica
 }
 ```
 
