@@ -555,10 +555,10 @@ The dashboard tracks progress regardless of which agent is driving.</span></div>
   </div>
 </section>
 
-<!-- ─── Three-Tier Memory ─── -->
+<!-- ─── Four-Tier Memory ─── -->
 <section id="memory" style="background: #0d1117;">
   <div class="container">
-    <h2>Three-tier memory architecture</h2>
+    <h2>Four-tier memory architecture</h2>
     <p class="dim">Not everything belongs in one file. Each tier has a purpose, a source of truth ranking, and a different retrieval cost.</p>
 
     <div class="tier-stack">
@@ -572,15 +572,22 @@ The dashboard tracks progress regardless of which agent is driving.</span></div>
       <div class="tier tier-2">
         <div class="tier-label">Tier 2</div>
         <div class="tier-content">
-          <h3>File Memory <span class="dim">&mdash; Session context</span></h3>
-          <p>Project-scoped markdown files at <code>~/.claude/projects/*/memory/</code>. Agent-curated, human-reviewable. Loaded at session start. Stores user preferences, feedback, project state, and external references.</p>
+          <h3>session-rag <span class="dim">&mdash; Verbatim session history</span></h3>
+          <p>MCP server indexing JSONL transcripts into Milvus Lite in real-time. Semantic search with date filtering across all past sessions. Primary context source for <code>/start</code> and <code>/prime</code>. Based on <a href="https://github.com/mwgreen/claude-code-session-rag" target="_blank" rel="noopener">mwgreen/claude-code-session-rag</a>.</p>
         </div>
       </div>
       <div class="tier tier-3">
         <div class="tier-label">Tier 3</div>
         <div class="tier-content">
-          <h3>mem0 <span class="dim">&mdash; Episodic recall</span></h3>
-          <p>Cloud-based semantic memory. Automatically populated from session digests. Probabilistic retrieval via embedding similarity. Never authoritative &mdash; DocVault always wins. Best for past decisions, operational context, and gap-filling.</p>
+          <h3>mem0 <span class="dim">&mdash; Curated episodic memory</span></h3>
+          <p>Cloud-based semantic memory. Populated from retro lessons, handoffs, and session summaries. Probabilistic retrieval via embedding similarity. Never authoritative &mdash; DocVault always wins. Best for past decisions, operational context, and gap-filling.</p>
+        </div>
+      </div>
+      <div class="tier tier-4">
+        <div class="tier-label">Tier 4</div>
+        <div class="tier-content">
+          <h3>File Memory <span class="dim">&mdash; Session context</span></h3>
+          <p>Project-scoped markdown files at <code>~/.claude/projects/*/memory/</code>. Agent-curated, human-reviewable. Loaded at session start. Stores user preferences, feedback, project state, and external references.</p>
         </div>
       </div>
     </div>
@@ -721,30 +728,30 @@ The dashboard tracks progress regardless of which agent is driving.</span></div>
 <span class="comment">│              THE CONTINUOUS LEARNING LOOP                │</span>
 <span class="comment">└─────────────────────────────────────────────────────────┘</span>
 
-<span class="highlight">Morning — /prime boots you up</span>
+<span class="highlight">Quick resume — /start (same-day, short breaks)</span>
+<span class="output">  Queries session-rag for recent conversation turns</span>
+<span class="output">  Pulls curated memories from mem0</span>
+<span class="output">  Checks git state + 5 most recent open issues</span>
+<span class="output">  Under 15 seconds, no indexing</span>
+
+<span class="highlight">Full boot — /prime (after days away, new projects)</span>
+<span class="output">  Queries session-rag + mem0 for full context</span>
 <span class="output">  Indexes codebase (Claude Context + Code Graph)</span>
-<span class="output">  Reads recent session digests from DocVault</span>
-<span class="output">  Pulls relevant memories from mem0</span>
-<span class="output">  Checks open issues + git status</span>
+<span class="output">  Checks open issues + git status + code health</span>
 <span class="output">  Presents: "Here's where you left off, here's what's next"</span>
 
 <span class="highlight">During the day — sessions compound</span>
-<span class="output">  Each session has full context from /prime</span>
+<span class="output">  session-rag indexes every turn in real-time</span>
 <span class="output">  Work produces commits, specs, implementation logs</span>
 <span class="output">  /handoff relays state between terminal sessions</span>
 
-<span class="highlight">End of session — /wrap orchestrates everything</span>
+<span class="highlight">End of session — /wrap (retro folded in)</span>
 <span class="cmd">/wrap</span>
 <span class="output">  Step 1: Cleanup (stale branches, uncommitted work)</span>
-<span class="output">  Step 2: /vault-update (sync documentation)</span>
-<span class="output">  Step 3: /retro</span>
-<span class="output">    Extracts prescriptive lessons from conversation</span>
+<span class="output">  Step 2: Retro — extracts prescriptive lessons</span>
 <span class="output">    Saves to mem0 as structured retro-learning memories</span>
-<span class="output">  Step 4: /digest-session</span>
-<span class="output">    Reads JSONL session transcripts</span>
-<span class="output">    Summarizes via configurable LLM (local Ollama or cloud)</span>
-<span class="output">    Writes daily digest to DocVault/Daily Digests/</span>
-<span class="output">    Saves key facts to mem0 for cross-session recall</span>
+<span class="output">  Step 3: Curated session summary → mem0</span>
+<span class="output">    session-rag has the verbatim turns; mem0 gets the digest</span>
 
 <span class="highlight">On-demand — /audit checks project health</span>
 <span class="cmd">/audit</span>
@@ -753,22 +760,27 @@ The dashboard tracks progress regardless of which agent is driving.</span></div>
 <span class="output">  Issue staleness check</span>
 <span class="output">  Actionable remediation report</span>
 
-<span class="comment">┌─────────────────────────────────────────────────────────┐</span>
-<span class="comment">│  /prime ──→ work ──→ /audit ──→ /wrap ──→ /prime ──→ .. │</span>
-<span class="comment">│  Tomorrow's /prime reads today's digest + retro lessons │</span>
-<span class="comment">└─────────────────────────────────────────────────────────┘</span></div>
+<span class="comment">┌──────────────────────────────────────────────────────────────┐</span>
+<span class="comment">│  /start ──→ work ──→ /audit ──→ /wrap ──→ /start ──→ ..     │</span>
+<span class="comment">│  session-rag + mem0 carry context across every session       │</span>
+<span class="comment">└──────────────────────────────────────────────────────────────┘</span></div>
     </div>
 
     <div class="feature-grid">
       <div class="feature-card">
+        <div class="tag green">/start</div>
+        <h3>Quick resume</h3>
+        <p>Queries session-rag + mem0 for recent context, checks git state and open issues. Under 15 seconds, no indexing. Use for same-day work or short breaks.</p>
+      </div>
+      <div class="feature-card">
         <div class="tag green">/prime</div>
-        <h3>Fast session quick-start</h3>
-        <p>Boots in ~15 seconds: indexes code, reads digests, pulls mem0 memories, checks issues and git status. Optional <code>--deep</code> mode for thorough codebase analysis. The agent starts every session knowing what happened yesterday.</p>
+        <h3>Full session boot</h3>
+        <p>Queries session-rag + mem0, indexes codebase, checks code health, gathers project status. Use after days away or on new projects. The agent starts every session knowing what happened yesterday.</p>
       </div>
       <div class="feature-card">
         <div class="tag accent">/wrap</div>
         <h3>End-of-session orchestrator</h3>
-        <p>One command to close a session cleanly: cleanup stale branches, sync documentation via /vault-update, extract prescriptive lessons via /retro, then process session logs via /digest-session. Replaces the deprecated /goodnight and /digest-session skills.</p>
+        <p>One command to close a session cleanly: cleanup stale branches, run retrospective inline, save lessons + curated summary to mem0. session-rag indexes turns automatically &mdash; /wrap just captures the curated layer.</p>
       </div>
       <div class="feature-card">
         <div class="tag purple">/audit</div>
@@ -968,10 +980,11 @@ The dashboard tracks progress regardless of which agent is driving.</span></div>
   <span class="cmd">inject-spec-workflow-guide</span>   <span class="output">Inject the spec workflow guide into the session</span>
   <span class="cmd">inject-steering-guide</span>        <span class="output">Inject the steering doc guide into the session</span>
 
-<span class="highlight">Commands &amp; Skills (11 commands / 6 skills &mdash; /spec is command-only; the others map 1:1)</span>
+<span class="highlight">Commands &amp; Skills (11 commands / 7 skills &mdash; /spec is command-only; the others map 1:1)</span>
   <span class="cmd">/spec</span>                  <span class="output">Phase 2-4 orchestrator (Requirements → Design → Tasks → Implement)</span>
-  <span class="cmd">/prime</span>                 <span class="output">Fast session quick-start (~15s, optional deep mode)</span>
-  <span class="cmd">/wrap</span>                  <span class="output">End-of-session orchestrator (cleanup, docs, retro, digest)</span>
+  <span class="cmd">/start</span>                 <span class="output">Quick resume (session-rag + mem0 + git + issues, ~15s)</span>
+  <span class="cmd">/prime</span>                 <span class="output">Full session boot (session-rag + mem0 + indexes + health)</span>
+  <span class="cmd">/wrap</span>                  <span class="output">End-of-session orchestrator (retro + mem0 summary, cleanup)</span>
   <span class="cmd">/audit</span>                 <span class="output">On-demand project health check</span>
   <span class="cmd">/retro</span>                 <span class="output">Prescriptive lesson extraction to mem0</span>
   <span class="cmd">/publish-templates</span>     <span class="output">Promote a battle-tested template into the plugin</span>
@@ -1079,8 +1092,8 @@ The dashboard tracks progress regardless of which agent is driving.</span></div>
       <div class="code-body"><span class="success">&#x2713;</span> <span class="output">SpecFlow MCP server — spec lifecycle + dashboard</span>           <span class="success">shipped</span>
 <span class="success">&#x2713;</span> <span class="output">DocVault — cross-project knowledge vault</span>                    <span class="success">shipped</span>
 <span class="success">&#x2713;</span> <span class="output">Claude Context fork — semantic search (Milvus, self-hosted)</span>  <span class="success">shipped</span>
-<span class="success">&#x2713;</span> <span class="output">6 lifecycle skills + 11 slash commands</span>                      <span class="success">shipped</span>
-<span class="success">&#x2713;</span> <span class="output">Memory pipeline — /wrap inline + /batch-digest catch-up</span>     <span class="success">shipped</span>
+<span class="success">&#x2713;</span> <span class="output">7 lifecycle skills + 11 slash commands</span>                      <span class="success">shipped</span>
+<span class="success">&#x2713;</span> <span class="output">Memory pipeline — session-rag + mem0 (/wrap, /start, /prime)</span> <span class="success">shipped</span>
 <span class="success">&#x2713;</span> <span class="output">Readiness-report gate — hard phase gate (SWF-86)</span>            <span class="success">shipped</span>
 <span class="success">&#x2713;</span> <span class="output">DocVault consolidation — single vault, not nested .specflow (SWF-2)</span>  <span class="success">shipped</span>
 <span class="success">&#x2713;</span> <span class="output">TDD template rewrite + mandatory quality gates (SWF-70)</span>    <span class="success">shipped</span>
