@@ -4,19 +4,19 @@ MCP server plugin for spec-driven development with a real-time web dashboard. Po
 
 ## Quick Reference
 
-| Field             | Value                                                                      |
-| ----------------- | -------------------------------------------------------------------------- |
-| Package           | `@lbruton/specflow`                                                        |
-| Version           | `3.6.3`                                                                    |
-| Upstream          | [Pimzino/spec-workflow-mcp](https://github.com/Pimzino/spec-workflow-mcp)  |
-| Origin            | [lbruton/specflow](https://github.com/lbruton/specflow)                    |
-| Branch            | `main` (PR required, signed commits, status checks)                        |
-| Skills source     | `specflow/skills/` in the repo (users copy → `~/.claude/skills/`)          |
-| Commands source   | `specflow/commands/` in the repo (users copy → `~/.claude/commands/`)      |
-| MCP install       | User-level `~/.claude/settings.json` → `npx -y @lbruton/specflow@latest .` |
-| Dashboard port    | 5051                                                                       |
-| Dashboard service | `com.specflow.dashboard` (launchd)                                         |
-| Issue prefix      | `SWF`                                                                      |
+| Field             | Value                                                                                                                                                               |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Package           | `@lbruton/specflow`                                                                                                                                                 |
+| Version           | `3.6.3`                                                                                                                                                             |
+| Upstream          | [Pimzino/spec-workflow-mcp](https://github.com/Pimzino/spec-workflow-mcp)                                                                                           |
+| Origin            | [lbruton/specflow](https://github.com/lbruton/specflow)                                                                                                             |
+| Branch            | `main` (PR required, signed commits, status checks)                                                                                                                 |
+| Skills source     | `specflow/skills/` in the repo (users copy → `~/.claude/skills/`)                                                                                                   |
+| Commands source   | `specflow/commands/` in the repo (users copy → `~/.claude/commands/`)                                                                                               |
+| MCP install       | User-level `~/.claude/settings.json` → `npx -y @lbruton/specflow@latest .`                                                                                          |
+| Dashboard port    | `5000` (default; override with `specflow --dashboard --port <n>`)                                                                                                   |
+| Dashboard service | Single Node process (`specflow --dashboard`; singleton instance registered in `~/.specflow-mcp/activeSession.json`); all MCP servers share the one running instance |
+| Issue prefix      | `SWF`                                                                                                                                                               |
 
 ## DocVault — Project Documentation
 
@@ -111,13 +111,23 @@ src/
   types.ts         # Shared TypeScript types
   index.ts         # Server entry point
 skills/            # Shipped skills — users copy to ~/.claude/skills/
-  prime/           # Universal session boot
-  wrap/            # End-of-session orchestrator (supports --handoff)
   audit/           # On-demand project health check
+  chat/            # Casual discovery mode (Phase 0)
+  codacy-resolve/  # Triage + resolve Codacy findings
+  discover/        # Structured brainstorm/research (Phase 1)
+  issue/           # Vault-based issue CRUD
   migrate-skill/   # Skill migration checklist
-  publish-templates/  # Template publish pipeline (⚠️ canonical copy still has wrong direction — fix in user-level skill exists at ~/.claude/skills/publish-templates/, awaiting promotion)
+  pr-cleanup/      # Post-merge branch/worktree cleanup
+  prime/           # Universal session boot
+  publish-templates/  # Template publish pipeline (canonical src/markdown/templates/)
+  retro/           # End-of-session retrospective → mem0
+  spec/            # Spec-driven development orchestrator
+  start/           # Lightweight session reorientation
+  wrap/            # End-of-session orchestrator (supports --handoff)
 commands/          # Shipped slash-command definitions — users copy to ~/.claude/commands/
-  spec.md, prime.md, wrap.md, audit.md, ...
+  audit.md, create-spec.md, create-steering-doc.md, implement-task.md,
+  inject-spec-workflow-guide.md, inject-steering-guide.md, prime.md,
+  refresh-tasks.md, spec.md, spec-status.md, wrap.md
 ```
 
 ## Steering Documents
@@ -132,59 +142,25 @@ Reference these when planning new features or making architectural decisions.
 
 ## Templates — Source of Truth Hierarchy
 
-**`src/markdown/templates/{name}.md` is the ONE editable source.** Everything else in the chain is either a derived artifact (KB snapshot, bundled dist, npm package) or a runtime cache (per-project template dir refreshed on MCP boot). This was inverted in CLAUDE.md prior to 2026-04-07 — the older docs claimed the DocVault guide page was canonical, but the guide pages themselves always documented `src/` as the canonical source. The contradiction was caught and corrected during the 2026-04-07 wrap redesign session; the corrected direction below matches reality.
+**`src/markdown/templates/{name}.md` is the ONE editable source.** Everything downstream is a derived artifact or runtime cache.
 
-```
-INPUT: a battle-tested template (from a user-level location, project override,
-       or wherever the template was iterated)
-                       │
-                       │  /publish-templates skill: sanitize, make project-agnostic
-                       ▼
-src/markdown/templates/{name}.md        ← CANONICAL SOURCE (specflow git repo)
-                       │                  Edit here. This is what ships.
-              ┌────────┴─────────┐
-              │                  │
-              ▼                  ▼  (regenerated as a side effect of /publish-templates)
-   npm run build           DocVault/Projects/SpecFlow/Templates/{name}-guide.md
-              │                     ↑ KB snapshot — codeblock + frontmatter +
-              ▼                       changelog. NOT editable. NOT a source.
-   dist/markdown/templates/        Humans read this in Obsidian. Hand-edits get
-              │                     overwritten on the next publish. The page
-              ▼                     itself documents this in its Canonical
-   npm publish (passkey, manual)   Source section.
-              │
-              ▼
-   @lbruton/specflow on npm
-              │
-              ▼  (next MCP boot — workspace-initializer.copyTemplate())
-   DocVault/specflow/{project}/templates/{name}.md
-              ↑ runtime cache, overwritten on every boot from the bundled
-                npm package (until SWF-95 lands version-gating). Editing here
-                is pointless — it gets clobbered.
+```text
+src/markdown/templates/{name}.md           ← CANONICAL (edit here, or via /publish-templates)
+   ├─→ dist/markdown/templates/            ← npm build output
+   │     └─→ @lbruton/specflow on npm
+   │           └─→ DocVault/specflow/{project}/templates/  ← runtime cache for bundled/global files
+   └─→ DocVault/Projects/SpecFlow/Templates/{name}-guide.md  ← KB snapshot, regenerated by /publish-templates
 ```
 
-### The three directories — DO NOT confuse them
+| Directory                                              | Role                                           | Editable?                                                                                                                                                                                                                               |
+| ------------------------------------------------------ | ---------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/markdown/templates/`                              | Canonical source in git                        | **YES** — direct edit or `/publish-templates`                                                                                                                                                                                           |
+| `DocVault/Projects/SpecFlow/Templates/{name}-guide.md` | Human-readable KB mirror (Obsidian)            | **NO** — regenerated; hand-edits clobbered                                                                                                                                                                                              |
+| `DocVault/specflow/{project}/templates/`               | Per-project runtime cache + additive overrides | **Global/bundled filenames: NO** — MCP boot re-copies them from the npm package (until SWF-95 version-gates this). **New override-only filenames: YES** — not clobbered; StakTrakr is the only project with legitimate overrides today. |
 
-| Directory                                              | What it is                                                                                                                                                                                                                                                                               | Editable?                                                                                      |
-| ------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| `specflow/src/markdown/templates/`                     | **Canonical source** in the specflow git repo. Compiled into `dist/` and shipped via npm.                                                                                                                                                                                                | **YES — edit here, or use `/publish-templates` to write here from a battle-tested source.**    |
-| `DocVault/Projects/SpecFlow/Templates/{name}-guide.md` | **KB snapshot** — human-readable mirror with prose explanation, frontmatter, and a regenerated codeblock. Lives in the DocVault Obsidian vault. Each page declares `canonical_source: src/markdown/templates/...` in its own frontmatter and has a "Canonical Source" section saying so. | **NO — regenerated by `/publish-templates`. Hand-edits silently overwritten on next publish.** |
-| `DocVault/specflow/{project}/templates/{name}.md`      | **Runtime cache** for the MCP server. Refreshed from the npm-bundled package on every MCP boot. Per-project, but typically identical to the global.                                                                                                                                      | **NO — overwritten on every boot. Pointless to edit.**                                         |
+**Ship a change:** use `/publish-templates` — writes canonical, regenerates the DocVault guide snapshot, builds/tests, bumps version, commits, pushes, and stops before `npm publish` for manual passkey.
 
-The third directory (`DocVault/specflow/{project}/templates/`) is also where **project overrides** would live if a project legitimately needs to extend the global template. Overrides should be ADDITIVE only — never duplicate global content. Currently only StakTrakr has legitimate overrides. See `DocVault/Projects/SpecFlow/recovered-templates-2026-04-07/` for the audit history.
-
-### Edit/upgrade procedure
-
-**To ship a template change:** use the `/publish-templates` skill. It writes to canonical `src/markdown/templates/`, regenerates the matching DocVault guide page snapshot (codeblock + frontmatter + changelog), runs build/test, bumps the version, commits both repos, pushes, and stops before `npm publish` for manual passkey auth.
-
-**To inspect a template:** read `src/markdown/templates/{name}.md` directly, or read the matching guide page in DocVault Obsidian for the human-readable explanation.
-
-**Never:**
-
-- Edit `DocVault/Projects/SpecFlow/Templates/{name}-guide.md` codeblocks by hand (regenerated)
-- Edit `DocVault/specflow/{project}/templates/{name}.md` (runtime cache)
-- Treat the DocVault Templates folder as a "source" — it's a published mirror
-- Trust an old mem0 entry that says the DocVault guide is canonical (pre-2026-04-07 model, now wrong)
+**Inspect a template:** read `src/markdown/templates/{name}.md` directly; the DocVault guide is the human-readable explanation.
 
 ## Two Parsers - Keep in Sync
 
@@ -196,15 +172,15 @@ If you change how specs are parsed, update BOTH parsers.
 ## Build, Test, and Deploy
 
 ```bash
-npm run build        # Compiles src/ -> dist/, copies static assets
-npm test             # Runs vitest suite (243 tests)
+npm run build            # validate:i18n → clean → tsc → build:dashboard (Vite)
+npm test                 # vitest unit suite (src/**/__tests__)
+npm run test:e2e         # Playwright E2E (e2e/*.spec.ts) — batch-approvals, worktree isolation
+npm run test:e2e:worktree # worktree-scoped E2E (separate config)
+npm run validate:mdx     # MDX template validator (SWF-101/116)
+npm run format           # prettier --write .
 ```
 
-After building, the MCP tools pick up changes on next invocation. The dashboard UI runs as a separate launchd service and must be restarted to serve new static assets:
-
-```bash
-launchctl stop com.specflow.dashboard && launchctl start com.specflow.dashboard
-```
+After building, MCP tools pick up the rebuilt `dist/` on next invocation (an `/mcp` reconnect is enough for MCP-side assets). The dashboard is a **long-running Node process** (started via `specflow --dashboard`) — to serve rebuilt dashboard assets, stop it (kill the PID recorded in `~/.specflow-mcp/activeSession.json`) and relaunch with `specflow --dashboard`.
 
 ## Post-Change Gate -- MANDATORY
 
@@ -303,6 +279,14 @@ GitHub squash-merges PRs by default. After merge, `git branch -d <branch>` fails
 ## Gotcha: Prompt Path References
 
 MCP prompts in `src/prompts/` embed file paths in their text output. These paths MUST use `PathUtils.getWorkflowRoot()` — never hardcode `.specflow/`. If you change path resolution, grep all prompts for stale path strings. Files: create-spec.ts, implement-task.ts, spec-status.ts, create-steering-doc.ts, inject-steering-guide.ts.
+
+## Quality Gates (OPS-143)
+
+Pre-commit + build-time gates run automatically. Expect side effects on Edit/Write/commit.
+
+- **prettier + lint-staged + husky**: staged `.{ts,tsx,js,cjs,mjs,json,css,html}` files get `prettier --write` on every commit. Claude should expect formatting changes on top of its own edits. Config: `.prettierrc.json`, `.prettierignore`.
+- **i18n validation**: `npm run validate:i18n` runs as the first step of every `npm run build`. Missing/extra/misformatted translation keys fail the build. Script: `scripts/validate-i18n.js`.
+- **MDX validation**: `npm run validate:mdx` (`scripts/validate-mdx.ts` → `src/core/mdx-validator.ts`) validates spec/template MDX. Keep callers using `PathUtils.getWorkflowRoot()` — hardcoded `.specflow/` paths break the validator.
 
 ## Hooks
 
