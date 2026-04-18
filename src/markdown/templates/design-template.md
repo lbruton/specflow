@@ -162,7 +162,7 @@ _If **No** or **Minimal**, briefly justify (e.g., "string rename with no input/a
 - **Sanitization for storage/display:** [HTML escape, SQL parameterization, path normalization]
 
 ### Codacy SRM Pre-Check (advisory)
-- **Run before tasks.md C5.5:** Check existing Codacy findings against the files this spec will modify (use `mcp__codacy__codacy_list_repository_issues` filtered to changed files)
+- **Run before tasks.md C5.5:** Check existing Codacy SRM findings against the files this spec will modify (use `mcp__codacy__codacy_search_repository_srm_items` filtered to changed files — this is the SRM/security tool family, NOT `codacy_list_repository_issues` which returns code-quality findings)
 - **Findings to address up front:** [list any pre-existing Critical/High findings on files this spec touches, so they can be fixed in scope rather than orphaned]
 
 ### Codacy SRM Gate (enforced in tasks.md C5.5)
