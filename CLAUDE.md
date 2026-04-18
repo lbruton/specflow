@@ -4,19 +4,19 @@ MCP server plugin for spec-driven development with a real-time web dashboard. Po
 
 ## Quick Reference
 
-| Field             | Value                                                                      |
-| ----------------- | -------------------------------------------------------------------------- |
-| Package           | `@lbruton/specflow`                                                        |
-| Version           | `3.6.3`                                                                    |
-| Upstream          | [Pimzino/spec-workflow-mcp](https://github.com/Pimzino/spec-workflow-mcp)  |
-| Origin            | [lbruton/specflow](https://github.com/lbruton/specflow)                    |
-| Branch            | `main` (PR required, signed commits, status checks)                        |
-| Skills source     | `specflow/skills/` in the repo (users copy → `~/.claude/skills/`)          |
-| Commands source   | `specflow/commands/` in the repo (users copy → `~/.claude/commands/`)      |
-| MCP install       | User-level `~/.claude/settings.json` → `npx -y @lbruton/specflow@latest .` |
-| Dashboard port    | `5000` (default; `DEFAULT_DASHBOARD_PORT` in `src/core/security-utils.ts`) |
-| Dashboard service | No persistent service — dashboard spawns per-MCP-session under Fastify     |
-| Issue prefix      | `SWF`                                                                      |
+| Field             | Value                                                                                                                                              |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Package           | `@lbruton/specflow`                                                                                                                                |
+| Version           | `3.6.3`                                                                                                                                            |
+| Upstream          | [Pimzino/spec-workflow-mcp](https://github.com/Pimzino/spec-workflow-mcp)                                                                          |
+| Origin            | [lbruton/specflow](https://github.com/lbruton/specflow)                                                                                            |
+| Branch            | `main` (PR required, signed commits, status checks)                                                                                                |
+| Skills source     | `specflow/skills/` in the repo (users copy → `~/.claude/skills/`)                                                                                  |
+| Commands source   | `specflow/commands/` in the repo (users copy → `~/.claude/commands/`)                                                                              |
+| MCP install       | User-level `~/.claude/settings.json` → `npx -y @lbruton/specflow@latest .`                                                                         |
+| Dashboard port    | `5000` (default; override with `specflow --dashboard --port <n>`)                                                                                  |
+| Dashboard service | Standalone singleton Node process (`specflow --dashboard`, registered in `~/.specflow-mcp/activeSession.json`); all MCP servers share one instance |
+| Issue prefix      | `SWF`                                                                                                                                              |
 
 ## DocVault — Project Documentation
 
@@ -125,9 +125,9 @@ skills/            # Shipped skills — users copy to ~/.claude/skills/
   start/           # Lightweight session reorientation
   wrap/            # End-of-session orchestrator (supports --handoff)
 commands/          # Shipped slash-command definitions — users copy to ~/.claude/commands/
-  audit, create-spec, create-steering-doc, implement-task,
-  inject-spec-workflow-guide, inject-steering-guide, prime,
-  refresh-tasks, spec, spec-status, wrap
+  audit.md, create-spec.md, create-steering-doc.md, implement-task.md,
+  inject-spec-workflow-guide.md, inject-steering-guide.md, prime.md,
+  refresh-tasks.md, spec.md, spec-status.md, wrap.md
 ```
 
 ## Steering Documents
@@ -144,19 +144,19 @@ Reference these when planning new features or making architectural decisions.
 
 **`src/markdown/templates/{name}.md` is the ONE editable source.** Everything downstream is a derived artifact or runtime cache.
 
-```
+```text
 src/markdown/templates/{name}.md           ← CANONICAL (edit here, or via /publish-templates)
    ├─→ dist/markdown/templates/            ← npm build output
    │     └─→ @lbruton/specflow on npm
-   │           └─→ DocVault/specflow/{project}/templates/  ← runtime cache, overwritten on MCP boot
+   │           └─→ DocVault/specflow/{project}/templates/  ← runtime cache for bundled/global files
    └─→ DocVault/Projects/SpecFlow/Templates/{name}-guide.md  ← KB snapshot, regenerated by /publish-templates
 ```
 
-| Directory                                              | Role                                | Editable?                                                                                                                                |
-| ------------------------------------------------------ | ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| `src/markdown/templates/`                              | Canonical source in git             | **YES** — direct edit or `/publish-templates`                                                                                            |
-| `DocVault/Projects/SpecFlow/Templates/{name}-guide.md` | Human-readable KB mirror (Obsidian) | **NO** — regenerated; hand-edits clobbered                                                                                               |
-| `DocVault/specflow/{project}/templates/`               | Per-project runtime cache           | **NO** — overwritten on every MCP boot (until SWF-95 version-gating). Legitimate **additive overrides** go here (StakTrakr only, today). |
+| Directory                                              | Role                                           | Editable?                                                                                                                                                                                                                               |
+| ------------------------------------------------------ | ---------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/markdown/templates/`                              | Canonical source in git                        | **YES** — direct edit or `/publish-templates`                                                                                                                                                                                           |
+| `DocVault/Projects/SpecFlow/Templates/{name}-guide.md` | Human-readable KB mirror (Obsidian)            | **NO** — regenerated; hand-edits clobbered                                                                                                                                                                                              |
+| `DocVault/specflow/{project}/templates/`               | Per-project runtime cache + additive overrides | **Global/bundled filenames: NO** — MCP boot re-copies them from the npm package (until SWF-95 version-gates this). **New override-only filenames: YES** — not clobbered; StakTrakr is the only project with legitimate overrides today. |
 
 **Ship a change:** use `/publish-templates` — writes canonical, regenerates the DocVault guide snapshot, builds/tests, bumps version, commits, pushes, and stops before `npm publish` for manual passkey.
 
@@ -180,7 +180,7 @@ npm run validate:mdx     # MDX template validator (SWF-101/116)
 npm run format           # prettier --write .
 ```
 
-After building, MCP tools pick up changes on next invocation. The dashboard UI serves directly out of the MCP process over Fastify — no separate daemon. Restarting the MCP client (e.g. `/mcp` reconnect in Claude Code) is enough to pick up rebuilt `dist/` assets.
+After building, MCP tools pick up the rebuilt `dist/` on next invocation (an `/mcp` reconnect is enough for MCP-side assets). The dashboard is a **separate long-running process** — to serve rebuilt dashboard assets, stop the current dashboard (kill the PID recorded in `~/.specflow-mcp/activeSession.json`) and relaunch with `specflow --dashboard`.
 
 ## Post-Change Gate -- MANDATORY
 
@@ -286,7 +286,7 @@ Pre-commit + build-time gates run automatically. Expect side effects on Edit/Wri
 
 - **prettier + lint-staged + husky**: staged `.{ts,tsx,js,cjs,mjs,json,css,html}` files get `prettier --write` on every commit. Claude should expect formatting changes on top of its own edits. Config: `.prettierrc.json`, `.prettierignore`.
 - **i18n validation**: `npm run validate:i18n` runs as the first step of every `npm run build`. Missing/extra/misformatted translation keys fail the build. Script: `scripts/validate-i18n.js`.
-- **MDX validation**: `npm run validate:mdx` (`scripts/validate-mdx.ts` → `src/core/mdx-validator.ts`) validates spec/template MDX. Recent PR #29 — keep callers using `PathUtils.getWorkflowRoot()`.
+- **MDX validation**: `npm run validate:mdx` (`scripts/validate-mdx.ts` → `src/core/mdx-validator.ts`) validates spec/template MDX. Keep callers using `PathUtils.getWorkflowRoot()` — hardcoded `.specflow/` paths break the validator.
 - **Project-level hooks** in `.claude/hooks/`: `block-generated-paths.py`, `post-edit-lint.py`, `post-edit-test.py` fire on Edit/Write inside this repo.
 - **Project-level subagent** in `.claude/agents/parser-sync-reviewer.md` backs the "Two Parsers" rule — dispatch it after parser edits.
 
