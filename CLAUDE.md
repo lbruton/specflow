@@ -4,19 +4,19 @@ MCP server plugin for spec-driven development with a real-time web dashboard. Po
 
 ## Quick Reference
 
-| Field             | Value                                                                                                                                              |
-| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Package           | `@lbruton/specflow`                                                                                                                                |
-| Version           | `3.6.3`                                                                                                                                            |
-| Upstream          | [Pimzino/spec-workflow-mcp](https://github.com/Pimzino/spec-workflow-mcp)                                                                          |
-| Origin            | [lbruton/specflow](https://github.com/lbruton/specflow)                                                                                            |
-| Branch            | `main` (PR required, signed commits, status checks)                                                                                                |
-| Skills source     | `specflow/skills/` in the repo (users copy → `~/.claude/skills/`)                                                                                  |
-| Commands source   | `specflow/commands/` in the repo (users copy → `~/.claude/commands/`)                                                                              |
-| MCP install       | User-level `~/.claude/settings.json` → `npx -y @lbruton/specflow@latest .`                                                                         |
-| Dashboard port    | `5000` (default; override with `specflow --dashboard --port <n>`)                                                                                  |
-| Dashboard service | Standalone singleton Node process (`specflow --dashboard`, registered in `~/.specflow-mcp/activeSession.json`); all MCP servers share one instance |
-| Issue prefix      | `SWF`                                                                                                                                              |
+| Field             | Value                                                                                                                                                               |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Package           | `@lbruton/specflow`                                                                                                                                                 |
+| Version           | `3.6.3`                                                                                                                                                             |
+| Upstream          | [Pimzino/spec-workflow-mcp](https://github.com/Pimzino/spec-workflow-mcp)                                                                                           |
+| Origin            | [lbruton/specflow](https://github.com/lbruton/specflow)                                                                                                             |
+| Branch            | `main` (PR required, signed commits, status checks)                                                                                                                 |
+| Skills source     | `specflow/skills/` in the repo (users copy → `~/.claude/skills/`)                                                                                                   |
+| Commands source   | `specflow/commands/` in the repo (users copy → `~/.claude/commands/`)                                                                                               |
+| MCP install       | User-level `~/.claude/settings.json` → `npx -y @lbruton/specflow@latest .`                                                                                          |
+| Dashboard port    | `5000` (default; override with `specflow --dashboard --port <n>`)                                                                                                   |
+| Dashboard service | Single Node process (`specflow --dashboard`; singleton instance registered in `~/.specflow-mcp/activeSession.json`); all MCP servers share the one running instance |
+| Issue prefix      | `SWF`                                                                                                                                                               |
 
 ## DocVault — Project Documentation
 
@@ -180,7 +180,7 @@ npm run validate:mdx     # MDX template validator (SWF-101/116)
 npm run format           # prettier --write .
 ```
 
-After building, MCP tools pick up the rebuilt `dist/` on next invocation (an `/mcp` reconnect is enough for MCP-side assets). The dashboard is a **separate long-running process** — to serve rebuilt dashboard assets, stop the current dashboard (kill the PID recorded in `~/.specflow-mcp/activeSession.json`) and relaunch with `specflow --dashboard`.
+After building, MCP tools pick up the rebuilt `dist/` on next invocation (an `/mcp` reconnect is enough for MCP-side assets). The dashboard is a **long-running Node process** (started via `specflow --dashboard`) — to serve rebuilt dashboard assets, stop it (kill the PID recorded in `~/.specflow-mcp/activeSession.json`) and relaunch with `specflow --dashboard`.
 
 ## Post-Change Gate -- MANDATORY
 
@@ -287,8 +287,6 @@ Pre-commit + build-time gates run automatically. Expect side effects on Edit/Wri
 - **prettier + lint-staged + husky**: staged `.{ts,tsx,js,cjs,mjs,json,css,html}` files get `prettier --write` on every commit. Claude should expect formatting changes on top of its own edits. Config: `.prettierrc.json`, `.prettierignore`.
 - **i18n validation**: `npm run validate:i18n` runs as the first step of every `npm run build`. Missing/extra/misformatted translation keys fail the build. Script: `scripts/validate-i18n.js`.
 - **MDX validation**: `npm run validate:mdx` (`scripts/validate-mdx.ts` → `src/core/mdx-validator.ts`) validates spec/template MDX. Keep callers using `PathUtils.getWorkflowRoot()` — hardcoded `.specflow/` paths break the validator.
-- **Project-level hooks** in `.claude/hooks/`: `block-generated-paths.py`, `post-edit-lint.py`, `post-edit-test.py` fire on Edit/Write inside this repo.
-- **Project-level subagent** in `.claude/agents/parser-sync-reviewer.md` backs the "Two Parsers" rule — dispatch it after parser edits.
 
 ## Hooks
 
