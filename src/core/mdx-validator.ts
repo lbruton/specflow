@@ -37,16 +37,23 @@ function getIssueMessage(error: any): string {
 
 function maskCodeSpans(lines: string[]): string[] {
   const out: string[] = new Array(lines.length);
-  let inFence = false;
+  let activeFence: string | null = null;
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
-    const fenceMatch = /^\s*```/.test(line);
+    const fenceMatch = /^\s*(```+|~~~+)/.exec(line);
     if (fenceMatch) {
-      inFence = !inFence;
-      out[i] = '';
-      continue;
+      const delimiter = fenceMatch[1];
+      if (activeFence === null) {
+        activeFence = delimiter;
+        out[i] = '';
+        continue;
+      } else if (delimiter === activeFence) {
+        activeFence = null;
+        out[i] = '';
+        continue;
+      }
     }
-    if (inFence) {
+    if (activeFence !== null) {
       out[i] = '';
       continue;
     }
@@ -54,6 +61,11 @@ function maskCodeSpans(lines: string[]): string[] {
     let inInline = false;
     for (let c = 0; c < line.length; c++) {
       const ch = line[c];
+      if (ch === '\\' && c + 1 < line.length && line[c + 1] === '`') {
+        masked += '  ';
+        c++;
+        continue;
+      }
       if (ch === '`') {
         inInline = !inInline;
         masked += ' ';
@@ -68,7 +80,7 @@ function maskCodeSpans(lines: string[]): string[] {
 
 function findTemplatePlaceholders(maskedLines: string[]): MdxValidationIssue[] {
   const issues: MdxValidationIssue[] = [];
-  const pattern = /\{N(?:\+[0-8])?\}/g;
+  const pattern = /\{N(?:\+\d+)?\}/g;
   for (let i = 0; i < maskedLines.length; i++) {
     let m: RegExpExecArray | null;
     pattern.lastIndex = 0;
@@ -102,7 +114,7 @@ const ALLOWED_HTML_TAGS = new Set([
 
 function findBareJsxTags(maskedLines: string[]): MdxValidationIssue[] {
   const issues: MdxValidationIssue[] = [];
-  const pattern = /<([a-z][a-z0-9-]*)>/g;
+  const pattern = /<([A-Z][a-zA-Z0-9]*|[a-z][a-z0-9-]*)(?:\s[^>]*)?\s*\/?>/g;
   for (let i = 0; i < maskedLines.length; i++) {
     let m: RegExpExecArray | null;
     pattern.lastIndex = 0;

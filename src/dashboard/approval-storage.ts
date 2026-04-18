@@ -289,13 +289,21 @@ export class ApprovalStorage extends EventEmitter {
       const message = error instanceof Error ? error.message : String(error);
       console.error(
         `[approval-storage] captureSnapshot failed for ${id} (${categoryName}/${type}): ${message}`,
+        error,
       );
       approval.snapshotCaptureError = {
         message,
         phase: 'initial',
         timestamp: new Date().toISOString(),
       };
-      await fs.writeFile(approvalFilePath, JSON.stringify(approval, null, 2), 'utf-8');
+      try {
+        await fs.writeFile(approvalFilePath, JSON.stringify(approval, null, 2), 'utf-8');
+      } catch (writeErr) {
+        console.warn(
+          `[approval-storage] Failed to persist snapshotCaptureError for ${id}:`,
+          writeErr,
+        );
+      }
     }
 
     return id;
@@ -360,14 +368,24 @@ export class ApprovalStorage extends EventEmitter {
     if (status === 'needs-revision') {
       try {
         await this.captureSnapshot(id, 'revision_requested');
-      } catch (error) {
-        console.warn('Failed to capture revision snapshot for approval %s:', id, error);
+      } catch (snapshotErr) {
+        console.warn('Failed to capture revision snapshot for approval %s:', id, snapshotErr);
+        approval.snapshotCaptureError = {
+          message: snapshotErr instanceof Error ? snapshotErr.message : String(snapshotErr),
+          phase: 'revision',
+          timestamp: new Date().toISOString(),
+        };
       }
     } else if (status === 'approved' || status === 'concerns') {
       try {
         await this.captureSnapshot(id, 'approved');
-      } catch (error) {
-        console.warn('Failed to capture approval snapshot for approval %s:', id, error);
+      } catch (snapshotErr) {
+        console.warn('Failed to capture approval snapshot for approval %s:', id, snapshotErr);
+        approval.snapshotCaptureError = {
+          message: snapshotErr instanceof Error ? snapshotErr.message : String(snapshotErr),
+          phase: 'revision',
+          timestamp: new Date().toISOString(),
+        };
       }
     }
 
@@ -806,10 +824,10 @@ export class ApprovalStorage extends EventEmitter {
   }
 
   private generateSnapshotId(): string {
-    return `snapshot_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    return `snapshot_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
   }
 
   private generateId(): string {
-    return `approval_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    return `approval_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
   }
 }
