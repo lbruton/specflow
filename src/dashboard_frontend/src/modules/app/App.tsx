@@ -247,7 +247,7 @@ function AppInner() {
                     <div className="text-sm text-[var(--text-muted)]">
                       Run:{' '}
                       <code className="px-2 py-1 bg-[var(--surface-inset)] rounded-md">
-                        npx @lbruton/spec-workflow-mcp /path/to/project
+                        npx @lbruton/specflow /path/to/project
                       </code>
                     </div>
                   </div>
