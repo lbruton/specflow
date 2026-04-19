@@ -1,0 +1,165 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+#
+# SpecFlow CodeRabbit config.
+# Derived from Devops/.coderabbit.base.yaml with SpecFlow-specific overrides.
+# (CodeRabbit has no "extends" directive — this file is self-contained.)
+#
+# SpecFlow-specific notes:
+# - TypeScript source in src/ (MCP server) + src/dashboard_frontend/ (React UI)
+# - src/markdown/templates/** are canonical spec-authoring templates; derived
+#   guide pages (DocVault/Projects/SpecFlow/Templates/) and runtime cache
+#   (DocVault/specflow/templates/) are regenerated and must never be edited
+# - src/core/parser.ts and src/dashboard/parser.ts must stay in sync —
+#   changes to one require matching changes to the other
+# - src/dashboard_frontend/src/locales/*.json are hand-maintained translations;
+#   validate-i18n gates builds but prose review of non-English locales adds noise
+# - skills/** is shipped as markdown that users copy into ~/.claude/skills/;
+#   reviews should verify generic/user-agnostic wording (no hardcoded paths)
+#
+# Profile: assertive (solo-dev; nitpicks welcome)
+# Docs: https://docs.coderabbit.ai/reference/configuration
+
+language: "en-US"
+early_access: false
+
+reviews:
+  profile: "assertive"
+
+  # PR summary features
+  high_level_summary: true
+  review_status: true
+  poem: false
+  collapse_walkthrough: false
+
+  # Workflow
+  request_changes_workflow: false
+  abort_on_close: true
+
+  # Auto-review settings
+  auto_review:
+    enabled: true
+    auto_incremental_review: true
+    drafts: false
+    ignore_title_keywords:
+      - "WIP"
+      - "DO NOT MERGE"
+    base_branches: []
+
+  # Path filters — exclude noise (global + SpecFlow-specific)
+  path_filters:
+    # Global
+    - "!**/node_modules/**"
+    - "!**/dist/**"
+    - "!**/build/**"
+    - "!**/.claude/**"
+    - "!**/.gemini/**"
+    - "!**/.agents/**"
+    - "!**/.spec-workflow/**"
+    - "!**/.specflow/**"
+    - "!**/.codacy/**"
+    - "!**/.github/**"
+    - "!**/vendor/**"
+    - "!**/deprecated/**"
+    - "!**/*.min.js"
+    - "!**/*.min.css"
+    - "!**/package-lock.json"
+    - "!**/pnpm-lock.yaml"
+    - "!**/yarn.lock"
+    - "!**/screenshots/**"
+    - "!**/*.png"
+    - "!**/*.jpg"
+    - "!**/*.svg"
+    # SpecFlow-specific
+    - "!.worktrees/**" # local-only dev worktrees, never committed
+    - "!CHANGELOG.md" # auto-generated on release
+    - "!docs/**/*.{de,es,fr,it,ja,ko,pt,ru,zh,ar}.md" # translated docs — review English originals only
+    - "!src/dashboard_frontend/src/locales/!(en).json" # translated locale files — review en.json; others gated by validate-i18n
+
+  # Path-specific review instructions
+  path_instructions:
+    - path: "src/**/*.ts"
+      instructions: |
+        - Check for proper TypeScript strict-mode patterns (no implicit any, no non-null assertions without justification).
+        - Flag missing error handling on async operations.
+        - Verify imports are from correct package paths (no workspace:* leaks).
+    - path: "src/prompts/**/*.ts"
+      instructions: |
+        - MCP prompt text embeds file paths. NEVER hardcode `.specflow/` paths —
+          always use `PathUtils.getWorkflowRoot()`. Stale hardcoded paths break
+          the MDX validator (SWF-116) and mislead cross-model handoffs.
+    - path: "src/core/parser.ts"
+      instructions: |
+        - This parser is the MCP-tools copy. Any regex or section-extraction
+          change here MUST land with a matching change to src/dashboard/parser.ts.
+          Divergence causes dashboard vs MCP inconsistencies that are hard to debug.
+    - path: "src/dashboard/parser.ts"
+      instructions: |
+        - This parser is the dashboard copy. Any regex or section-extraction
+          change here MUST land with a matching change to src/core/parser.ts.
+    - path: "src/markdown/templates/**/*.md"
+      instructions: |
+        - This is the CANONICAL template source. The derived guide pages at
+          DocVault/Projects/SpecFlow/Templates/*-guide.md and the runtime
+          cache at DocVault/specflow/templates/ are regenerated — never
+          edit them by hand.
+        - Validate MDX compatibility: no `<!-- -->` HTML comments (use `{/* */}`),
+          no bare `<tag>` JSX-like tokens outside code fences, no literal
+          `{N+digit}` placeholders without substitution context.
+    - path: "src/dashboard_frontend/**/*.tsx"
+      instructions: |
+        - Check React component patterns: proper hook dependencies, no inline
+          object props causing re-renders.
+        - Verify accessibility basics (alt text, aria labels, keyboard navigation).
+        - Verify i18n keys exist across all 10 locale files — missing keys
+          fail `npm run validate:i18n` and block the build.
+    - path: "skills/**/SKILL.md"
+      instructions: |
+        - Shipped skills are copied into user ~/.claude/skills/. Verify the
+          content is generic — no hardcoded `/Volumes/DATA/...` paths, no
+          lbruton-specific project names as required examples, no DocVault
+          absolute paths (use `${DOCVAULT_PATH}/...` or relative).
+        - If the skill has a matching command in commands/, note any parity
+          gaps between them (SWF-124 tracks the broader parity restoration).
+    - path: "tests/**"
+      instructions: |
+        - Verify meaningful assertions (not just "it runs without error").
+        - Check for proper cleanup/teardown.
+    - path: "src/**/__tests__/**"
+      instructions: |
+        - Verify meaningful assertions (not just "it runs without error").
+        - Check for proper cleanup/teardown.
+    - path: "e2e/**"
+      instructions: |
+        - Playwright E2E tests. Verify batch-approvals and worktree-isolation
+          semantics if either is touched.
+
+  # Finishing touches
+  finishing_touches:
+    docstrings:
+      enabled: false
+    autofix:
+      enabled: true
+
+  # Static analysis tools
+  tools:
+    eslint:
+      enabled: true
+    markdownlint:
+      enabled: true
+    gitleaks:
+      enabled: true
+    actionlint:
+      enabled: true
+    yamllint:
+      enabled: true
+    ast-grep:
+      enabled: true
+
+# Knowledge base — learn from feedback over time
+knowledge_base:
+  learnings:
+    scope: auto
+
+# Chat — allow @coderabbitai interactions in PR comments
+chat:
+  auto_reply: true
