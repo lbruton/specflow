@@ -23,30 +23,31 @@ These rules apply to every prime report — full and delta alike:
    **Note**: The YAML at the top of THIS skill file (`name: prime`, `description: ...`) describes the skill itself for the plugin registry — it is NOT the output format. The prime REPORT uses completely different field names.
 
    Every prime report — full and delta — begins with exactly these field names (no others, no substitutions):
+
    ```yaml
    ---
    doc_type: prime-report
    tags: [<tag>]
-   project: <project>
-   date: "2026-04-10"
+   project: <name>
+   date: "<YYYY-MM-DD>"
    branch: dev
    version: "2.1.0"
    ---
    ```
+
    - Field `doc_type` — MUST be `prime-report`
    - Field `tags` (NOT `tag`, NOT `type`) — topic tags only, no `prime-report` (that goes in `doc_type`)
    - Field `project` (NOT `name`, NOT `title`) — project name as string
-   - Field `date` (quoted string: `"2026-04-10"` NOT `2026-04-10`) — today's date
+   - Field `date` (quoted string: `"<YYYY-MM-DD>"` NOT `<YYYY-MM-DD>`) — today's date
    - Field `branch` (NOT `git_branch`) — current git branch
    - Field `version` (NOT `ver`) — from version.lock or `"n/a"`
 
    Delta reports add a sixth field: `delta_from: <previous-prime-filename>`.
-2. **Quote the date**: Always `date: "2026-04-10"` — NEVER `date: 2026-04-10`. Unquoted dates break Obsidian Bases sorting.
+2. **Quote the date**: Always `date: "<YYYY-MM-DD>"` — NEVER `date: <YYYY-MM-DD>`. Unquoted dates break Obsidian Bases sorting.
 3. **All frontmatter fields required**: `doc_type` (must be `prime-report`), `tags`, `project`, `date`, `branch`, `version`. Use `"n/a"` if unknown — never omit any field.
 4. **All section headers required**: `## Recent Activity`, `## Where We Left Off`, `## Index Health`, `## Code Health`, `## Security Reviews`, `## Project Status`, `## Suggested Session Plan`. Show a placeholder if data is unavailable — never omit the header.
 5. **Session plan must have items**: `## Suggested Session Plan` MUST have at least one `1. ...` numbered item.
-6. **DocVault save path in output**: End every report with a line like: `Full report saved to: \`DocVault/Projects/<name>/prime/<filename>.md\``
-7. **No unfilled placeholders**: Replace ALL `<angle-bracket>` tokens with real values before outputting. Never leave `<name>`, `<tag>`, `<branch>`, etc. in the final report.
+6. **No unfilled placeholders**: Replace ALL `<angle-bracket>` tokens with real values before outputting. Never leave `<name>`, `<tag>`, `<branch>`, etc. in the final report.
 
 ## Pre-flight: Local/Remote Sync Check
 
@@ -209,7 +210,7 @@ locally via Milvus Lite + EmbeddingGemma and provides project-scoped semantic se
 empty results. Use `project_root="*"` for cross-project search, or omit the parameter
 entirely (defaults to current project via HTTP header).
 
-```
+```text
 mcp__sessionflow__search_all_sessions(
   query="last session summary recent work decisions next steps handoff <project-name>",
   n=10
@@ -300,7 +301,13 @@ The header always surfaces these counts so the user has an at-a-glance signal of
 
 Read the central expiration tracker page to surface anything expiring soon:
 
-Use the `Read` tool on `${DOCVAULT_PATH}/Infrastructure/Expiration Tracker.md`.
+Check if `${DOCVAULT_PATH}/Infrastructure/Expiration Tracker.md` exists before reading:
+
+```bash
+[ -f "${DOCVAULT_PATH}/Infrastructure/Expiration Tracker.md" ] && echo "hasExpirationTracker=true" || echo "hasExpirationTracker=false"
+```
+
+If `hasExpirationTracker=true`, use the `Read` tool on `${DOCVAULT_PATH}/Infrastructure/Expiration Tracker.md`. If `hasExpirationTracker=false`, skip this step and omit the `## ⚠️ Expiring Soon` section from the report.
 
 Parse all markdown tables in the file. For each row that has an `Expires` column with
 a date, compute `days_left = (expires_date - today)`. Filter to only rows where
@@ -634,7 +641,7 @@ Source: [[Expiration Tracker]] (DocVault/Infrastructure/)
 <If hasDigest=false or no digest file found: write exactly "No session digest found for this project." then supplement with any mem0 context.>
 <If digest exists: 3-5 sentence recap from the latest session digest — goals, decisions, next steps, pain points>
 <Weave in relevant mem0 findings: retro learnings, workarounds, known issues from earlier sessions>
-<If no digest exists: fall back to mem0 + session-oracle results>
+<If no digest exists: fall back to mem0 results>
 <If neither: "No recent session history found.">
 
 ## Session Logs Digested
@@ -779,7 +786,7 @@ Not every project has every capability. Handle missing pieces:
 
 | Missing | Behavior |
 |---------|----------|
-| sessionflow MCP down | Set `hasSessionFlow=false`, fall back to mem0 + session-oracle for "where we left off" |
+| sessionflow MCP down | Set `hasSessionFlow=false`, fall back to mem0 for "where we left off" |
 | No `issuePrefix` | Skip vault issue queries, show GitHub issues only |
 | No CGC (Docker down) | Skip CGC stats + dead code + complexity, note in Index Health |
 | CGC MCP disconnected | Note "CGC MCP unavailable — container may have restarted" in Index Health. Do NOT restart containers. |
@@ -820,8 +827,8 @@ Not every project has every capability. Handle missing pieces:
 ### Frontmatter
 - Frontmatter is **MANDATORY in every prime report** — full and delta alike. The very first line of the report MUST be `---` (YAML block open), not a heading.
 - If `project.json` is missing, infer the project name from git remote URL, directory name, or context. Never use `<name>` literally — always substitute the real value.
-- **ALWAYS quote the date field** — this is the most common mistake: write `date: "2026-04-10"` NOT `date: 2026-04-10`. Unquoted dates are parsed as datetime objects and break Obsidian Bases sorting.
-- All fields are required: `tags`, `project`, `date`, `branch`, `version`, and (for delta) `delta_from`. Use `"n/a"` if a value is unavailable — never omit the field.
+- **ALWAYS quote the date field** — this is the most common mistake: write `date: "<YYYY-MM-DD>"` NOT `date: <YYYY-MM-DD>`. Unquoted dates are parsed as datetime objects and break Obsidian Bases sorting.
+- All fields are required: `doc_type`, `tags`, `project`, `date`, `branch`, `version`, and (for delta) `delta_from`. Use `"n/a"` if a value is unavailable — never omit the field.
 - The `doc_type` field MUST be `"prime-report"` — this is how Obsidian Bases finds all prime reports across projects. Do NOT put `prime-report` in the `tags` array.
 
 ### Session Digest Absence
