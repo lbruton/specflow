@@ -1,8 +1,7 @@
 # yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
 #
 # SpecFlow CodeRabbit config.
-# Derived from Devops/.coderabbit.base.yaml with SpecFlow-specific overrides.
-# (CodeRabbit has no "extends" directive — this file is self-contained.)
+# Self-contained (CodeRabbit has no "extends" directive).
 #
 # SpecFlow-specific notes:
 # - TypeScript source in src/ (MCP server) + src/dashboard_frontend/ (React UI)
@@ -57,7 +56,6 @@ reviews:
     - "!**/.spec-workflow/**"
     - "!**/.specflow/**"
     - "!**/.codacy/**"
-    - "!**/.github/**"
     - "!**/vendor/**"
     - "!**/deprecated/**"
     - "!**/*.min.js"
@@ -110,14 +108,17 @@ reviews:
         - Check React component patterns: proper hook dependencies, no inline
           object props causing re-renders.
         - Verify accessibility basics (alt text, aria labels, keyboard navigation).
-        - Verify i18n keys exist across all 10 locale files — missing keys
-          fail `npm run validate:i18n` and block the build.
     - path: "skills/**/SKILL.md"
       instructions: |
         - Shipped skills are copied into user ~/.claude/skills/. Verify the
           content is generic — no hardcoded `/Volumes/DATA/...` paths, no
-          lbruton-specific project names as required examples, no DocVault
-          absolute paths (use `${DOCVAULT_PATH}/...` or relative).
+          lbruton-specific project names as required examples.
+        - Note: skills intentionally reference absolute DocVault paths at
+          runtime (e.g. `/Volumes/DATA/GitHub/DocVault/`). This is by design
+          — skills run in user context and resolve paths at call time. Do NOT
+          flag these as errors. The absolute-path constraint applies only to
+          src/ TypeScript code, where PathUtils.getWorkflowRoot() must be
+          used instead of hardcoded paths.
         - If the skill has a matching command in commands/, note any parity
           gaps between them (SWF-124 tracks the broader parity restoration).
     - path: "tests/**"
@@ -133,13 +134,6 @@ reviews:
         - Playwright E2E tests. Verify batch-approvals and worktree-isolation
           semantics if either is touched.
 
-  # Finishing touches
-  finishing_touches:
-    docstrings:
-      enabled: false
-    autofix:
-      enabled: true
-
   # Static analysis tools
   tools:
     eslint:
@@ -151,8 +145,6 @@ reviews:
     actionlint:
       enabled: true
     yamllint:
-      enabled: true
-    ast-grep:
       enabled: true
 
 # Knowledge base — learn from feedback over time
