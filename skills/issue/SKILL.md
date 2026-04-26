@@ -1,341 +1,189 @@
 ---
 name: issue
 description: >
-  Vault-based issue management — create, read, update, and list issues stored as
-  markdown files in DocVault. Handles counter increment, sub-issue creation, and
-  GitHub issue sync for user-facing scope. Triggers on: "create issue", "issue",
-  "new issue", "new bug", "file a bug", "track this"
+  Issue management — create, read, update, list. Backend is driven by
+  `.specflow/config.json` `issue_backend` field: `plane` (Plane MCP, primary
+  going forward) or `docvault` (legacy markdown — for projects not yet migrated).
+  Triggers on: "create issue", "issue", "new issue", "new bug", "file a bug",
+  "track this".
 user-invocable: false
 ---
 
-# Issue Management — Vault-Based
+# Issue Management — Backend-Aware
 
-Issues are markdown files with YAML frontmatter stored in DocVault. No external service dependency.
+This skill dispatches based on the project's `.specflow/config.json`. Read it first; everything else follows.
 
-## Schema Reference
-
-Full schema, field definitions, and valid values: `${DOCVAULT_PATH}/Templates/issue-schema.md`
-
-## Prefix Registry
-
-| Prefix | Project | Path | Tag |
-|--------|---------|------|-----|
-| `STAK` | StakTrakr | `Projects/StakTrakr/Issues/` | `staktrakr` |
-| `HEX` | HexTrackr | `Projects/HexTrackr/Issues/` | `hextrackr` |
-| `FORGE` | Forge | `Projects/Forge/Issues/` | `forge` |
-| `WHO` | WhoseOnFirst | `Projects/WhoseOnFirst/Issues/` | `whoseonfirst` |
-| `MEL` | MyMelo | `Projects/MyMelo/Issues/` | `mymelo` |
-| `OPS` | Devops / Infra | `Projects/Devops/Issues/` | `ops` |
-| `SWF` | SpecFlow | `Projects/SpecFlow/Issues/` | `specflow` |
-| `CC` | claude-context | `Projects/claude-context/Issues/` | `claude-context` |
-| `TRMC` | TechRefreshMacCompare | `Projects/TechRefreshMacCompare/Issues/` | `trmc` |
-| `PAP` | PAPiTA | `Projects/PAPiTA/Issues/` | `papita` |
-
-Also available in each project's `.claude/project.json` as `issuePrefix` and `issueTag`.
-
----
-
-## Creating an Issue
-
-### Step 1: Determine project
-
-Read `.claude/project.json` in the current working directory:
+## Step 0 — Read project config
 
 ```bash
-cat .claude/project.json 2>/dev/null
+cat .specflow/config.json
 ```
 
-Extract `issuePrefix` and `issueTag`. If not present, infer from context (mentioned project name, current directory, or description content). If truly ambiguous, use `OPS-` as fallback and note it in the title.
+Extract:
+- `project` — display name
+- `issue_prefix` — e.g. `SFLW`, `HOME`, `DEVS`
+- `issue_backend` — `"plane"` or `"docvault"` (default if absent: `"docvault"`)
+- `plane_workspace` — only when backend is plane (e.g. `"lbruton"`)
+- `plane_project_id` — only when backend is plane (uuid)
 
-### Step 2: Read and increment counter
+If `issue_backend` is missing or `"docvault"` → jump to **DocVault legacy path** at the bottom.
+If `issue_backend` is `"plane"` → continue here.
 
-```bash
-cat ${DOCVAULT_PATH}/Projects/{project}/Issues/_counter.md
-```
-
-Read the `next` value from frontmatter. This is the issue number to use.
-
-### Step 3: Write issue file
-
-Write the issue markdown file to:
-
-```
-${DOCVAULT_PATH}/Projects/{project}/Issues/{PREFIX}-{NUM}.md
-```
-
-**CRITICAL: Use this exact frontmatter structure.** Obsidian Bases filters depend on every field being present, correctly typed, and properly quoted. Missing or misformatted fields will silently exclude the issue from Bases views.
-
-```yaml
 ---
-id: "{PREFIX}-{NUM}"  # id must be quoted for Obsidian Bases compatibility
-title: "Issue title here"
-description: "One-sentence summary of the issue"
-project: "{project_name}"
-type: feature
-scope: internal
-status: backlog
-priority: 3
-github_issue:
-assignee: "$USER"
-created: "{YYYY-MM-DD}"
-updated: "{YYYY-MM-DD}"
-completed:
-due:
-tags:
-  - issue
-  - "{project_tag}"
----
-```
 
-**Field rules:**
-- `id`: **MUST be quoted** — `"SWF-63"` not `SWF-63` (YAML parses unquoted as number)
-- `title`: **MUST be quoted** — contains special characters
-- `project`: **REQUIRED** — use the `project` value from `_counter.md` (e.g., `StakTrakr`, `TechRefreshMacCompare`). This field drives Bases grouping and cross-project views.
-- `created` / `updated`: **MUST be quoted** — `"2026-04-04"` not `2026-04-04` (YAML parses unquoted as date object)
-- `type`: `feature` | `bug` | `chore` | `spike`
-- `scope`: `user-facing` | `internal`
-- `status`: `backlog` (default) or `todo`
-- `priority`: numeric 1-4 (1=critical/blocking, 2=high, 3=medium, 4=low/nice-to-have). Default 3 if not obvious.
-- `github_issue`: leave empty (set only for inbound GH bugs)
-- `completed` / `due`: leave empty (set when status changes)
-- `tags`: **MUST include `issue`** — Bases filters on this tag. Add `{project_tag}` second.
+## Plane backend — primary path
 
-### Step 3.5: Link related documentation
+All operations route through `mcp__plane__*` tools. No counter file, no sub-issue letter convention, no `_Index.md` to maintain — Plane handles all of that.
 
-After writing the issue file, identify vault documentation pages related to this issue and add them to the `## Related Documentation` section as wikilinks.
+### Create
 
-**How to find related pages:**
+1. **Resolve state and label IDs once per session:**
 
-1. List all non-issue `.md` files in the project's vault directory:
-   ```bash
-   find ${DOCVAULT_PATH}/Projects/{project}/ -name "*.md" -not -path "*/Issues/*" -not -name "_*"
+   ```
+   mcp__plane__list_states   project_id: {plane_project_id}
+   mcp__plane__list_labels   project_id: {plane_project_id}
    ```
 
-2. For infrastructure/cross-project issues (OPS), also check:
-   ```bash
-   ls ${DOCVAULT_PATH}/Infrastructure/*.md
-   ls ${DOCVAULT_PATH}/Architecture/*.md
+   Map names → uuids. Cache for the rest of the session.
+
+2. **Pick state and label from user intent:**
+
+   | Intent | State | Label |
+   |---|---|---|
+   | New backlog item | `Backlog` | based on type |
+   | Ready to work | `Todo` | based on type |
+   | Active work | `In Progress` | based on type |
+
+   Type → label map (matches conventional commits):
+
+   | Type | Label |
+   |---|---|
+   | `feature`, `feat` | `Feature` |
+   | `bug`, `fix` | `Bug` |
+   | `chore` | `Chore` |
+   | `docs`, `documentation` | `Documentation` |
+   | `patch`, `hotfix` | `Patch` |
+
+3. **Create the issue:**
+
+   ```
+   mcp__plane__create_issue
+     project_id: {plane_project_id}
+     issue_data:
+       name: "{title}"
+       description_html: "{html-rendered description}"
+       state: {state_uuid}
+       labels: [{label_uuid}]
+       priority: "urgent"|"high"|"medium"|"low"|"none"
    ```
 
-3. Match pages to the issue by:
-   - **Title/keyword overlap** — issue title mentions "Cloud Sync" → link `[[Cloud Sync]]`
-   - **Scope match** — issue touches frontend → link `[[Frontend Overview]]`, `[[DOM Patterns]]`
-   - **Infrastructure dependency** — issue involves deployment → link `[[Portainer]]`, `[[Stack Registry]]`
-   - **Architecture impact** — issue changes data flow → link `[[Architecture]]`, `[[Data Model]]`
+   Plane assigns `sequence_id` automatically — capture from the response. The full issue ID is `{issue_prefix}-{sequence_id}` (e.g. `SFLW-8`).
 
-4. Add 1-5 relevant links (don't over-link). Each link should include a brief reason:
-   ```markdown
-   ## Related Documentation
+4. **Confirm:**
 
-   - [[Cloud Sync]] — retry logic lives here
-   - [[Architecture]] — sync flow may change
+   ```
+   Created {issue_prefix}-{sequence_id}: {title}
+     URL: https://plane.lbruton.cc/lbruton/projects/{plane_project_id}/issues/{id}
+     State: {state}
+     Labels: {labels}
+     Priority: {priority}
    ```
 
-5. If no documentation pages are clearly related, leave the section with the template comment. Not every issue needs doc links.
-
-**Tip:** For complex issues, dispatch the `vault-linker` agent to do a thorough scan. For simple bugs, 1-2 obvious links are sufficient.
-
-### Step 4: Increment counter
-
-Update `_counter.md` — set `next` to `{NUM + 1}`.
-
-### Step 5: GitHub issue (inbound only)
-
-**GitHub Issues are an inbound-only public bug inbox.** Never create GitHub issues from
-vault issues. All tracking lives in DocVault — users see fixes via the changelog.
-
-- Do NOT create a GitHub issue when creating a vault issue (regardless of scope or type)
-- The `github_issue` field is only set when triaging an inbound GH issue filed by a user
-
-**Inbound GitHub issues (public bug reports):**
-When a user files a bug on GitHub, triage it into a vault issue:
-1. Create the vault issue with `scope: user-facing`, `type: bug`
-2. Set `github_issue` to the GH issue number
-3. Reply on the GH issue acknowledging receipt
-4. Close the GH issue when the vault issue reaches `done`
-
-### Step 5.5: Validate frontmatter (HARD GATE)
-
-After writing the issue file, **read it back** and verify against the template. This is the #1 source of Bases visibility bugs — silently broken issues that don't appear in views.
-
-**Read the file back and check ALL of these:**
-
-1. **All required fields present:** `id`, `title`, `description`, `project`, `type`, `scope`, `status`, `priority`, `github_issue`, `assignee`, `created`, `updated`, `completed`, `due`, `tags`
-2. **Quoting correct:**
-   - `id` value is quoted: `id: "SWF-63"` (NOT `id: SWF-63`)
-   - `created` value is quoted: `created: "2026-04-04"` (NOT `created: 2026-04-04`)
-   - `updated` value is quoted: `updated: "2026-04-04"` (NOT `updated: 2026-04-04`)
-   - `title` value is quoted
-3. **Tags include `issue`:** The first tag MUST be `issue` — Bases filters on this
-4. **Priority is numeric:** `1`, `2`, `3`, or `4` (NOT `P1`, `P2`, etc.)
-5. **Empty fields present:** `github_issue:`, `completed:`, `due:` must exist even if empty
-
-**Valid values:**
-- `status`: `backlog`, `todo`, `in-progress`, `in-review`, `done`, `canceled`
-- `type`: `feature`, `bug`, `chore`, `spike`
-- `scope`: `user-facing`, `internal`
-
-If ANY field is missing, unquoted when it should be quoted, or has an invalid value, **fix it before proceeding**. Do NOT skip this check. An issue that doesn't appear in Bases is effectively invisible.
-
-### Step 6: Confirm
+### Read
 
 ```
-Created {PREFIX}-{NUM}: {title}
-  Type:     {type}
-  Scope:    {scope}
-  Priority: {priority}
-  Path:     DocVault/Projects/{project}/Issues/{PREFIX}-{NUM}.md
-  GitHub:   #{github_issue} (if user-facing)
+mcp__plane__get_issue_using_readable_identifier
+  project_identifier: {issue_prefix}
+  issue_identifier: {sequence_id}    # e.g. "8" for SFLW-8
 ```
+
+Returns `name`, `description_html`, `state` (uuid), `labels` (uuid array), `priority`, `created_at`, etc. To turn the state/label UUIDs into names, resolve via the cached `list_states` / `list_labels` from the Create flow. The Plane workspace is baked into the MCP server's startup config — the tool does not accept a `workspace_slug` parameter.
+
+### Update / close
+
+Status change:
+
+```
+mcp__plane__update_issue
+  project_id: {plane_project_id}
+  issue_id: {issue_uuid}
+  issue_data:
+    state: {new_state_uuid}
+```
+
+For closing: set state to `Done` (or `Cancelled` for cancellation). Plane records `completed_at` automatically.
+
+### List
+
+```
+mcp__plane__list_project_issues
+  project_id: {plane_project_id}
+```
+
+Filter client-side on state group (`backlog` / `unstarted` / `started` / `completed` / `cancelled`) as needed.
+
+### Notes for the Plane path
+
+- **No counter file.** Plane assigns `sequence_id` atomically; nothing to increment locally.
+- **No sub-issue letter suffix.** Plane has first-class parent-child issues — pass `parent: {parent_uuid}` to `create_issue` and the child gets its own normal sequence_id (e.g. `SFLW-9` with parent `SFLW-3`), not a letter suffix.
+- **No GitHub triage step.** Plane's GitHub integration is configured at the workspace level. If the project has it wired up, syncing is automatic. Inbound GH bugs that need ingestion can be created directly in Plane via the same `create_issue` call.
+- **Related documentation wikilinks** are no longer maintained by this skill — they were a DocVault construct. If you want to cross-reference vault docs, paste the wikilink into the Plane issue's description (Plane preserves markdown).
 
 ---
 
-## Creating Sub-Issues
+## Prefix Registry (Plane backend)
 
-Sub-issues use letter suffixes: `{PREFIX}-{NUM}-A`, `{PREFIX}-{NUM}-B`, etc.
+| Prefix | Project | Plane project_id |
+|---|---|---|
+| `HOME` | HomeNetwork | `6d660454-a709-49d5-8b6c-a580f90170ee` |
+| `DEVS` | Devops | `84abb46d-4032-40a4-aeee-e20cab6cb828` |
+| `SFLW` | SpecFlow | `72fd0b33-6719-47fa-92a5-97e9ba511f32` |
+| _(others)_ | _migrating per `~/.claude/CLAUDE.md` §12_ | _TBD_ |
 
-### Step 1: Find parent issue
-
-Read the parent issue file to get context and determine the next available letter.
-
-```bash
-ls ${DOCVAULT_PATH}/Projects/{project}/Issues/{PREFIX}-{NUM}-*.md 2>/dev/null
-```
-
-### Step 2: Write sub-issue file
-
-Use the template from `DocVault/Templates/issue-sub.md`:
-
-```
-${DOCVAULT_PATH}/Projects/{project}/Issues/{PREFIX}-{NUM}-{LETTER}.md
-```
-
-Include `parent: "[[{PREFIX}-{NUM}]]"` in frontmatter and add `issue/sub` to tags.
-
-### Step 3: Update parent
-
-Add the sub-issue wikilink to the parent's `## Sub-Issues` section.
-
-**Sub-issues do NOT increment the counter.**
+Authoritative source: each project's `.specflow/config.json`. The table above is a convenience.
 
 ---
 
-## Reading an Issue
+## DocVault legacy path
 
-Given an issue ID (e.g., `STAK-473`):
+For projects with `issue_backend: "docvault"` or no `issue_backend` field. **This path is being retired.** New work should target Plane; only use this when the project hasn't been migrated yet (see `~/.claude/CLAUDE.md` §12 for migration status).
 
-1. Parse the prefix to determine the project (use prefix registry)
-2. Read the file (check root first, then Closed/):
-   ```bash
-   cat ${DOCVAULT_PATH}/Projects/{project}/Issues/{ISSUE-ID}.md 2>/dev/null || \
-   cat ${DOCVAULT_PATH}/Projects/{project}/Issues/Closed/{ISSUE-ID}.md
-   ```
+### Create
 
----
+1. Read `${DOCVAULT_PATH}/Projects/{project}/Issues/_counter.md`, take `next` value.
+2. Write `${DOCVAULT_PATH}/Projects/{project}/Issues/{PREFIX}-{NUM}.md` using the schema at `${DOCVAULT_PATH}/Templates/issue-schema.md` (full field list and quoting rules live there).
+3. Increment counter: set `next: {NUM + 1}` in `_counter.md`.
+4. Update `_Index.md` atomically (per CLAUDE.md §11 rule).
 
-## Updating an Issue
+Critical frontmatter rules (most-broken):
+- `id`, `title`, `created`, `updated` MUST be quoted strings.
+- `doc_type: issue` (required for Bases visibility — never put `issue` in tags).
+- `priority`: numeric `1`–`4`.
 
-### Status changes
+### Read / update / list / close
 
-**Preferred: Obsidian CLI property:set** (if Obsidian is running):
+- **Read:** `cat ${DOCVAULT_PATH}/Projects/{project}/Issues/{ID}.md` (check root, then `Closed/`).
+- **Status update:** edit the file's frontmatter; update `updated` and (if done) `completed`.
+- **Close-move:** `git mv` the file from `Issues/` into `Issues/Closed/`; update both `_Index.md` files atomically in the same commit.
+- **List:** `grep -rl 'status:.*\(backlog\|todo\|in-progress\)' ${DOCVAULT_PATH}/Projects/{project}/Issues/`.
 
-```bash
-OBS='/Applications/Obsidian.app/Contents/MacOS/obsidian'
-$OBS vault="DocVault" property:set name="status" value="done" path="Projects/{project}/Issues/{ISSUE-ID}.md"
-$OBS vault="DocVault" property:set name="updated" value="$(date +%Y-%m-%d)" path="Projects/{project}/Issues/{ISSUE-ID}.md"
-$OBS vault="DocVault" property:set name="completed" value="$(date +%Y-%m-%d)" path="Projects/{project}/Issues/{ISSUE-ID}.md"
-```
+Sub-issues use letter suffixes (`SWF-12-A`, `SWF-12-B`) and don't increment the counter. Add `parent: "[[SWF-12]]"` to frontmatter; update parent's `## Sub-Issues` section.
 
-**Fallback:** Edit the issue file's frontmatter directly:
-- Update `status` field
-- Update `updated` date
-- If status → `done`: set `completed` date
+### Legacy notes
 
-**Close-move rule:** When status changes to `done`, `canceled`, or `superseded`, move the file to `Closed/`:
-
-```bash
-ISSUE_FILE="${DOCVAULT_PATH}/Projects/{project}/Issues/{ISSUE-ID}.md"
-ISSUE_DIR=$(dirname "$ISSUE_FILE")
-CLOSED_DIR="$ISSUE_DIR/Closed"
-mkdir -p "$CLOSED_DIR"
-git mv "$ISSUE_FILE" "$CLOSED_DIR/$(basename "$ISSUE_FILE")"
-```
-
-If the file is untracked (not yet committed), use `mv` instead of `git mv`.
-
-### Bulk status update
-
-```bash
-# Find all in-progress issues for a project
-# Note: status values may be quoted ("in-progress") or unquoted — use .* to handle both
-grep -rl 'status:.*in-progress' ${DOCVAULT_PATH}/Projects/{project}/Issues/
-```
-
----
-
-## Listing Issues
-
-### Preferred: Obsidian CLI base:query (structured JSON)
-
-If Obsidian is running, use the CLI for structured issue queries — much richer than grep:
-
-```bash
-OBS='/Applications/Obsidian.app/Contents/MacOS/obsidian'
-
-# All issues for a project (returns JSON with status, priority, type, days open, tags)
-$OBS vault="DocVault" base:query path="Projects/{project}/Issues/Issues.base" format=json
-
-# Cross-project view (all issues)
-$OBS vault="DocVault" base:query path="Issues.base" format=json
-```
-
-This returns structured data per issue: `path`, `Issue`, `title`, `type`, `Priority`, `status`, `Days Open`, `due`, `tags`.
-
-### Fallback: grep (when Obsidian isn't running)
-
-```bash
-# Note: status values may be quoted or unquoted in YAML frontmatter — use .* to handle both
-grep -rl 'status:.*\(backlog\|todo\|in-progress\|in-review\)' ${DOCVAULT_PATH}/Projects/{project}/Issues/ 2>/dev/null
-```
-
----
-
-## Agent Routing
-
-When creating issues, classify the task for AI agent delegation:
-
-| Agent | Best For | Tag |
-|-------|----------|-----|
-| **Codex** | Mechanical, repetitive, bulk tasks | — |
-| **Opus** | Complex architecture, security, multi-module | — |
-| **Sonnet** | Balanced research + implementation | — |
-| **Gemini** | Documentation, content, UI iteration | — |
-
-See `agent-routing` skill for the full decision tree.
+- GitHub Issues are inbound-only — never create from vault issues. Triage inbound GH bugs into vault issues with `scope: user-facing` and `github_issue: {gh-number}`.
+- Issues prior to 2026-03-13 lived in Linear; old prefixes (STAK-, HEX-, DEV-, HKF-, API-, WHO-) reference valid Linear issues. The vault numbered onward from there.
 
 ---
 
 ## Issue Creation Rules
 
-Every code change needs an issue. Exceptions: instruction-file-only changes
-(CLAUDE.md, AGENTS.md, skills) and `/gsd` sessions (casual fixes below spec threshold).
+Every code change needs an issue (regardless of backend). Exceptions: instruction-file-only edits (CLAUDE.md, skills) and `/gsd` sessions for trivial fixes.
 
-Issue ID goes in commit message, PR body, and version lock claim.
+The issue ID format `{PREFIX}-{NUM}` is identical between backends — commit messages, PR bodies, and version lock claims work the same way for both.
 
 ---
 
-## GitHub Issues Policy
+## Migration
 
-**GitHub Issues are an inbound-only public bug inbox — not a planning tool.**
-
-- All open GitHub issues were closed on 2026-03-18 and migrated to vault tracking
-- New GitHub issues from users are triaged into vault issues on receipt
-- NEVER create GitHub issues from vault issues — all tracking is vault-only
-- Users see fixes via the changelog, not via GitHub issue updates
-- When an inbound GH issue's vault counterpart reaches `done`, close the GH issue with a comment referencing the fix commit
-
-## Legacy: Linear Migration
-
-Issues prior to 2026-03-13 lived in Linear. Old prefixes (STAK-, HEX-, DEV-, HKF-, API-, WHO-)
-still reference valid Linear issues at linear.app/your-org. The vault continues numbering
-from where Linear left off. See `issue-schema.md` for the absorbed prefix mapping.
+Status of each project's migration: `~/.claude/CLAUDE.md` §12. If a project's `.specflow/config.json` doesn't have `issue_backend` yet but §12 lists it as ✅ migrated, that's a config-drift bug — flag it and add the missing fields rather than silently routing to DocVault.

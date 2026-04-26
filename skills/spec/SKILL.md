@@ -68,24 +68,25 @@ If any answer is "no," STOP and do the missing step first.
 
 Read both config files to resolve all paths:
 
-```bash
-cat .claude/project.json
-cat .specflow/config.json
-```
+Use the `Read` tool on `.claude/project.json` and `.specflow/config.json`.
 
 From `.claude/project.json` extract:
 - `issuePrefix` → used for issue file lookups
 - `name` → display label
 
-From `.specflow/config.json` extract and resolve:
-- `docvault` → relative path to DocVault (e.g. `../DocVault`)
+From `.specflow/config.json` extract:
 - `project` → project name for specflow paths
+- `docvault` → relative path to DocVault (e.g. `../DocVault`)
+- `issue_backend` → `"plane"` or `"docvault"` (default if absent: `"docvault"`)
+- `plane_workspace` → only when `issue_backend` is `"plane"` (e.g. `"lbruton"`)
+- `plane_project_id` → only when `issue_backend` is `"plane"` (uuid)
 
 **Resolve the specflow root path** — this is used for ALL subsequent file reads (templates, specs, steering, discovery):
 
 ```bash
 DOCVAULT=$(cd "$(pwd)/$(python3 -c "import json; print(json.load(open('.specflow/config.json')).get('docvault','../DocVault'))")" && pwd)
 PROJECT=$(python3 -c "import json; print(json.load(open('.specflow/config.json')).get('project',''))")
+ISSUE_BACKEND=$(python3 -c "import json; print(json.load(open('.specflow/config.json')).get('issue_backend','docvault'))")
 SPECFLOW_ROOT="$DOCVAULT/specflow/$PROJECT"
 SPECFLOW_GLOBAL="$DOCVAULT/specflow"
 ```
@@ -93,16 +94,35 @@ SPECFLOW_GLOBAL="$DOCVAULT/specflow"
 Store these variables for the entire session:
 - `SPECFLOW_ROOT` → `{docvault}/specflow/{project}` (project-specific: specs, templates, steering, approvals)
 - `SPECFLOW_GLOBAL` → `{docvault}/specflow` (global templates fallback)
-- `DOCVAULT` → absolute DocVault root (for issue lookups, vault-update)
+- `DOCVAULT` → absolute DocVault root (for vault-update; for issue lookups only when backend is `docvault`)
+- `ISSUE_BACKEND` → either `plane` or `docvault`; gates the issue lookup path below
 
-### Fetch issue from vault
+### Fetch issue (backend-aware)
+
+**If `ISSUE_BACKEND == "plane"`:**
+
+Use the Plane MCP to fetch the issue:
+
+```
+mcp__plane__get_issue_using_readable_identifier
+  project_identifier: {issue_prefix from .claude/project.json}
+  issue_identifier: {sequence number — strip the prefix from $ARGUMENTS}
+```
+
+For example, if `$ARGUMENTS` is `SFLW-3`, pass `project_identifier: "SFLW"` and `issue_identifier: "3"`. The Plane workspace is baked into the MCP server's startup config; the tool does not accept a `workspace_slug` parameter.
+
+Extract from the response:
+- `name` → title
+- `description_html` (or `description_stripped`) → description
+- `priority` → priority
+- `state` → resolve state name via `mcp__plane__list_states` (cache once per session); map to status keyword (`backlog`, `todo`, `in-progress`, `in-review`, `done`, `cancelled`)
+- `labels` → resolve label names via `mcp__plane__list_labels`; treat as tags
+
+**If `ISSUE_BACKEND == "docvault"` (legacy / unmigrated projects):**
 
 Read the issue file from DocVault:
 
-```bash
-cat "$DOCVAULT/Projects/$PROJECT/Issues/{ISSUE-ID}.md" 2>/dev/null || \
-cat "$DOCVAULT/Projects/$PROJECT/Issues/Closed/{ISSUE-ID}.md"
-```
+Use the `Read` tool on `$DOCVAULT/Projects/$PROJECT/Issues/{ISSUE-ID}.md`. If not found, use `Glob` with pattern `**/{ISSUE-ID}.md` under `$DOCVAULT/Projects/$PROJECT/Issues/` to locate it (may be in `Closed/` or a subfolder).
 
 Extract: title, description, priority, status, tags from frontmatter.
 
@@ -201,11 +221,11 @@ Skipping any of these calls is a workflow violation.
      limit: 5
    ```
 
-4. **Check for existing discovery brief:**
-   ```bash
-   ls "$SPECFLOW_ROOT/discovery/{ISSUE-ID}.md" 2>/dev/null
-   ```
-   If a `/discover` brief exists for this issue, read it. The discovery findings inform requirements — user stories, edge cases, and technical constraints that were surfaced during exploration.
+4. **Check for existing discovery brief** — two locations, in order:
+   a. **In the issue body** (primary, post-OPS-150): the issue you already read in Step 0 may contain a populated `## Discovery` section with Problem Statement, Recommended Approach, Files Affected, Patterns to Follow, Context Pointers, and Estimated Scope. Use it directly — it's the authoritative source.
+   b. **Legacy file path** (older specs only): `ls "$SPECFLOW_ROOT/discovery/{ISSUE-ID}.md" 2>/dev/null` — read if present.
+
+   The Discovery block's Context Pointers list the exact mem0 query strings `/discover` used. Re-run them if you need to surface the full prior context in a fresh session. The discovery findings inform requirements — user stories, edge cases, and technical constraints surfaced during exploration.
 
 5. **Ask clarifying questions** — one at a time, grounded in the issue description and any discovery findings.
 
@@ -267,7 +287,7 @@ Skipping any of these calls is a workflow violation.
       - Potential ripple effects
       - Prior art in the codebase
 
-   c. **Reference any existing discovery brief** — if `/discover` was run before `/spec`, read `DocVault/specflow/{project}/discovery/{ISSUE-ID}.md` and incorporate its findings into the Impact Report. Do NOT duplicate the research — just reference and extend.
+   c. **Reference any existing discovery brief** — if `/discover` was run before `/spec`, the Discovery block lives in the issue body's `## Discovery` section (primary, post-OPS-150) or at legacy path `DocVault/specflow/{project}/discovery/{ISSUE-ID}.md`. Incorporate findings into the Impact Report — do NOT duplicate the research, just reference and extend. If the Discovery block lists Context Pointers (mem0 queries, Research Briefs, KB pages), follow them for additional context.
 
    <HARD-GATE>
    Do not write design.md until codebase-search is complete and the Impact Report is produced.
@@ -617,7 +637,23 @@ After test coverage is verified and documentation is updated:
 
 ## Step 6: Close Issues & Completion
 
-### a) Close vault issue
+### a) Close issue (backend-aware)
+
+**If `ISSUE_BACKEND == "plane"`:**
+
+Resolve the `Done` state UUID (cached from earlier `list_states` call) and close via:
+
+```
+mcp__plane__update_issue
+  project_id: {plane_project_id}
+  issue_id: {issue uuid from the earlier get_issue_using_readable_identifier response}
+  issue_data:
+    state: {Done state uuid}
+```
+
+Plane records `completed_at` automatically. If the issue has parent/child relationships in Plane, only close the issue this spec implemented — don't auto-cascade to siblings or parents.
+
+**If `ISSUE_BACKEND == "docvault"`:**
 
 Update the vault issue file in DocVault:
 
@@ -629,7 +665,7 @@ Update the vault issue file in DocVault:
 ```
 
 Edit the issue markdown file at `$DOCVAULT/Projects/$PROJECT/Issues/{ISSUE-ID}.md`.
-If the issue has sub-issues, close those too (update each sub-issue file's status to `done`).
+If the issue has sub-issues (letter-suffix children like `{ID}-A`), close those too (update each sub-issue file's status to `done`).
 
 ### b) Close GitHub issue (if user-facing)
 
