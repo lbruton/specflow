@@ -16,7 +16,8 @@ MCP server plugin for spec-driven development with a real-time web dashboard. Po
 | MCP install       | User-level `~/.claude/settings.json` → `npx -y @lbruton/specflow@latest .`                                                                                          |
 | Dashboard port    | `5000` (default; override with `specflow --dashboard --port <n>`)                                                                                                   |
 | Dashboard service | Single Node process (`specflow --dashboard`; singleton instance registered in `~/.specflow-mcp/activeSession.json`); all MCP servers share the one running instance |
-| Issue prefix      | `SWF`                                                                                                                                                               |
+| Issue prefix      | `SFLW` (renamed from `SWF` 2026-04-26 with the Plane migration)                                                                                                     |
+| Issue tracker     | Plane (self-hosted) — `https://plane.lbruton.cc/lbruton/projects/72fd0b33-6719-47fa-92a5-97e9ba511f32/`. Pre-migration markdown archived at `DocVault/Archive/Issues-Pre-Plane/SpecFlow/`. |
 
 ## DocVault — Project Documentation
 
