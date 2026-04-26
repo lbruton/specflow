@@ -14,7 +14,7 @@ MCP server plugin for spec-driven development with a real-time web dashboard. Po
 | Skills source     | `specflow/skills/` in the repo (users copy → `~/.claude/skills/`)                                                                                                   |
 | Commands source   | `specflow/commands/` in the repo (users copy → `~/.claude/commands/`)                                                                                               |
 | MCP install       | User-level `~/.claude/settings.json` → `npx -y @lbruton/specflow@latest .`                                                                                          |
-| Dashboard port    | `5000` (default; override with `specflow --dashboard --port <n>`)                                                                                                   |
+| Dashboard port    | `5000` (default; override with `specflow --dashboard --port <n>`). lbruton's environment uses `--port 5051`.                                                        |
 | Dashboard service | Single Node process (`specflow --dashboard`; singleton instance registered in `~/.specflow-mcp/activeSession.json`); all MCP servers share the one running instance |
 | Issue prefix      | `SFLW` (renamed from `SWF` 2026-04-26 with the Plane migration)                                                                                                     |
 | Issue tracker     | Plane (self-hosted) — `https://plane.lbruton.cc/lbruton/projects/72fd0b33-6719-47fa-92a5-97e9ba511f32/`. Pre-migration markdown archived at `DocVault/Archive/Issues-Pre-Plane/SpecFlow/`. |
@@ -40,7 +40,7 @@ When making changes that affect documented behavior, run `/vault-update` before 
 | **npm package** `@lbruton/specflow` | MCP server + dashboard (compiled TypeScript) | `npx -y @lbruton/specflow@latest .` in user-level settings.json      | `src/` → built into `dist/` → published to npm          |
 | **GitHub repo direct download**     | Skills + slash commands (markdown files)     | Clone/zip the repo, copy `skills/` and `commands/` into `~/.claude/` | `specflow/skills/` and `specflow/commands/` (top-level) |
 
-**Skills and commands are NEVER in the npm package.** They are plain markdown that users install by copying. The MCP server and the skills are independent — installing one does not install the other. The README must instruct users to do both.
+**Skills and commands ship as plain markdown separate from the npm package.** Users install them by copying. The MCP server and the skills are independent — installing one does not install the other. The README must instruct users to do both.
 
 ### Skill Distribution Pipeline
 
@@ -65,13 +65,11 @@ flowchart LR
 
 **Hard rules:**
 
-- There is NO `plugin/` directory. If you see one, it's an orphan from before the 2026-04-07 reconciliation — delete it, do not edit it.
-- There is NO `.claude-plugin/` directory. Removed in v3.6.0 (PR #12) — `marketplace.json` referenced the dead `plugin/` source. If it reappears, delete it.
-- There is NO marketplace directory under `~/.claude/plugins/marketplaces/`. If one exists, it's stale — delete it.
-- **Never symlink** the user-level skill to the repo copy. They are intentionally separate so user-level can iterate without dirtying the shipped version.
-- Promotion is a manual `cp` after the user-level version has been tested. Long-term we may automate this, but today it's a deliberate human step.
+- Orphan directories from pre-v3.6.0 (`plugin/`, `.claude-plugin/`, `~/.claude/plugins/marketplaces/`) — delete on sight, do not edit.
+- **Keep the user-level skill and the repo copy as separate files.** They are intentionally separate so user-level can iterate without dirtying the shipped version. Use direct `cp` for promotion, not symlinks.
+- Promotion uses manual `cp` after the user-level version has been tested. Long-term we may automate this, but today it's a deliberate human step.
 
-### DocVault Consolidation (SWF-2 — shipped v3.5.0)
+### DocVault Architecture
 
 All specflow artifacts live in DocVault. Each project has only `.specflow/config.json` locally.
 
@@ -155,20 +153,22 @@ src/markdown/templates/{name}.md           ← CANONICAL (edit here, or via /pub
 
 | Directory                                              | Role                                           | Editable?                                                                                                                                                                                                                               |
 | ------------------------------------------------------ | ---------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `src/markdown/templates/`                              | Canonical source in git                        | **YES** — direct edit or `/publish-templates`                                                                                                                                                                                           |
-| `DocVault/Projects/SpecFlow/Templates/{name}-guide.md` | Human-readable KB mirror (Obsidian)            | **NO** — regenerated; hand-edits clobbered                                                                                                                                                                                              |
-| `DocVault/specflow/{project}/templates/`               | Per-project runtime cache + additive overrides | **Global/bundled filenames: NO** — MCP boot re-copies them from the npm package (until SWF-95 version-gates this). **New override-only filenames: YES** — not clobbered; StakTrakr is the only project with legitimate overrides today. |
+| `src/markdown/templates/`                              | Canonical source in git                        | **YES** — edit directly or use `/publish-templates`                                                                                                                                                                                    |
+| `DocVault/Projects/SpecFlow/Templates/{name}-guide.md` | Human-readable KB mirror (Obsidian)            | **Read-only** — auto-regenerated; hand-edits are overwritten                                                                                                                                                                            |
+| `DocVault/specflow/{project}/templates/`               | Per-project runtime cache + additive overrides | **Global/bundled filenames: Read-only** — MCP boot re-copies them from the npm package (until SWF-95 version-gates this). **New override-only filenames: Editable** — not clobbered; StakTrakr is the only project with legitimate overrides today. |
 
 **Ship a change:** use `/publish-templates` — writes canonical, regenerates the DocVault guide snapshot, builds/tests, bumps version, commits, pushes, and stops before `npm publish` for manual passkey.
 
 **Inspect a template:** read `src/markdown/templates/{name}.md` directly; the DocVault guide is the human-readable explanation.
+
+**Path disambiguation:** `DocVault/Projects/SpecFlow/Templates/` (KB snapshots, auto-regenerated by `/publish-templates`) is a completely different path from `DocVault/specflow/{project}/templates/` (npm runtime cache, overwritten on MCP boot). Stale KB snapshots self-heal on the next `/publish-templates` run — do not trigger regeneration manually. The three tiers resolve in order: project `templates/` → `DocVault/specflow/user-templates/` → `DocVault/specflow/templates/` (only this last tier is clobbered on boot).
 
 ## Two Parsers - Keep in Sync
 
 - `src/core/parser.ts` -- used by MCP tools (spec-status, spec-list, etc.)
 - `src/dashboard/parser.ts` -- used by the dashboard UI server
 
-If you change how specs are parsed, update BOTH parsers.
+When you change how specs are parsed, update both parsers to keep them synchronized. Add this as a check in your Post-Change Gate: after editing either parser, grep the other for the same function names to confirm parity.
 
 ## Build, Test, and Deploy
 
@@ -185,16 +185,16 @@ After building, MCP tools pick up the rebuilt `dist/` on next invocation (an `/m
 
 ## Post-Change Gate -- MANDATORY
 
-After ANY source edit:
+After ANY source edit, follow these steps:
 
-1. `npm run build` -- verify compilation succeeds
+1. `npm run build` -- verify compilation succeeds **in a worktree, never in the main checkout**. `rimraf` wipes `dist/` before `tsc` runs — a failed build in main corrupts the live dashboard with no easy recovery.
 2. `git status --short` -- verify your changes
 3. Create a worktree branch, commit your changes there, and open a PR
 4. Merge the PR once all status checks pass
 
-Never leave uncommitted source changes. `dist/` is gitignored -- if you build without committing, the next `git pull` silently reverts your work.
+Always commit source changes promptly. `dist/` is gitignored — if you build without committing, the next `git pull` silently reverts your work.
 
-**Branch protection:** `main` enforces signed commits, required pull requests, and required status checks. Direct pushes are rejected. All changes (including skills, templates, docs) go through a PR. See the security note in the user-level `CLAUDE.md` § Repo Boundaries for the post-INC-001 rationale.
+**Branch protection:** `main` enforces signed commits, required pull requests, and required status checks. All changes (including skills, templates, docs) go through a PR. See the security note in the user-level `CLAUDE.md` § Repo Boundaries for the post-INC-001 rationale.
 
 ## Publishing
 
@@ -212,7 +212,7 @@ Never leave uncommitted source changes. `dist/` is gitignored -- if you build wi
 # 7. Verify: npm view @lbruton/specflow version
 ```
 
-**npm publish constraint:** lbruton uses passkey authentication for npm. Claude CANNOT run `npm login` or `npm publish` directly — both fail with 401 at the auth step. Always hand off step 5 to the user and wait for confirmation before running step 6 verification. See mem0 `feedback_npm_publish_passkey.md` for the rationale.
+**npm publish constraint:** lbruton uses passkey authentication for npm. Hand off step 5 (`npm publish --access public`) to the user and wait for confirmation before running step 6 verification. See mem0 `feedback_npm_publish_passkey.md` for the rationale.
 
 ## Promoting a Skill — User-Level → Shipped
 
@@ -226,15 +226,22 @@ The promotion flow is intentionally manual. After a skill has been battle-tested
 
 The same flow applies to slash commands in `commands/`. There is no build step, no compile, no npm involvement. Skills and commands ship as raw markdown.
 
-**Anti-patterns to avoid:**
+**Reverse-sync (shipped → user-level):** When a PR sanitizes the shipped copy and makes it cleaner than the user-level version, reverse-sync immediately after merge:
 
-- Editing `specflow/skills/<name>/SKILL.md` directly without testing at user level first — you'll ship something that broke in the first session.
-- Symlinking user-level → repo copy. They must be separate files so user-level can iterate freely.
-- Looking for a `plugin/` directory. There isn't one. If your search returns one, it's an orphan and should be deleted, not edited.
+1. `cp /Volumes/DATA/GitHub/specflow/skills/<name>/SKILL.md ~/.claude/skills/<name>/SKILL.md`
+2. Re-personalize any `{owner}` → `lbruton` placeholders the sanitization introduced
+3. Verify: `diff ~/.claude/skills/<name>/SKILL.md specflow/skills/<name>/SKILL.md` — only re-personalization changes should appear
+
+**Best practices:**
+
+- Test skills at user level first before editing `specflow/skills/<name>/SKILL.md` directly. This prevents shipping broken versions.
+- Keep user-level and repo-copy as separate files so user-level can iterate freely. Use `cp` for promotion.
+- After any sync in either direction, run `diff` to confirm only the expected delta landed.
+- When you encounter a `plugin/` directory in search results, recognize it as an orphan and delete it rather than editing it.
 
 ## Gotcha: mem0 Reader Pattern (SWF-90)
 
-mem0 cloud v1 API does NOT persist top-level `agent_id` — it's `null` on every record. Project tag lives in `metadata.project`. **Never** filter mem0 reads with `filters: {AND: [{agent_id: <tag>}]}` — fetch unfiltered, then post-filter on `metadata.project` case-insensitively (legacy records have inconsistent casing like `SpecFlow` vs `specflow`). Canonical pattern: `~/.claude/hooks/mem0-session-start.py:83-140`. Full reference: `DocVault/Architecture/mem0-configuration.md` § Schema Reality.
+mem0 cloud v1 API does not persist top-level `agent_id` — it's `null` on every record. Project tag lives in `metadata.project`. Filter mem0 reads by fetching unfiltered, then post-filtering on `metadata.project` case-insensitively (legacy records have inconsistent casing like `SpecFlow` vs `specflow`). Avoid filtering with `filters: {AND: [{agent_id: <tag>}]}` as it will not match. Canonical pattern: `~/.claude/hooks/mem0-session-start.py:83-140`. Full reference: `DocVault/Architecture/mem0-configuration.md` § Schema Reality.
 
 ## Adding a New Tool
 
@@ -250,48 +257,51 @@ mem0 cloud v1 API does NOT persist top-level `agent_id` — it's `null` on every
 
 ## DocVault Index Rule
 
-Every DocVault folder must have `_Index.md`. When creating, deleting, or moving files in DocVault, update the folder's `_Index.md` and parent indexes in the same commit. Run `/vault-reconcile` to detect drift.
+Every DocVault folder must have `_Index.md`. When creating, deleting, or moving files in DocVault, update the folder's `_Index.md` and parent indexes in the same commit. Run `/vault-reconcile` to detect drift. When moving an issue to `Closed/`, update **both** the source `_Index.md` (remove entry) and `Closed/_Index.md` (add entry) atomically — partial updates create ghost entries.
 
 ## Post-Publish Verification -- MANDATORY
 
-After `npm publish`, before telling the user it's done:
+After `npm publish`, complete these verification steps before telling the user it's done:
 
 1. Verify npm has the new version: `npm view @lbruton/specflow version`
 2. Clear npx cache if stale (see Publishing section)
-3. `/mcp` reconnect to load new version
-4. Verify config loads: check `DocVault/specflow/{project}/` dirs exist
-5. Verify migration ran: local `.specflow/` should contain only `config.json`
-6. Verify templates: project templates dir should have overrides only, not globals
+3. Run `/mcp` reconnect to load new version
+4. *(Migration complete as of v3.5.0 — skip unless troubleshooting a fresh install)* Verify config loads: check that `DocVault/specflow/{project}/` dirs exist
+5. *(Migration complete as of v3.5.0 — skip unless troubleshooting a fresh install)* Verify migration ran: local `.specflow/` should contain only `config.json`
+6. *(Migration complete as of v3.5.0 — skip unless troubleshooting a fresh install)* Verify templates: project templates dir should have overrides only, not globals
 7. Run a test spec or `spec-status` to confirm MCP tools work with DocVault paths
 
 ## Gotcha: Version Bump Checklist
 
-When bumping `package.json` version, also update:
+When bumping `package.json` version, update these files as well:
 
 1. `CLAUDE.md` Quick Reference table (Version field)
 2. Run `npm run build` to propagate to `dist/`
 
-Both files were out of sync prior to v3.6.0 — the CLAUDE.md version field is not auto-synced.
+The CLAUDE.md version field is not auto-synced — manual updates are required on every bump.
 
 ## Gotcha: Squash Merge Branch Cleanup
 
-GitHub squash-merges PRs by default. After merge, `git branch -d <branch>` fails with "not fully merged" because the squash commit has a different SHA than the branch commits. The branch IS merged — the `[gone]` tracking status confirms it. Use `git branch -D <branch>` for branches confirmed `[gone]` after a squash merge.
+GitHub squash-merges PRs by default. After merge, `git branch -d <branch>` fails with "not fully merged" because the squash commit has a different SHA than the branch commits. The branch is merged — the `[gone]` tracking status confirms this. Use `git branch -D <branch>` (capital D) for branches confirmed `[gone]` after a squash merge.
 
 ## Gotcha: Prompt Path References
 
-MCP prompts in `src/prompts/` embed file paths in their text output. These paths MUST use `PathUtils.getWorkflowRoot()` — never hardcode `.specflow/`. If you change path resolution, grep all prompts for stale path strings. Files: create-spec.ts, implement-task.ts, spec-status.ts, create-steering-doc.ts, inject-steering-guide.ts.
+MCP prompts in `src/prompts/` embed file paths in their text output. Use `PathUtils.getWorkflowRoot()` for all paths — avoid hardcoding `.specflow/`. When you change path resolution, search all prompts for stale path strings. Files to check: create-spec.ts, implement-task.ts, spec-status.ts, create-steering-doc.ts, inject-steering-guide.ts.
 
 ## Quality Gates (OPS-143)
 
 Pre-commit + build-time gates run automatically. Expect side effects on Edit/Write/commit.
 
-- **prettier + lint-staged + husky**: staged `.{ts,tsx,js,cjs,mjs,json,css,html}` files get `prettier --write` on every commit. Claude should expect formatting changes on top of its own edits. Config: `.prettierrc.json`, `.prettierignore`.
-- **i18n validation**: `npm run validate:i18n` runs as the first step of every `npm run build`. Missing/extra/misformatted translation keys fail the build. Script: `scripts/validate-i18n.js`.
-- **MDX validation**: `npm run validate:mdx` (`scripts/validate-mdx.ts` → `src/core/mdx-validator.ts`) validates spec/template MDX. Keep callers using `PathUtils.getWorkflowRoot()` — hardcoded `.specflow/` paths break the validator.
+- **prettier + lint-staged + husky**: staged `.{ts,tsx,js,cjs,mjs,json,css,html}` files get auto-formatted with `prettier --write` on every commit. Expect formatting changes on top of your own edits. Config: `.prettierrc.json`, `.prettierignore`.
+- **i18n validation**: `npm run validate:i18n` runs as the first step of every `npm run build`. The build fails on missing/extra/misformatted translation keys. Script: `scripts/validate-i18n.js`.
+- **MDX validation**: `npm run validate:mdx` (`scripts/validate-mdx.ts` → `src/core/mdx-validator.ts`) validates spec/template MDX. Use `PathUtils.getWorkflowRoot()` in all callers — hardcoded `.specflow/` paths break the validator.
+- **CodeQL is NOT a required status check** — only `Codacy Static Code Analysis` is required per the `protect-main` ruleset. Verify with `gh api repos/lbruton/specflow/rulesets` before spending effort fixing a CodeQL failure. Large formatting diffs can surface pre-existing CodeQL annotations on unchanged lines — classify these as pre-existing, not PR-introduced.
+- **OAuth token lacks `workflow` scope** — pushes touching `.github/workflows/` files will be rejected. `.github/` is in `.prettierignore` for this reason. File workflow changes as a separate issue rather than including them in formatting or tooling PRs.
 
 ## Hooks
 
 - **gitleaks**: Pre-commit hook scans for accidental secret commits (`github-pat`, `aws`, `stripe`, etc.). Runs via `pre-commit` framework. Installed 2026-04-14 (OPS-116).
+- **Husky + gitleaks coexistence**: Husky v9 sets `core.hooksPath=.husky`, taking over from `.git/hooks/` entirely. The gitleaks `pre-commit` framework writes to `.git/hooks/`, so the husky `pre-commit` script must explicitly call `pre-commit run` to chain gitleaks. Without this, gitleaks silently stops running after husky is installed.
 
 ## Consumers
 
