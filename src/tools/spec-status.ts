@@ -59,7 +59,7 @@ export async function specStatusHandler(args: any, context: ToolContext): Promis
         nextSteps: [
           'Check spec name',
           'Use spec-list tool to search available specs',
-          'Create spec with create-spec-doc',
+          'Create spec with write-spec-doc',
         ],
       };
     }

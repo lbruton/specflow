@@ -10,6 +10,7 @@ allowed-tools: >-
   mcp__specflow__approvals,
   mcp__specflow__log-implementation,
   mcp__specflow__spec-list,
+  mcp__specflow__write-spec-doc,
   mcp__mem0__search_memories,
   mcp__plane__get_issue_using_readable_identifier,
   mcp__plane__list_states,
@@ -51,6 +52,7 @@ Resuming a spec does NOT mean "wing it." It means:
 - Skipping `approvals` and asking the user "does this look good?" → verbal approval is never valid
 - Resuming Phase 5 without calling `spec-status` → leads to re-implementing completed tasks or missing in-progress state
 - Editing spec files directly without knowing the current approval state → overwrites pending approvals
+- Use `mcp__specflow__write-spec-doc` to write spec documents (requirements.md, discovery.md, design.md, tasks.md) — never use the `Write` tool for files in the spec directory. The tool enforces phase gates server-side.
 
 **Self-check before writing ANY spec document:**
 - [ ] Did I call `spec-workflow-guide`?
@@ -235,9 +237,12 @@ Skipping any of these calls is a workflow violation.
 5. **Ask clarifying questions** — one at a time, grounded in the issue description and any discovery findings.
 
 6. **Write requirements.md** (include YAML frontmatter from the template):
-   ```
-   $SPECFLOW_ROOT/specs/{specName}/requirements.md
-   ```
+   Call `mcp__specflow__write-spec-doc` with:
+   - `specName: "{specName}"`
+   - `documentType: "requirements"`
+   - `content:` set to the full drafted markdown content
+
+   If the tool returns a gate error, surface the error message to the user and stop.
 
 7. **Request dashboard approval:**
    ```
@@ -282,9 +287,12 @@ Skipping any of these calls is a workflow violation.
 4. **Run research:** codebase-search skill → Context7 for framework/library docs → web search for competing approaches and prior art. Focus on questions raised by the requirements.
 
 5. **Write discovery.md:**
-   ```
-   $SPECFLOW_ROOT/specs/{specName}/discovery.md
-   ```
+   Call `mcp__specflow__write-spec-doc` with:
+   - `specName: "{specName}"`
+   - `documentType: "discovery"`
+   - `content:` set to the full drafted markdown content
+
+   If the tool returns a gate error, surface the error message to the user and stop.
 
 6. **Request dashboard approval** (same pattern as Step 2 — request → poll → delete on approval).
 
@@ -337,9 +345,12 @@ Skipping any of these calls is a workflow violation.
 6. **Present design in sections**, get user feedback after each section.
 
 7. **Write design.md:**
-   ```
-   $SPECFLOW_ROOT/specs/{specName}/design.md
-   ```
+   Call `mcp__specflow__write-spec-doc` with:
+   - `specName: "{specName}"`
+   - `documentType: "design"`
+   - `content:` set to the full drafted markdown content
+
+   If the tool returns a gate error, surface the error message to the user and stop.
 
 8. **Request dashboard approval** (same pattern as Step 2 — request → poll → delete on approval).
 
@@ -375,9 +386,12 @@ Skipping any of these calls is a workflow violation.
    - **File Touch Map** — CREATE / MODIFY / TEST with file paths
 
 5. **Write tasks.md:**
-   ```
-   $SPECFLOW_ROOT/specs/{specName}/tasks.md
-   ```
+   Call `mcp__specflow__write-spec-doc` with:
+   - `specName: "{specName}"`
+   - `documentType: "tasks"`
+   - `content:` set to the full drafted markdown content
+
+   If the tool returns a gate error, surface the error message to the user and stop.
 
 6. **Request dashboard approval** (same pattern as Steps 2–3).
 

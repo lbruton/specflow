@@ -160,7 +160,7 @@ export async function specListHandler(args: any, context: ToolContext): Promise<
       },
       nextSteps:
         results.length === 0
-          ? ['No specs found. Use create-spec-doc to create a new specification.']
+          ? ['No specs found. Use write-spec-doc to create a new specification.']
           : ['Use spec-status with a spec name for detailed phase information.'],
     };
   } catch (error) {

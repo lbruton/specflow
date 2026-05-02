@@ -5,6 +5,7 @@ import { steeringGuideTool, steeringGuideHandler } from './steering-guide.js';
 import { approvalsTool, approvalsHandler } from './approvals.js';
 import { logImplementationTool, logImplementationHandler } from './log-implementation.js';
 import { specListTool, specListHandler } from './spec-list.js';
+import { writeSpecDocTool, writeSpecDocHandler } from './write-spec-doc.js';
 import { ToolContext, ToolResponse, MCPToolResponse, toMCPResponse } from '../types.js';
 
 export function registerTools(): Tool[] {
@@ -15,6 +16,7 @@ export function registerTools(): Tool[] {
     approvalsTool,
     logImplementationTool,
     specListTool,
+    writeSpecDocTool,
   ];
 }
 
@@ -45,6 +47,9 @@ export async function handleToolCall(
         break;
       case 'spec-list':
         response = await specListHandler(args, context);
+        break;
+      case 'write-spec-doc':
+        response = await writeSpecDocHandler(args, context);
         break;
       default:
         throw new Error(`Unknown tool: ${name}`);

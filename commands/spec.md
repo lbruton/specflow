@@ -228,9 +228,11 @@ Skipping any of these calls is a workflow violation.
 5. **Ask clarifying questions** — one at a time, grounded in the Impact Report findings.
 
 6. **Write requirements.md:**
-   ```
-   <workflowRoot>/specs/{specName}/requirements.md
-   ```
+   Call `mcp__specflow__write-spec-doc` with:
+   - `specName`: the derived spec name
+   - `documentType`: `"requirements"`
+   - `content`: the drafted requirements document
+   If the tool returns a gate error, surface the error and stop.
 
 7. **Request dashboard approval:**
    ```
@@ -275,9 +277,11 @@ Skipping any of these calls is a workflow violation.
 4. **Run research:** codebase-search skill → Context7 for framework/library docs → web search for competing approaches and prior art. Focus on questions raised by the requirements.
 
 5. **Write discovery.md:**
-   ```
-   <workflowRoot>/specs/{specName}/discovery.md
-   ```
+   Call `mcp__specflow__write-spec-doc` with:
+   - `specName`: the derived spec name
+   - `documentType`: `"discovery"`
+   - `content`: the drafted discovery document
+   If the tool returns a gate error, surface the error and stop.
 
 6. **Request dashboard approval** (same pattern as Step 2 — request → poll → delete on approval).
 
@@ -306,9 +310,11 @@ Skipping any of these calls is a workflow violation.
 4. **Present design in sections**, get user feedback after each section.
 
 5. **Write design.md:**
-   ```
-   <workflowRoot>/specs/{specName}/design.md
-   ```
+   Call `mcp__specflow__write-spec-doc` with:
+   - `specName`: the derived spec name
+   - `documentType`: `"design"`
+   - `content`: the drafted design document
+   If the tool returns a gate error, surface the error and stop.
 
 6. **Request dashboard approval** (same pattern as Step 2 — request → poll → delete on approval).
 
@@ -340,9 +346,11 @@ Skipping any of these calls is a workflow violation.
    - **File Touch Map** — CREATE / MODIFY / TEST with file paths
 
 4. **Write tasks.md:**
-   ```
-   <workflowRoot>/specs/{specName}/tasks.md
-   ```
+   Call `mcp__specflow__write-spec-doc` with:
+   - `specName`: the derived spec name
+   - `documentType`: `"tasks"`
+   - `content`: the drafted tasks document
+   If the tool returns a gate error, surface the error and stop.
 
 5. **Request dashboard approval** (same pattern as Steps 2–3).
 
