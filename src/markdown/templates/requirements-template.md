@@ -16,6 +16,15 @@ updated: {{YYYY-MM-DD}}
 
 [Provide a brief overview of the feature, its purpose, and its value to users]
 
+> **Content Boundary — Requirements define WHAT, not HOW.**
+> This document captures user needs, acceptance criteria, and measurable quality targets.
+>
+> **Do NOT include:** API designs, component architecture, function signatures, code examples,
+> implementation patterns, database schemas, or technology choices — these belong in `design.md`.
+>
+> If you find yourself writing "the component should call `functionName()`" or drawing architecture
+> diagrams, you've crossed into design territory. Move it.
+
 ## Alignment with Product Vision
 
 [Explain how this feature supports the goals outlined in product.md]
@@ -60,20 +69,25 @@ updated: {{YYYY-MM-DD}}
 
 ## Non-Functional Requirements
 
-### Code Architecture and Modularity
-- **Single Responsibility Principle**: Each file should have a single, well-defined purpose
-- **Modular Design**: Components, utilities, and services should be isolated and reusable
-- **Dependency Management**: Minimize interdependencies between modules
-- **Clear Interfaces**: Define clean contracts between components and layers
+### Test-Driven Development (TDD)
+
+- **TDD Required**: This spec SHALL follow TDD principles — Phase 0 writes failing tests for all acceptance criteria BEFORE any implementation begins
+- **Test Coverage**: Every acceptance criterion above SHALL have at least one corresponding failing test written in Phase 0
+- **Baseline**: An existing test baseline SHALL be recorded before any changes (Phase 0 task 0.4)
+- **Green Phase**: Phase 1+ implementation tasks SHALL make Phase 0 failing tests pass without modifying the test assertions
 
 ### Performance
-- [Performance requirements]
+
+- [Measurable target — e.g., "Page load < 2s on 3G", "P99 latency < 200ms", "Bundle size < 500KB"]
 
 ### Security
-- [Security requirements]
+
+- [Measurable target — e.g., "All user input sanitized at API boundary", "No secrets in client bundle", "Auth required for all /api/* routes"]
 
 ### Reliability
-- [Reliability requirements]
+
+- [Measurable target — e.g., "Graceful degradation when API unreachable", "Zero data loss on crash recovery", "99.9% uptime SLA"]
 
 ### Usability
-- [Usability requirements]
+
+- [Measurable target — e.g., "Core flow completable in < 3 clicks", "WCAG 2.1 AA compliance", "Works without JavaScript for read-only views"]

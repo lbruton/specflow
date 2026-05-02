@@ -137,11 +137,22 @@ ${context.dashboardUrl ? `- Dashboard: ${context.dashboardUrl}` : ''}
 
 **Workflow Guidelines:**
 - Requirements documents define WHAT needs to be built
-- Design documents define HOW it will be built  
+- Design documents define HOW it will be built
 - Tasks documents break down implementation into actionable steps
 - Each document builds upon the previous one in sequence
 - Templates are automatically updated on server start
 
+${
+  documentType === 'requirements'
+    ? `
+**Content Boundary — Requirements define WHAT, not HOW:**
+- DO include: user stories, acceptance criteria (EARS format), measurable NFR targets, open questions
+- Do NOT include: API designs, component architecture, function signatures, code examples, implementation patterns, database schemas, technology choices
+- These implementation details belong in the Design document (Phase 2)
+- If you find yourself writing function names, class hierarchies, or architecture diagrams, you have crossed into design territory — stop and move that content to design.md
+`
+    : ''
+}
 ${
   documentType === 'tasks'
     ? `

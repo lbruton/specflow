@@ -47,27 +47,73 @@ If any answer is "no," STOP and do the missing step first.
 
 ## Step 0: Parse Arguments & Project Detection
 
-**Argument:** An issue ID (e.g. `STAK-XXX`), required. If not provided, stop and ask.
+**Argument:** An issue ID (e.g. `STAK-XXX`, `SFLW-XXX`), required. If not provided, stop and ask.
 **Optional flag:** `--resume` — skip directly to the current in-progress phase.
 
 ### Project detection
 
-Read `.claude/project.json` (in the current working directory):
+Read the config files to resolve all paths:
 
 ```bash
-cat .claude/project.json
+# .claude/project.json is optional — read it if present
+[ -f .claude/project.json ] && cat .claude/project.json
+cat .specflow/config.json
 ```
 
-Extract:
+From `.claude/project.json` extract (if the file exists):
 - `issuePrefix` → used for issue file lookups
 - `name` → display label
 
-### Fetch issue from vault
+If `.claude/project.json` is absent, read `issue_prefix` from `.specflow/config.json` and use it as `issuePrefix`.
+
+From `.specflow/config.json` extract:
+- `project` → project name for specflow paths
+- `docvault` → relative path to DocVault (e.g. `../DocVault`)
+- `issue_backend` → `"plane"` or `"docvault"` (default if absent: `"docvault"`)
+- `plane_project_id` → only when `issue_backend` is `"plane"` (uuid)
+
+**Resolve the specflow root path:**
+
+```bash
+if [ ! -f .specflow/config.json ]; then
+  echo "ERROR: .specflow/config.json not found. Run this command from the project root." >&2
+  exit 1
+fi
+DOCVAULT=$(python3 -c "import json, os; print(os.path.abspath(json.load(open('.specflow/config.json')).get('docvault','../DocVault')))")
+PROJECT=$(python3 -c "import json; print(json.load(open('.specflow/config.json')).get('project',''))")
+ISSUE_BACKEND=$(python3 -c "import json; print(json.load(open('.specflow/config.json')).get('issue_backend','docvault'))")
+SPECFLOW_ROOT="$DOCVAULT/specflow/$PROJECT"
+```
+
+Store `SPECFLOW_ROOT`, `DOCVAULT`, and `ISSUE_BACKEND` for the entire session.
+
+### Fetch issue (backend-aware)
+
+**If `ISSUE_BACKEND == "plane"`:**
+
+Use the Plane MCP to fetch the issue:
+
+```bash
+mcp__plane__get_issue_using_readable_identifier
+  project_identifier: {issuePrefix — from .claude/project.json if present, else issue_prefix from .specflow/config.json}
+  issue_identifier: {sequence number — strip the prefix from $ARGUMENTS}
+```
+
+For example, if `$ARGUMENTS` is `SFLW-3`, pass `project_identifier: "SFLW"` and `issue_identifier: "3"`.
+
+Extract from the response:
+- `name` → title
+- `description_html` → description
+- `priority` → priority
+- `state` → resolve state name via `mcp__plane__list_states` (cache once per session)
+- `labels` → resolve label names via `mcp__plane__list_labels`
+
+**If `ISSUE_BACKEND == "docvault"` (legacy / unmigrated projects):**
 
 Read the issue file from DocVault:
 
 ```bash
-cat ../DocVault/Projects/{project}/Issues/{ISSUE-ID}.md
+cat $DOCVAULT/Projects/$PROJECT/Issues/{ISSUE-ID}.md
 ```
 
 Extract: title, description, priority, status, tags from frontmatter.
@@ -84,7 +130,7 @@ Store as `specName` for all subsequent file paths.
 ```
 ## Spec: {specName}
 
-Issue:    STAK-XXX — {title}
+Issue:    {ISSUE-ID} — {title}
 Priority: {priority}
 State:    {state}
 Labels:   {labels}
@@ -517,7 +563,23 @@ After both agents return successfully:
 
 ## Step 6: Close Issues & Completion
 
-### a) Close vault issue
+### a) Close issue (backend-aware)
+
+**If `ISSUE_BACKEND == "plane"`:**
+
+Resolve the `Done` state UUID (cached from earlier `list_states` call) and close via:
+
+```bash
+mcp__plane__update_issue
+  project_id: {plane_project_id from .specflow/config.json}
+  issue_id: {issue uuid from the earlier get_issue_using_readable_identifier response}
+  issue_data:
+    state: {Done state uuid}
+```
+
+Plane records `completed_at` automatically. Only close the issue this spec implemented — don't auto-cascade to parent/child issues.
+
+**If `ISSUE_BACKEND == "docvault"`:**
 
 Update the vault issue file in DocVault:
 
@@ -528,7 +590,7 @@ Update the vault issue file in DocVault:
 #   updated: {today's date}
 ```
 
-Edit the issue markdown file at `DocVault/Projects/{project}/Issues/{ISSUE-ID}.md`.
+Edit the issue markdown file at `$DOCVAULT/Projects/$PROJECT/Issues/{ISSUE-ID}.md`.
 If the issue has sub-issues, close those too (update each sub-issue file's status to `done`).
 
 ### b) Close GitHub issue (if user-facing)
