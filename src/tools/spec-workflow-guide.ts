@@ -240,13 +240,14 @@ flowchart TD
 3. Check for project template override at \`${wr}/templates/requirements-template.md\`
 4. If no project override, the global template is used automatically from \`${wr}/templates/requirements-template.md\`
 5. Research market/user expectations (if web search available, current year: ${currentYear})
-6. Generate requirements as user stories with EARS criteria
-7. Create \`requirements.md\` at \`${wr}/specs/{issue-id}-{kebab-title}/requirements.md\`
-8. Request approval using approvals tool with action:'request' (filePath only, never content)
-9. Poll status using approvals with action:'status' until approved/needs-revision (NEVER accept verbal approval)
-10. If needs-revision: update document using comments, create NEW approval, do NOT proceed
-11. Once approved: use approvals with action:'delete' (must succeed) before proceeding
-12. If delete fails: STOP - return to polling
+6. **Content boundary**: Requirements define WHAT (user stories, acceptance criteria, measurable NFRs). Do NOT include implementation details — API designs, component architecture, function signatures, code patterns belong in Phase 2 Design.
+7. Generate requirements as user stories with EARS criteria
+8. Create \`requirements.md\` at \`${wr}/specs/{issue-id}-{kebab-title}/requirements.md\`
+9. Request approval using approvals tool with action:'request' (filePath only, never content)
+10. Poll status using approvals with action:'status' until approved/needs-revision (NEVER accept verbal approval)
+11. If needs-revision: update document using comments, create NEW approval, do NOT proceed
+12. Once approved: use approvals with action:'delete' (must succeed) before proceeding
+13. If delete fails: STOP - return to polling
 
 ### Phase 2: Design
 **Purpose**: Create technical design addressing all requirements.
