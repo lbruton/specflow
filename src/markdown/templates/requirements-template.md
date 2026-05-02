@@ -70,19 +70,24 @@ updated: {{YYYY-MM-DD}}
 ## Non-Functional Requirements
 
 ### Test-Driven Development (TDD)
+
 - **TDD Required**: This spec SHALL follow TDD principles — Phase 0 writes failing tests for all acceptance criteria BEFORE any implementation begins
 - **Test Coverage**: Every acceptance criterion above SHALL have at least one corresponding failing test written in Phase 0
 - **Baseline**: An existing test baseline SHALL be recorded before any changes (Phase 0 task 0.4)
 - **Green Phase**: Phase 1+ implementation tasks SHALL make Phase 0 failing tests pass without modifying the test assertions
 
 ### Performance
+
 - [Measurable target — e.g., "Page load < 2s on 3G", "P99 latency < 200ms", "Bundle size < 500KB"]
 
 ### Security
+
 - [Measurable target — e.g., "All user input sanitized at API boundary", "No secrets in client bundle", "Auth required for all /api/* routes"]
 
 ### Reliability
+
 - [Measurable target — e.g., "Graceful degradation when API unreachable", "Zero data loss on crash recovery", "99.9% uptime SLA"]
 
 ### Usability
+
 - [Measurable target — e.g., "Core flow completable in < 3 clicks", "WCAG 2.1 AA compliance", "Works without JavaScript for read-only views"]

@@ -52,16 +52,19 @@ If any answer is "no," STOP and do the missing step first.
 
 ### Project detection
 
-Read both config files to resolve all paths:
+Read the config files to resolve all paths:
 
 ```bash
-cat .claude/project.json
+# .claude/project.json is optional — read it if present
+[ -f .claude/project.json ] && cat .claude/project.json
 cat .specflow/config.json
 ```
 
-From `.claude/project.json` extract:
+From `.claude/project.json` extract (if the file exists):
 - `issuePrefix` → used for issue file lookups
 - `name` → display label
+
+If `.claude/project.json` is absent, read `issue_prefix` from `.specflow/config.json` and use it as `issuePrefix`.
 
 From `.specflow/config.json` extract:
 - `project` → project name for specflow paths
@@ -72,7 +75,11 @@ From `.specflow/config.json` extract:
 **Resolve the specflow root path:**
 
 ```bash
-DOCVAULT=$(cd "$(pwd)/$(python3 -c "import json; print(json.load(open('.specflow/config.json')).get('docvault','../DocVault'))")" && pwd)
+if [ ! -f .specflow/config.json ]; then
+  echo "ERROR: .specflow/config.json not found. Run this command from the project root." >&2
+  exit 1
+fi
+DOCVAULT=$(python3 -c "import json, os; print(os.path.abspath(json.load(open('.specflow/config.json')).get('docvault','../DocVault')))")
 PROJECT=$(python3 -c "import json; print(json.load(open('.specflow/config.json')).get('project',''))")
 ISSUE_BACKEND=$(python3 -c "import json; print(json.load(open('.specflow/config.json')).get('issue_backend','docvault'))")
 SPECFLOW_ROOT="$DOCVAULT/specflow/$PROJECT"
@@ -86,9 +93,9 @@ Store `SPECFLOW_ROOT`, `DOCVAULT`, and `ISSUE_BACKEND` for the entire session.
 
 Use the Plane MCP to fetch the issue:
 
-```
+```bash
 mcp__plane__get_issue_using_readable_identifier
-  project_identifier: {issuePrefix from .claude/project.json}
+  project_identifier: {issuePrefix — from .claude/project.json if present, else issue_prefix from .specflow/config.json}
   issue_identifier: {sequence number — strip the prefix from $ARGUMENTS}
 ```
 
@@ -562,7 +569,7 @@ After both agents return successfully:
 
 Resolve the `Done` state UUID (cached from earlier `list_states` call) and close via:
 
-```
+```bash
 mcp__plane__update_issue
   project_id: {plane_project_id from .specflow/config.json}
   issue_id: {issue uuid from the earlier get_issue_using_readable_identifier response}

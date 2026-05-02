@@ -72,6 +72,7 @@ If ANY tool is missing, report the missing tools to the user and STOP.
 
 1. IF the project has `devops/version.lock`: run `/release patch` to claim a version and create a worktree. ALL file edits happen inside the worktree. Verify: `git branch --show-current` returns `patch/VERSION`.
 2. IF the project has NO `devops/version.lock`: prompt the user about setting up version tracking. Record their decision.
+3. **Parallel agent dispatch:** When the Parallel Dispatch Plan above lists tasks in the same batch, dispatch them as simultaneous Agent tool calls in a SINGLE message. Each parallel agent MUST receive an explicit worktree target path — agents that inherit the wrong `cwd` write to the main tree and produce split diffs. Each agent also needs its own `/release patch` call to claim its own worktree before writing any files.
 
 ### MCP Tool Reference
 
@@ -123,14 +124,14 @@ If ANY tool is missing, report the missing tools to the user and STOP.
 > This is NOT optional. Skipping Phase 0 and writing implementation code first defeats TDD.
 
 - [ ] 0.4 Establish test baseline
-  - File: `.specflow/test-baseline.json` (read or create)
-  - **Cached baseline check:** Read `.specflow/test-baseline.json` if it exists. If the cached baseline is valid (commit matches current base branch HEAD AND timestamp < 12 hours old), use the cached results instead of re-running the full suite. Log that the cached baseline was used.
-  - **Full run (if cache miss):** Run the project's test command to establish a passing baseline. Write results to `.specflow/test-baseline.json`.
+  - File: `{{workflowRoot}}/specs/{{spec-name}}/test-baseline.json` (read or create)
+  - **Cached baseline check:** Read `{{workflowRoot}}/specs/{{spec-name}}/test-baseline.json` if it exists. If the cached baseline is valid (commit matches `git merge-base HEAD <base-branch>` AND timestamp < 12 hours old), use the cached results instead of re-running the full suite. Log that the cached baseline was used.
+  - **Full run (if cache miss):** Run the project's test command to establish a passing baseline. Write results to `{{workflowRoot}}/specs/{{spec-name}}/test-baseline.json`.
   - If no test suite exists, flag this to the user and discuss whether to set one up
   - Purpose: Record the starting state so regressions can be detected. Cached baselines avoid redundant full-suite runs when running multiple specs in one session.
-  - _Leverage: Project test configuration, `.specflow/test-baseline.json` (if exists)_
+  - _Leverage: Project test configuration, `{{workflowRoot}}/specs/{{spec-name}}/test-baseline.json` (if exists)_
   - _Requirements: All_
-  - _Prompt: Role: QA Engineer | Task: Check for `.specflow/test-baseline.json`. If it exists, read it and validate: (1) the `commit` field matches `git rev-parse HEAD` of the base branch, (2) the `timestamp` is less than 12 hours old, (3) `fail` is 0. If ALL three conditions pass, log "Using cached baseline" with the cached counts and skip the full run. If ANY condition fails (or file missing), run the project's full test suite, record pass/fail/skip counts, then write `.specflow/test-baseline.json` with format: `{"timestamp": "<ISO>", "command": "<test cmd>", "pass": N, "fail": N, "skip": N, "total": N, "branch": "<base>", "commit": "<sha>"}`. If no test suite exists, flag to user. | Restrictions: Use the project's existing test framework. Do not modify source files. Do not use a stale baseline (commit mismatch or > 12h). | Success: Baseline results (pass/fail/skip) are recorded — either from cache or fresh run. `.specflow/test-baseline.json` exists and is current._
+  - _Prompt: Role: QA Engineer | Task: Check for `{{workflowRoot}}/specs/{{spec-name}}/test-baseline.json`. If it exists, read it and validate: (1) the `commit` field matches `git merge-base HEAD <base-branch>` (the merge-base of the current worktree branch and the base branch), (2) the `timestamp` is less than 12 hours old, (3) `fail` is 0. If ALL three conditions pass, log "Using cached baseline" with the cached counts and skip the full run. If ANY condition fails (or file missing), run the project's full test suite, record pass/fail/skip counts, then write `{{workflowRoot}}/specs/{{spec-name}}/test-baseline.json` with format: `{"timestamp": "<ISO>", "command": "<test cmd>", "pass": N, "fail": N, "skip": N, "total": N, "branch": "<base>", "commit": "<merge-base-sha>"}`. If no test suite exists, flag to user. | Restrictions: Use the project's existing test framework. Do not modify source files. Do not use a stale baseline (commit mismatch or > 12h). | Success: Baseline results (pass/fail/skip) are recorded — either from cache or fresh run. `{{workflowRoot}}/specs/{{spec-name}}/test-baseline.json` exists and is current._
 
 - [ ] 0.5 Write failing tests for new behavior (TDD — BEFORE implementation)
   - File: [test file paths — determined by project conventions]
@@ -149,7 +150,7 @@ If ANY tool is missing, report the missing tools to the user and STOP.
 > **TDD Context:** Phase 0 established the test baseline (task 0.4) and wrote failing tests for all acceptance criteria (task 0.5).
 > Implementation tasks below are the "green phase" — write the minimum code to make those tests pass while following design.md patterns.
 >
-> **Targeted tests during implementation:** Run only tests related to the files you changed, not the full suite. Use your framework's file-filtering option: `vitest --related <files>`, `jest --findRelatedTests <files>`, `pytest <test-file>`, etc. The full suite runs once in closing task {N}. This saves significant time and tokens on multi-task specs.
+> **Targeted tests during implementation:** Run only tests related to the files you changed, not the full suite. Use your framework's file-filtering option: `vitest --related <files>`, `jest --findRelatedTests <files>`, `pytest <test-file>`, etc. The full suite runs once in closing task N. This saves significant time and tokens on multi-task specs.
 
 - [ ] 1. [Task title]
   - File: `[file path]`
@@ -194,7 +195,7 @@ If ANY tool is missing, report the missing tools to the user and STOP.
 > - Rewrite these tasks from scratch
 > - Simplify or consolidate them
 > - Skip any task in this block
-> - Treat {N+1}–{N+5} as placeholders for your own closing tasks
+> - Treat N+1–N+5 as placeholders for your own closing tasks
 > - Move TDD tasks (0.4–0.5) back into this block — they are Phase 0
 >
 > The tasks-closing-gate hook will **block** writes to tasks.md missing this block.
@@ -207,17 +208,17 @@ If ANY tool is missing, report the missing tools to the user and STOP.
 > If implementation ends at Task 3, closing tasks start at 4. The spec validator rejects
 > non-numeric IDs like `C1.` — use sequential numbers only.
 
-- [ ] {N}. Run full test suite — zero regressions + update baseline
-  - File: `.specflow/test-baseline.json` (update)
+- [ ] N. Run full test suite — zero regressions + update baseline
+  - File: `{{workflowRoot}}/specs/{{spec-name}}/test-baseline.json` (update)
   - Run the project's **complete** test suite after all implementation is done (no `--related` filtering — this is the full verification)
   - All new tests from Phase 0 task 0.5 must now pass (green); no existing tests may regress from the task 0.4 baseline
-  - After a passing run, update `.specflow/test-baseline.json` with the new counts and current commit — this primes the cache for the next spec
+  - After a passing run, update `{{workflowRoot}}/specs/{{spec-name}}/test-baseline.json` with the new counts and current commit — this primes the cache for the next spec
   - Purpose: Verify implementation is complete AND refresh the baseline cache so the next spec's task 0.4 can skip the full run
   - _Leverage: Project test command, baseline results from Phase 0 task 0.4_
   - _Requirements: All_
-  - _Prompt: Role: QA Engineer | Task: Run the project's FULL test suite (no --related filtering). Compare results against the baseline from Phase 0 task 0.4. All failing tests from task 0.5 must now pass (green phase complete). No existing tests may have regressed. If any test fails, diagnose and fix before proceeding. After a fully passing run, update `.specflow/test-baseline.json` with: `{"timestamp": "<ISO>", "command": "<test cmd>", "pass": N, "fail": N, "skip": N, "total": N, "branch": "<current>", "commit": "<HEAD sha>"}`. | Restrictions: Do not skip or disable any tests. Do not modify tests to make them pass unless they have a genuine bug. Do NOT update the baseline if any test fails. | Success: Full test suite passes. Zero regressions. `.specflow/test-baseline.json` updated with current results._
+  - _Prompt: Role: QA Engineer | Task: Run the project's FULL test suite (no --related filtering). Compare results against the baseline from Phase 0 task 0.4. All failing tests from task 0.5 must now pass (green phase complete). No existing tests may have regressed. If any test fails, diagnose and fix before proceeding. After a fully passing run, update `{{workflowRoot}}/specs/{{spec-name}}/test-baseline.json` with: `{"timestamp": "<ISO>", "command": "<test cmd>", "pass": N, "fail": N, "skip": N, "total": N, "branch": "<current>", "commit": "<HEAD sha>"}`. | Restrictions: Do not skip or disable any tests. Do not modify tests to make them pass unless they have a genuine bug. Do NOT update the baseline if any test fails. | Success: Full test suite passes. Zero regressions. `{{workflowRoot}}/specs/{{spec-name}}/test-baseline.json` updated with current results._
 
-- [ ] {N+1}. Log implementation — HARD GATE
+- [ ] N+1. Log implementation — HARD GATE
   - File: (no file changes — logging only)
   - Call `mcp__specflow__log-implementation` with a comprehensive summary of ALL implementation work done across all tasks in this spec
   - Include: all functions added/modified, all files changed, all tests written, all endpoints created
@@ -226,7 +227,7 @@ If ANY tool is missing, report the missing tools to the user and STOP.
   - _Requirements: All_
   - _Prompt: Role: Project Coordinator | Task: Call the log-implementation MCP tool with a comprehensive summary covering all implementation tasks in this spec. Aggregate: (1) all functions added or modified with file paths, (2) all files created or changed, (3) all test files and test counts, (4) any new endpoints, routes, or APIs, (5) any configuration changes. This is the consolidated implementation record. | Restrictions: Do not skip any task's artifacts. | Success: log-implementation MCP tool call succeeds with full artifact listing._
 
-- [ ] {N+2}. Security Review — Codacy CLI + CodeRabbit (parallel scan)
+- [ ] N+2. Security Review — Codacy CLI + CodeRabbit (parallel scan)
   - File: (no file changes — review only, fixes happen via loop-back if needed)
   - **PARALLEL DISPATCH — MANDATORY:** In a SINGLE message, invoke BOTH scanners simultaneously:
     1. `codacy-cli` skill — local SAST/quality scan via `.codacy/cli.sh analyze` against changed files (SARIF output). Bootstraps `.codacy/cli.sh` if missing.
@@ -239,8 +240,8 @@ If ANY tool is missing, report the missing tools to the user and STOP.
   - _Requirements: Security NFR from requirements.md_
   - _Prompt: Role: Security Engineer | Task: Run pre-PR security + review scans IN PARALLEL. In a single message, dispatch BOTH (1) the codacy-cli skill against files changed in this spec, AND (2) the coderabbit:review skill to review the branch diff. Wait for both to complete, merge findings, deduplicate. For each Critical/High finding: read the code, determine real vs false positive, fix or add inline suppression with justification. Medium: fix or waiver. Low/Info: advisory. | Restrictions: Do NOT call mcp__codacy__* tools — use the local Codacy CLI skill. Do NOT serialize the scanners. Do NOT skip CodeRabbit. Do not blanket-disable rules. | Success: Both scans completed and merged. Zero unaddressed Critical/High findings. All triage decisions logged._
 
-- [ ] {N+3}. Generate verification.md
-  - File: `DocVault/specflow/{{projectName}}/specs/{{spec-name}}/verification.md`
+- [ ] N+3. Generate verification.md
+  - File: `{{workflowRoot}}/specs/{{spec-name}}/verification.md`
   - Generate a verification checklist in the spec directory
   - List every requirement and acceptance criterion from requirements.md as a checklist item
   - For each item: mark `[x]` with `file:line` code evidence, OR mark `[ ]` with a gap description
@@ -249,9 +250,9 @@ If ANY tool is missing, report the missing tools to the user and STOP.
   - _Requirements: All_
   - _Prompt: Role: QA Engineer | Task: Generate verification.md in the spec directory. Read requirements.md and list every requirement and acceptance criterion as a markdown checklist. For each item, search the codebase for the implementing code and mark [x] with file:line evidence. If any criterion cannot be verified, mark [ ] with a gap description. Run /vault-update and close linked issues. Run /verification-before-completion for a final check. | Restrictions: Do not mark [x] without concrete file:line evidence. Do not fabricate evidence. | Success: verification.md exists with every requirement/AC listed and evidenced. /vault-update completed. Linked issues closed. /verification-before-completion passed._
 
-- [ ] {N+4}. Cross-Model Peer Review
+- [ ] N+4. Cross-Model Peer Review
   - File: (no file changes — review only, fixes happen via loop-back if needed)
-  - **Note:** CodeRabbit already ran in task {N+2} alongside Codacy CLI — do NOT re-invoke it here. This task is Codex-first cross-model review.
+  - **Note:** CodeRabbit already ran in task N+2 alongside Codacy CLI — do NOT re-invoke it here. This task is Codex-first cross-model review.
   - **Review dispatch chain (try in order, use first that works):**
     1. **Codex (`codex:rescue`)** — invoke via the Skill tool with `skill: "codex:rescue"`. Do NOT use the Agent tool with a subagent_type.
     2. **Built-in code review (`pr-review-toolkit:review-pr`)** — fallback if Codex dispatch fails.
@@ -262,16 +263,16 @@ If ANY tool is missing, report the missing tools to the user and STOP.
   - Purpose: Cross-model peer review catches blind spots a single-model review misses.
   - _Leverage: `codex:rescue` skill (primary), `pr-review-toolkit:review-pr` skill (fallback), branch git diff_
   - _Requirements: All_
-  - _Prompt: Role: Code Review Coordinator | Task: Run a cross-model peer review. Try in order: (1) codex:rescue via Skill tool, (2) pr-review-toolkit:review-pr via Skill tool, (3) mark [!] BLOCKED. Fix Critical/Important findings by looping back to implementation. Minor findings are advisory. | Restrictions: Do NOT invoke coderabbit:review (already ran in {N+2}). Do NOT use Agent tool for codex:rescue — use Skill tool. NEVER mark [x] if review was skipped — use [!]. | Success: Review completed with Critical/Important issues addressed, OR [!] BLOCKED with documented reason._
+  - _Prompt: Role: Code Review Coordinator | Task: Run a cross-model peer review. Try in order: (1) codex:rescue via Skill tool, (2) pr-review-toolkit:review-pr via Skill tool, (3) mark [!] BLOCKED. Fix Critical/Important findings by looping back to implementation. Minor findings are advisory. | Restrictions: Do NOT invoke coderabbit:review (already ran in N+2). Do NOT use Agent tool for codex:rescue — use Skill tool. NEVER mark [x] if review was skipped — use [!]. | Success: Review completed with Critical/Important issues addressed, OR [!] BLOCKED with documented reason._
 
-- [ ] {N+5}. Loop or complete
+- [ ] N+5. Loop or complete
   - File: (no file changes — decision gate only)
   - IF ANY task above is marked `[!]` (BLOCKED) -> STOP. Present to user for decision.
-  - IF verification.md has ANY unchecked `[ ]` items -> loop back through {N}–{N+4}
-  - IF {N+2} has unaddressed Critical/High -> loop back through {N}–{N+4}
-  - IF {N+4} has unaddressed Critical/Important -> loop back through {N}–{N+4}
+  - IF verification.md has ANY unchecked `[ ]` items -> fix the failing requirements/code first, THEN loop back through N–N+4
+  - IF N+2 has unaddressed Critical/High -> fix the flagged code first, THEN loop back through N–N+4
+  - IF N+4 has unaddressed Critical/Important -> fix the flagged code first, THEN loop back through N–N+4
   - ONLY when ALL clean AND zero `[!]` tasks remain -> proceed to PR/commit
   - Purpose: Enforce the verification loop — specs are not complete until every requirement is proven AND all reviews pass.
-  - _Leverage: verification.md from {N+3}, scan results from {N+2}, review results from {N+4}_
+  - _Leverage: verification.md from N+3, scan results from N+2, review results from N+4_
   - _Requirements: All_
-  - _Prompt: Role: Project Coordinator | Task: Scan ALL tasks for [!] BLOCKED — if any exist, present to user and STOP. Then check: verification.md unchecked items, {N+2} unaddressed Critical/High, {N+4} unaddressed Critical/Important. If any count is non-zero, loop back through {N}–{N+4}. Only when all clean: proceed to PR/commit. | Restrictions: Do NOT proceed if ANY gaps remain. Do NOT remove unchecked items to force completion. Do NOT change [!] to [x] without user decision. | Success: Zero [!] tasks. verification.md fully checked. All reviews clean. PR/commit may proceed._
+  - _Prompt: Role: Project Coordinator | Task: Scan ALL tasks for [!] BLOCKED — if any exist, present to user and STOP. Then check: verification.md unchecked items, N+2 unaddressed Critical/High, N+4 unaddressed Critical/Important. If any count is non-zero, FIX the failing code or tests first (do not re-run verification without fixing the root cause), then loop back through N–N+4. Only when all clean: proceed to PR/commit. | Restrictions: Do NOT proceed if ANY gaps remain. Do NOT remove unchecked items to force completion. Do NOT change [!] to [x] without user decision. Do NOT loop back without fixing the underlying issue first. | Success: Zero [!] tasks. verification.md fully checked. All reviews clean. PR/commit may proceed._

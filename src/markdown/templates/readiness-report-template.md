@@ -98,8 +98,8 @@ updated: {{YYYY-MM-DD}}
 |-------------|----------------|--------|
 | Establish test baseline before changes | Task 0.4 | [Covered / Missing] |
 | Write failing tests for new behavior (TDD) | Task 0.5 | [Covered / Missing] |
-| Full test suite pass after implementation | Task {N} | [Covered / Missing] |
-| Requirement-to-code verification with evidence | Task {N+3} | [Covered / Missing] |
+| Full test suite pass after implementation | Task N | [Covered / Missing] |
+| Requirement-to-code verification with evidence | Task N+3 | [Covered / Missing] |
 
 ### Manual verification notes
 
