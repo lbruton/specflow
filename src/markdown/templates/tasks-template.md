@@ -14,7 +14,7 @@ updated: {{YYYY-MM-DD}}
 
 ## File Touch Map
 
-> **Why this section exists:** Surface the blast radius before any task begins. The Phase 4 orchestrator uses this map to decide which tasks can run in parallel (no overlapping files) versus serial (shared files). The readiness gate (Phase 3.9) verifies that every file referenced by any task below appears in this map. Reviewers use it as a 30-second preview of "how big is this change really" before reading individual tasks.
+> **Why this section exists:** Surface the blast radius before any task begins. The Phase 5 orchestrator uses this map to decide which tasks can run in parallel (no overlapping files) versus serial (shared files). The readiness gate (Phase 4.9) verifies that every file referenced by any task below appears in this map. Reviewers use it as a 30-second preview of "how big is this change really" before reading individual tasks.
 
 | Action | Files | Scope |
 |--------|-------|-------|

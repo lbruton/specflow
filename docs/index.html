@@ -838,12 +838,12 @@
 
             <span class="highlight">Codex CLI</span> <span class="dim">Task Generation</span>
             <span class="cmd">@spec resume</span>
-            <span class="output">&rarr; Reads spec from disk, picks up at Phase 3</span>
+            <span class="output">&rarr; Reads spec from disk, picks up at Phase 4</span>
             <span class="output"> &rarr; Generates tasks.md &rarr; awaiting approval</span>
 
             <span class="highlight">Gemini CLI</span> <span class="dim">Implementation</span>
             <span class="cmd">@spec resume</span>
-            <span class="output">&rarr; Reads spec from disk, picks up at Phase 4</span>
+            <span class="output">&rarr; Reads spec from disk, picks up at Phase 5</span>
             <span class="output">
               &rarr; Implements tasks &rarr; commits &rarr; logs artifacts</span
             >
@@ -1090,7 +1090,8 @@
         <p class="dim" style="text-align: center; margin-top: 1rem; font-size: 0.85rem">
           <code>/start</code> or <code>/prime</code> boots the session with full context.
           <code>/chat</code> and <code>/discover</code> explore and research before committing to a
-          spec. <code>/spec</code> drives Phases 2&ndash;4. <code>/retro</code> extracts lessons.
+          spec. <code>/spec</code> drives the full spec workflow (Requirements &rarr; Design &rarr;
+          Tasks &rarr; Implementation). <code>/retro</code> extracts lessons.
           <code>/wrap</code> closes the session and saves everything to MemFlow.
         </p>
 
@@ -1481,7 +1482,7 @@
             >
             <span class="cmd">/spec</span>
             <span class="output"
-              >Phase 2-4 orchestrator (Requirements → Design → Tasks → Implement)</span
+              >Phase 1-5 orchestrator (Requirements → Discovery → Design → Tasks → Implement)</span
             >
             <span class="cmd">/start</span>
             <span class="output">Quick resume (SessionFlow + MemFlow + git + issues, ~15s)</span>

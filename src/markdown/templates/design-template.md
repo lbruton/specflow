@@ -86,7 +86,7 @@ graph TD
 
 ### Has UI Changes: [Yes / No]
 
-_If **No**, skip this section entirely. If **Yes**, complete all fields below — this gates Phase 4._
+_If **No**, skip this section entirely. If **Yes**, complete all fields below — this gates Phase 5._
 
 ### Visual Scope
 - **Impact Level:** [New screen / New modal or panel / Redesign existing component / Minor element additions]
@@ -109,7 +109,7 @@ _If **No**, skip this section entirely. If **Yes**, complete all fields below �
 > 2. A Playground prototype (or reference HTML) is interactively approved by the user
 > 3. Both artifact paths are filled in above
 >
-> This gate is enforced in Phase 4 — the orchestrator MUST check this section before dispatching any task tagged with `ui:true`.
+> This gate is enforced in Phase 5 — the orchestrator MUST check this section before dispatching any task tagged with `ui:true`.
 
 ## Open Questions
 

@@ -61,24 +61,10 @@ Spec names MUST use issue prefix: {ISSUE-ID}-{kebab-title} (e.g., STAK-123-user-
 ## Workflow Diagram
 \`\`\`mermaid
 flowchart TD
-    Start([Start: User requests feature]) --> DiscoveryChoice{Run Discovery<br/>Phase 0?}
-    DiscoveryChoice -->|Yes| CheckSteering{Steering docs exist?}
-    DiscoveryChoice -->|Skip| P1_Template
-    CheckSteering -->|Yes| P0_Load[Read steering docs]
-    CheckSteering -->|No| P0_Template
-    P0_Load --> P0_Template[Check project template overrides,<br/>then global template:<br/>discovery-template.md]
-    P0_Template --> P0_Research[Codebase analysis +<br/>Context7 + web search]
-    P0_Research --> P0_Create[Create file:<br/>${wr}/specs/{name}/<br/>discovery.md]
-    P0_Create --> P0_Approve[approvals<br/>action: request<br/>filePath only]
-    P0_Approve --> P0_Status[approvals<br/>action: status<br/>poll status]
-    P0_Status --> P0_Check{Status?}
-    P0_Check -->|needs-revision| P0_Update[Update document using user comments as guidance]
-    P0_Update --> P0_Create
-    P0_Check -->|approved| P0_Clean[approvals<br/>action: delete]
-    P0_Clean -->|failed| P0_Status
+    Start([Start: User requests feature]) --> P1_Template
 
-    %% Phase 1: Requirements (now reads discovery.md)
-    P0_Clean -->|success| P1_Template[Check project template overrides,<br/>then global template:<br/>requirements-template.md]
+    %% Phase 1: Requirements
+    P1_Template[Check project template overrides,<br/>then global template:<br/>requirements-template.md]
     P1_Template --> P1_Research[Web search if available]
     P1_Research --> P1_Create[Create file:<br/>${wr}/specs/{name}/<br/>requirements.md]
     P1_Create --> P1_Approve[approvals<br/>action: request<br/>filePath only]
@@ -89,10 +75,15 @@ flowchart TD
     P1_Check -->|approved| P1_Clean[approvals<br/>action: delete]
     P1_Clean -->|failed| P1_Status
 
-    %% Phase 2: Design
-    P1_Clean -->|success| P2_Template[Check project template overrides,<br/>then global template:<br/>design-template.md]
-    P2_Template --> P2_Analyze[Analyze codebase patterns]
-    P2_Analyze --> P2_Create[Create file:<br/>${wr}/specs/{name}/<br/>design.md]
+    %% Phase 2: Discovery (optional, after Requirements)
+    P1_Clean -->|success| DiscoveryChoice{Run Discovery<br/>Phase 2?}
+    DiscoveryChoice -->|Skip| P3_Template
+    DiscoveryChoice -->|Yes| CheckSteering{Steering docs exist?}
+    CheckSteering -->|Yes| P2_Load[Read steering docs]
+    CheckSteering -->|No| P2_Template
+    P2_Load --> P2_Template[Check project template overrides,<br/>then global template:<br/>discovery-template.md]
+    P2_Template --> P2_Research[Codebase analysis +<br/>Context7 + web search]
+    P2_Research --> P2_Create[Create file:<br/>${wr}/specs/{name}/<br/>discovery.md]
     P2_Create --> P2_Approve[approvals<br/>action: request<br/>filePath only]
     P2_Approve --> P2_Status[approvals<br/>action: status<br/>poll status]
     P2_Status --> P2_Check{Status?}
@@ -101,10 +92,10 @@ flowchart TD
     P2_Check -->|approved| P2_Clean[approvals<br/>action: delete]
     P2_Clean -->|failed| P2_Status
 
-    %% Phase 3: Tasks
-    P2_Clean -->|success| P3_Template[Check project template overrides,<br/>then global template:<br/>tasks-template.md]
-    P3_Template --> P3_Break[Convert design to tasks]
-    P3_Break --> P3_Create[Create file:<br/>${wr}/specs/{name}/<br/>tasks.md]
+    %% Phase 3: Design
+    P2_Clean -->|success| P3_Template[Check project template overrides,<br/>then global template:<br/>design-template.md]
+    P3_Template --> P3_Analyze[Analyze codebase patterns]
+    P3_Analyze --> P3_Create[Create file:<br/>${wr}/specs/{name}/<br/>design.md]
     P3_Create --> P3_Approve[approvals<br/>action: request<br/>filePath only]
     P3_Approve --> P3_Status[approvals<br/>action: status<br/>poll status]
     P3_Status --> P3_Check{Status?}
@@ -113,91 +104,130 @@ flowchart TD
     P3_Check -->|approved| P3_Clean[approvals<br/>action: delete]
     P3_Clean -->|failed| P3_Status
 
-    %% Phase 3.5: Visual Prototype Gate (conditional)
-    P3_Clean -->|success| P35_Check{design.md declares<br/>UI changes?}
-    P35_Check -->|No| IRG_Run
-    P35_Check -->|Yes| P35_Mockup[Tasks 0.1-0.3:<br/>Stitch mockup +<br/>Playground prototype]
-    P35_Mockup --> P35_Approve{User approves<br/>visual design?}
-    P35_Approve -->|No| P35_Revise[Revise mockup/<br/>prototype]
-    P35_Revise --> P35_Mockup
-    P35_Approve -->|Yes| P35_Update[Update design.md<br/>Prototype Artifacts]
-    P35_Update --> IRG_Run
+    %% Phase 4: Tasks
+    P3_Clean -->|success| P4_Template[Check project template overrides,<br/>then global template:<br/>tasks-template.md]
+    P4_Template --> P4_Break[Convert design to tasks]
+    P4_Break --> P4_Create[Create file:<br/>${wr}/specs/{name}/<br/>tasks.md]
+    P4_Create --> P4_Approve[approvals<br/>action: request<br/>filePath only]
+    P4_Approve --> P4_Status[approvals<br/>action: status<br/>poll status]
+    P4_Status --> P4_Check{Status?}
+    P4_Check -->|needs-revision| P4_Update[Update document using user comments as guidance]
+    P4_Update --> P4_Create
+    P4_Check -->|approved| P4_Clean[approvals<br/>action: delete]
+    P4_Clean -->|failed| P4_Status
 
-    %% Phase 3.9: Implementation Readiness Gate
+    %% Phase 4.5: Visual Prototype Gate (conditional)
+    P4_Clean -->|success| P45_Check{design.md declares<br/>UI changes?}
+    P45_Check -->|No| IRG_Run
+    P45_Check -->|Yes| P45_Mockup[Tasks 0.1-0.3:<br/>Stitch mockup +<br/>Playground prototype]
+    P45_Mockup --> P45_Approve{User approves<br/>visual design?}
+    P45_Approve -->|No| P45_Revise[Revise mockup/<br/>prototype]
+    P45_Revise --> P45_Mockup
+    P45_Approve -->|Yes| P45_Update[Update design.md<br/>Prototype Artifacts]
+    P45_Update --> IRG_Run
+
+    %% Phase 4.9: Implementation Readiness Gate
     IRG_Run[Cross-validate:<br/>requirements + design + tasks<br/>Save readiness-report.md] --> IRG_Approve[approvals<br/>action: request<br/>readiness-report.md]
     IRG_Approve --> IRG_Status[approvals<br/>action: status<br/>poll status]
     IRG_Status --> IRG_Result{Dashboard<br/>decision?}
     IRG_Result -->|approved| IRG_Clean[approvals<br/>action: delete]
-    IRG_Clean -->|success| P4_Ready[Spec complete.<br/>Ready to implement?]
+    IRG_Clean -->|success| P5_Ready[Spec complete.<br/>Ready to implement?]
     IRG_Clean -->|failed| IRG_Status
     IRG_Result -->|concerns| IRG_Log[Log concerns to<br/>tasks.md then<br/>delete approval]
-    IRG_Log --> P4_Ready
+    IRG_Log --> P5_Ready
     IRG_Result -->|rejected| IRG_Fix[Fix spec documents<br/>to resolve<br/>misalignment]
     IRG_Fix --> IRG_Run
 
-    %% Phase 4: Implementation
-    P4_Ready -->|Yes| P4_Status[spec-status]
-    P4_Status --> P4_Task[Edit tasks.md:<br/>Change [ ] to [-]<br/>for in-progress]
-    P4_Task --> P4_Code[Dispatch subagent:<br/>Implement code]
-    P4_Code --> P4_SpecReview{Spec compliance<br/>review?}
-    P4_SpecReview -->|pass| P4_QualityReview{Code quality<br/>review?}
-    P4_SpecReview -->|fail| P4_Code
-    P4_QualityReview -->|pass| P4_Log[log-implementation<br/>Record implementation<br/>details]
-    P4_QualityReview -->|fail| P4_Code
-    P4_Log --> P4_Complete[Edit tasks.md:<br/>Change [-] to [x]<br/>for completed]
-    P4_Complete --> P4_More{More tasks?}
-    P4_More -->|Yes| P4_Task
-    P4_More -->|No| P5_Start[Phase 5.1:<br/>Automated E2E]
-    P5_Start --> P5_E2E[/bb-test:<br/>Browserbase/Stagehand E2E<br/>against PR preview URL]
-    P5_E2E --> P5_Check{Tests pass?}
-    P5_Check -->|fail| P5_Fix[Fix failing tests<br/>before QA]
-    P5_Fix --> P5_E2E
-    P5_Check -->|pass| P5_QA[Phase 5.2:<br/>User QA Session]
-    P5_QA --> P5_QA_Present[Present preview URL<br/>Wait for user]
-    P5_QA_Present --> P5_QA_Check{User reports<br/>issues?}
-    P5_QA_Check -->|Yes| P5_QA_Fix[Fix issue<br/>commit + push<br/>wait for rebuild]
-    P5_QA_Fix --> P5_QA_Present
-    P5_QA_Check -->|QA complete| P5_Final[Phase 5.3:<br/>Docs + PR Finalization]
-    P5_Final --> P5_Docs[/vault-update:<br/>Update DocVault pages<br/>on final post-QA code]
-    P5_Docs --> P5_Issues[Close linked issues]
-    P5_Issues --> P5_Ready[Mark PR<br/>ready for review]
-    P5_Ready --> Done([Spec Complete:<br/>Hand off to /pr-resolve])
+    %% Phase 5: Implementation
+    P5_Ready -->|Yes| P5_Status[spec-status]
+    P5_Status --> P5_Task[Edit tasks.md:<br/>Change [ ] to [-]<br/>for in-progress]
+    P5_Task --> P5_Code[Dispatch subagent:<br/>Implement code]
+    P5_Code --> P5_SpecReview{Spec compliance<br/>review?}
+    P5_SpecReview -->|pass| P5_QualityReview{Code quality<br/>review?}
+    P5_SpecReview -->|fail| P5_Code
+    P5_QualityReview -->|pass| P5_Log[log-implementation<br/>Record implementation<br/>details]
+    P5_QualityReview -->|fail| P5_Code
+    P5_Log --> P5_Complete[Edit tasks.md:<br/>Change [-] to [x]<br/>for completed]
+    P5_Complete --> P5_More{More tasks?}
+    P5_More -->|Yes| P5_Task
+    P5_More -->|No| P6_Start[Phase 6.1:<br/>Automated E2E]
+    P6_Start --> P6_E2E[/bb-test:<br/>Browserbase/Stagehand E2E<br/>against PR preview URL]
+    P6_E2E --> P6_Check{Tests pass?}
+    P6_Check -->|fail| P6_Fix[Fix failing tests<br/>before QA]
+    P6_Fix --> P6_E2E
+    P6_Check -->|pass| P6_QA[Phase 6.2:<br/>User QA Session]
+    P6_QA --> P6_QA_Present[Present preview URL<br/>Wait for user]
+    P6_QA_Present --> P6_QA_Check{User reports<br/>issues?}
+    P6_QA_Check -->|Yes| P6_QA_Fix[Fix issue<br/>commit + push<br/>wait for rebuild]
+    P6_QA_Fix --> P6_QA_Present
+    P6_QA_Check -->|QA complete| P6_Final[Phase 6.3:<br/>Docs + PR Finalization]
+    P6_Final --> P6_Docs[/vault-update:<br/>Update DocVault pages<br/>on final post-QA code]
+    P6_Docs --> P6_Issues[Close linked issues]
+    P6_Issues --> P6_Ready[Mark PR<br/>ready for review]
+    P6_Ready --> Done([Spec Complete:<br/>Hand off to /pr-resolve])
 
     style Start fill:#e1f5e1
     style Done fill:#e1f5e1
-    style P5_Start fill:#e3f2fd
-    style P5_Check fill:#fff4e6
-    style P5_QA fill:#e8f5e9
-    style P5_QA_Check fill:#fff4e6
-    style P5_Final fill:#e3f2fd
-    style P0_Check fill:#ffe6e6
+    style P6_Start fill:#e3f2fd
+    style P6_Check fill:#fff4e6
+    style P6_QA fill:#e8f5e9
+    style P6_QA_Check fill:#fff4e6
+    style P6_Final fill:#e3f2fd
     style P1_Check fill:#ffe6e6
     style P2_Check fill:#ffe6e6
     style P3_Check fill:#ffe6e6
-    style P4_SpecReview fill:#ffe6e6
-    style P4_QualityReview fill:#ffe6e6
+    style P4_Check fill:#ffe6e6
+    style P5_SpecReview fill:#ffe6e6
+    style P5_QualityReview fill:#ffe6e6
     style DiscoveryChoice fill:#fff4e6
     style CheckSteering fill:#fff4e6
-    style P4_More fill:#fff4e6
-    style P35_Check fill:#fff4e6
-    style P35_Approve fill:#ffe6e6
-    style P35_Mockup fill:#e8f5e9
-    style P35_Update fill:#e3f2fd
+    style P5_More fill:#fff4e6
+    style P45_Check fill:#fff4e6
+    style P45_Approve fill:#ffe6e6
+    style P45_Mockup fill:#e8f5e9
+    style P45_Update fill:#e3f2fd
     style IRG_Run fill:#f3e5f5
     style IRG_Approve fill:#e3f2fd
     style IRG_Result fill:#ffe6e6
     style IRG_Clean fill:#e3f2fd
     style IRG_Log fill:#fff4e6
     style IRG_Fix fill:#ffe6e6
-    style P4_Log fill:#e3f2fd
+    style P5_Log fill:#e3f2fd
 \`\`\`
 
 ## Spec Workflow
 
-### Phase 0: Discovery
-**Purpose**: Research codebase, frameworks, and competing approaches before writing requirements. Optional — specs can skip this phase.
+### Phase 1: Requirements
+**Purpose**: Define what to build based on user needs. Requirements come first — they establish the problem statement that Discovery researches.
 
 **File Operations**:
+- Read steering docs: \`${wr}/steering/*.md\` (if they exist)
+- Check for project override: \`${wr}/templates/requirements-template.md\`
+- Read global template: \`${wr}/templates/requirements-template.md\` (if no custom template)
+- Create document: \`${wr}/specs/{issue-id}-{kebab-title}/requirements.md\`
+
+**Tools**:
+- approvals: Manage approval workflow (actions: request, status, delete)
+
+**Process**:
+1. Check if \`${wr}/steering/\` exists (if yes, read product.md, tech.md, structure.md)
+2. Check for project template override at \`${wr}/templates/requirements-template.md\`
+3. If no project override, the global template is used automatically from \`${wr}/templates/requirements-template.md\`
+4. Research market/user expectations (if web search available, current year: ${currentYear})
+5. **Content boundary**: Requirements define WHAT (user stories, acceptance criteria, measurable NFRs). Do NOT include implementation details — API designs, component architecture, function signatures, code patterns belong in Phase 3 Design.
+6. Generate requirements as user stories with EARS criteria
+6. Create \`requirements.md\` at \`${wr}/specs/{issue-id}-{kebab-title}/requirements.md\`
+7. Request approval using approvals tool with action:'request' (filePath only, never content)
+8. Poll status using approvals with action:'status' until approved/needs-revision (NEVER accept verbal approval)
+9. If needs-revision: update document using comments, create NEW approval, do NOT proceed
+10. Once approved: use approvals with action:'delete' (must succeed) before proceeding
+11. If delete fails: STOP - return to polling
+
+### Phase 2: Discovery
+**Purpose**: Research codebase, frameworks, and competing approaches AFTER knowing what to build. Optional — specs can skip this phase. Discovery is informed by the approved requirements — it researches how to solve the problem that requirements defined.
+
+**File Operations**:
+- Read approved requirements: \`${wr}/specs/{issue-id}-{kebab-title}/requirements.md\`
 - Read steering docs: \`${wr}/steering/*.md\` (if they exist)
 - Check for project override: \`${wr}/templates/discovery-template.md\`
 - Read global template: \`${wr}/templates/discovery-template.md\` (if no custom template)
@@ -207,49 +237,22 @@ flowchart TD
 - approvals: Manage approval workflow (actions: request, status, delete)
 
 **Process**:
-1. Check if \`${wr}/steering/\` exists (if yes, read product.md, tech.md, structure.md for project context)
-2. Check for project template override at \`${wr}/templates/discovery-template.md\`
-3. If no project override, the global template is used automatically from \`${wr}/templates/discovery-template.md\`
-4. Run codebase analysis (CGC, claude-context, Grep/Glob) to identify affected files and existing patterns
-5. Research frameworks and libraries via Context7 for current best practices
-6. Research competing approaches via web search (if available, current year: ${currentYear})
-7. Propose 2-3 competing approaches with pros/cons/effort/risk
-8. Create \`discovery.md\` at \`${wr}/specs/{issue-id}-{kebab-title}/discovery.md\`
-9. Request approval using approvals tool with action:'request' (filePath only, never content)
-10. Poll status using approvals with action:'status' until approved/needs-revision (NEVER accept verbal approval)
-11. If needs-revision: update document using comments, create NEW approval, do NOT proceed
-12. Once approved: use approvals with action:'delete' (must succeed) before proceeding
-13. If delete fails: STOP - return to polling
+1. Read approved \`requirements.md\` — use it as the problem statement that guides research
+2. Check if \`${wr}/steering/\` exists (if yes, read product.md, tech.md, structure.md for project context)
+3. Check for project template override at \`${wr}/templates/discovery-template.md\`
+4. If no project override, the global template is used automatically from \`${wr}/templates/discovery-template.md\`
+5. Run codebase analysis (CGC, claude-context, Grep/Glob) to identify affected files and existing patterns
+6. Research frameworks and libraries via Context7 for current best practices
+7. Research competing approaches via web search (if available, current year: ${currentYear})
+8. Propose 2-3 competing approaches with pros/cons/effort/risk
+9. Create \`discovery.md\` at \`${wr}/specs/{issue-id}-{kebab-title}/discovery.md\`
+10. Request approval using approvals tool with action:'request' (filePath only, never content)
+11. Poll status using approvals with action:'status' until approved/needs-revision (NEVER accept verbal approval)
+12. If needs-revision: update document using comments, create NEW approval, do NOT proceed
+13. Once approved: use approvals with action:'delete' (must succeed) before proceeding
+14. If delete fails: STOP - return to polling
 
-### Phase 1: Requirements
-**Purpose**: Define what to build based on user needs.
-
-**File Operations**:
-- Read discovery: \`${wr}/specs/{issue-id}-{kebab-title}/discovery.md\` (if it exists)
-- Read steering docs: \`${wr}/steering/*.md\` (if they exist and Phase 0 was skipped)
-- Check for project override: \`${wr}/templates/requirements-template.md\`
-- Read global template: \`${wr}/templates/requirements-template.md\` (if no custom template)
-- Create document: \`${wr}/specs/{issue-id}-{kebab-title}/requirements.md\`
-
-**Tools**:
-- approvals: Manage approval workflow (actions: request, status, delete)
-
-**Process**:
-1. Read \`discovery.md\` if it exists — use its codebase analysis and recommended direction as context for requirements
-2. Check if \`${wr}/steering/\` exists (if yes, read product.md, tech.md, structure.md)
-3. Check for project template override at \`${wr}/templates/requirements-template.md\`
-4. If no project override, the global template is used automatically from \`${wr}/templates/requirements-template.md\`
-5. Research market/user expectations (if web search available, current year: ${currentYear})
-6. **Content boundary**: Requirements define WHAT (user stories, acceptance criteria, measurable NFRs). Do NOT include implementation details — API designs, component architecture, function signatures, code patterns belong in Phase 2 Design.
-7. Generate requirements as user stories with EARS criteria
-8. Create \`requirements.md\` at \`${wr}/specs/{issue-id}-{kebab-title}/requirements.md\`
-9. Request approval using approvals tool with action:'request' (filePath only, never content)
-10. Poll status using approvals with action:'status' until approved/needs-revision (NEVER accept verbal approval)
-11. If needs-revision: update document using comments, create NEW approval, do NOT proceed
-12. Once approved: use approvals with action:'delete' (must succeed) before proceeding
-13. If delete fails: STOP - return to polling
-
-### Phase 2: Design
+### Phase 3: Design
 **Purpose**: Create technical design addressing all requirements.
 
 **File Operations**:
@@ -272,7 +275,7 @@ flowchart TD
 10. Once approved: use approvals with action:'delete' (must succeed) before proceeding
 11. If delete fails: STOP - return to polling
 
-### Phase 3: Tasks
+### Phase 4: Tasks
 **Purpose**: Break design into atomic implementation tasks.
 
 **File Operations**:
@@ -307,12 +310,12 @@ flowchart TD
 11. If delete fails: STOP - return to polling
 12. After successful cleanup: "Spec complete. Ready to implement?"
 
-### Phase 3.5: Visual Prototype Gate (conditional)
+### Phase 4.5: Visual Prototype Gate (conditional)
 **Purpose**: Ensure UI changes have visual approval before any implementation code is written.
 
 **Trigger**: This phase fires automatically if design.md contains \`Has UI Changes: Yes\` AND \`Prototype Required: Yes\` in the UI Impact Assessment section.
 
-**Skip condition**: If \`Has UI Changes: No\` or \`Prototype Required: No\`, skip directly to Phase 4.
+**Skip condition**: If \`Has UI Changes: No\` or \`Prototype Required: No\`, skip to Phase 4.9.
 
 **Process**:
 1. Read design.md and check the \`UI Impact Assessment\` section
@@ -325,14 +328,14 @@ flowchart TD
 4. **Save all visual artifacts** (playground HTML, mockup screenshots, Stitch exports) to the spec's \`artifacts/\` folder
 5. Update design.md \`Prototype Artifacts\` section with paths pointing to the \`artifacts/\` folder
 6. **BLOCKING**: No task tagged \`ui:true\` may begin until visual approval is recorded
-7. Proceed to Phase 4
+7. Proceed to Phase 4.9
 
 **CRITICAL — Prototype is Source of Truth**: The approved prototype in the \`artifacts/\` folder defines the visual design for implementation. Implementers MUST source their DOM structure, class names, spacing, and layout from the prototype — not from their own interpretation of the text requirements or earlier spec documents. The spec compliance reviewer will compare implementation against the prototype file. Ignoring an approved prototype is a spec compliance failure.
 
-### Phase 3.9: Implementation Readiness Gate
+### Phase 4.9: Implementation Readiness Gate
 **Purpose**: Cross-validate all spec documents for internal consistency before any code is written.
 
-**Trigger**: This phase fires automatically after Phase 3 approval (and Phase 3.5 if applicable). It runs on EVERY spec — it is not conditional.
+**Trigger**: This phase fires automatically after Phase 4 approval (and Phase 4.5 if applicable). It runs on EVERY spec — it is not conditional.
 
 **File Operations**:
 - Read specs: \`${wr}/specs/{issue-id}-{kebab-title}/requirements.md\`, \`design.md\`, \`tasks.md\`
@@ -359,8 +362,8 @@ flowchart TD
 3. Save the report as \`readiness-report.md\` in the spec folder using the output format below.
 4. Request dashboard approval using approvals tool with action:'request', filePath pointing to readiness-report.md
 5. Poll status using approvals with action:'status' until responded — the user has THREE options on the dashboard:
-   - **Approve (PASS)**: All checks satisfied. Proceed to Phase 4.
-   - **Concerns**: Minor gaps acknowledged. Agent proceeds to Phase 4 but MUST append a \`## Readiness Concerns\` section to tasks.md with the user's noted concerns.
+   - **Approve (PASS)**: All checks satisfied. Proceed to Phase 5.
+   - **Concerns**: Minor gaps acknowledged. Agent proceeds to Phase 5 but MUST append a \`## Readiness Concerns\` section to tasks.md with the user's noted concerns.
    - **Reject (FAIL)**: Critical misalignment. Agent fixes the spec documents and re-runs the readiness check from step 1.
 6. Once approved or concerns-acknowledged: use approvals with action:'delete' (must succeed) before proceeding.
 7. If delete fails: STOP - return to polling.
@@ -404,7 +407,7 @@ flowchart TD
 **CRITICAL**: This gate catches the #1 cause of spec implementation failures — tasks that drift from requirements during the design-to-tasks translation. Running this check takes 30 seconds and prevents hours of rework.
 **CRITICAL**: The readiness report MUST be submitted to the dashboard for human review. Verbal approval is NOT accepted. The agent's recommendation (PASS/CONCERNS/FAIL) is advisory — the human makes the final call via the dashboard.
 
-### Phase 4: Implementation
+### Phase 5: Implementation
 **Purpose**: Execute tasks systematically.
 
 **File Operations**:
@@ -429,7 +432,7 @@ flowchart TD
    - **UI GATE CHECK**: Before dispatching any task that creates or modifies UI components, verify:
      - Read design.md \`UI Impact Assessment\` section
      - If \`Prototype Required: Yes\`, confirm tasks 0.1–0.3 are marked \`[x]\` and \`Prototype Artifacts\` in design.md are populated
-     - If prototype gate is incomplete, STOP — complete Phase 3.5 first
+     - If prototype gate is incomplete, STOP — complete Phase 4.5 first
      - **MANDATORY**: Include the playground file path (e.g., \`${wr}/specs/{spec-name}/artifacts/playground.html\`) in the subagent prompt so the implementer has the approved visual reference
      - Tell the implementer explicitly: "Source your visual design from the prototype file. Do NOT re-read earlier spec documents and reinvent the design. The prototype IS the approved design."
      - The spec compliance reviewer (Stage 1) will compare implementation against the prototype — visual deviations are a FAIL
@@ -524,12 +527,12 @@ Only dispatch AFTER Stage 1 passes. Verify the code is well-built and production
 | Track progress (task list) | Search codebase |
 | Approve/reject agent work | Generate new files |
 
-### Phase 5: Post-Implementation (E2E + QA + Docs + PR Finalization)
+### Phase 6: Post-Implementation (E2E + QA + Docs + PR Finalization)
 **Purpose**: Verify the feature, QA with the user, update documentation on final code, and finalize the PR.
 
-Phase 5 has three stages. The spec is NOT complete until all three are done.
+Phase 6 has three stages. The spec is NOT complete until all three are done.
 
-#### Phase 5.1: Automated Testing
+#### Phase 6.1: Automated Testing
 
 **Purpose**: Run the project's test suite to verify the implementation.
 
@@ -543,7 +546,7 @@ Phase 5 has three stages. The spec is NOT complete until all three are done.
    - This is IN ADDITION to the unit/integration tests from step 2
 5. If tests fail: fix the failures before proceeding to QA. Do not skip to 5.2 with known test failures.
 
-#### Phase 5.2: User QA Session
+#### Phase 6.2: User QA Session
 
 **Purpose**: The user manually tests the feature on the preview deployment. This is where spec gaps, visual polish issues, and edge cases get caught. Automated tests passing does NOT mean the feature is done — user QA is the final quality gate before the PR leaves draft.
 
@@ -566,9 +569,9 @@ Phase 5 has three stages. The spec is NOT complete until all three are done.
    d. Wait for preview rebuild (check Cloudflare Pages deploy status)
    e. Report: "Fixed — {brief description}. Preview should rebuild in ~1 min."
 4. Repeat until the user signals QA is complete.
-5. Only then proceed to Phase 5.3.
+5. Only then proceed to Phase 6.3.
 
-#### Phase 5.3: Docs + PR Finalization
+#### Phase 6.3: Docs + PR Finalization
 
 **Purpose**: Update documentation on final post-QA code, close linked issues, mark PR ready for review, and hand off to the \`/pr-resolve\` workflow.
 
@@ -597,10 +600,10 @@ Phase 5 has three stages. The spec is NOT complete until all three are done.
 - Follow exact template structures
 - Get explicit user approval between phases (using approvals tool with action:'request')
 - Complete phases in sequence (no skipping)
-- Phase 5 has three stages: 5.1 (automated E2E), 5.2 (user QA session), 5.3 (docs + PR finalization) — all three are mandatory. Docs run AFTER QA so documentation captures final post-QA code
-- Phase 5.1 runs the project's test suite as detected in project-conventions.json. Browserbase/Stagehand is used additionally when the project has browser-based E2E tests.
-- CRITICAL: During Phase 5.2 (User QA), the agent MUST NOT suggest merging, declare the work done, or push back on findings. The user drives QA, the agent fixes. QA ends ONLY when the user says so
-- CRITICAL: The spec finish line is marking the PR ready for review (Phase 5.3), NOT passing automated tests. Automated tests passing = ready for QA, not ready to merge
+- Phase 6 has three stages: 6.1 (automated E2E), 6.2 (user QA session), 6.3 (docs + PR finalization) — all three are mandatory. Docs run AFTER QA so documentation captures final post-QA code
+- Phase 6.1 runs the project's test suite as detected in project-conventions.json. Browserbase/Stagehand is used additionally when the project has browser-based E2E tests.
+- CRITICAL: During Phase 6.2 (User QA), the agent MUST NOT suggest merging, declare the work done, or push back on findings. The user drives QA, the agent fixes. QA ends ONLY when the user says so
+- CRITICAL: The spec finish line is marking the PR ready for review (Phase 6.3), NOT passing automated tests. Automated tests passing = ready for QA, not ready to merge
 - One spec at a time
 - Spec names use issue prefix: {ISSUE-ID}-{kebab-title}
 - Approval requests: provide filePath only, never content
@@ -608,10 +611,10 @@ Phase 5 has three stages. The spec is NOT complete until all three are done.
 - CRITICAL: Must have approved status AND successful cleanup before next phase
 - CRITICAL: Every task marked [x] MUST have a corresponding implementation log — call log-implementation BEFORE changing [-] to [x]
 - CRITICAL: Every completed spec MUST have all linked issues (vault and GitHub) closed — a spec with open issues is NOT done
-- CRITICAL: Specs with UI changes MUST complete Phase 3.5 (visual prototype gate) before any UI implementation task begins
+- CRITICAL: Specs with UI changes MUST complete Phase 4.5 (visual prototype gate) before any UI implementation task begins
 - CRITICAL: If design.md references a prototype HTML file, implementers MUST source their visual design from it — ignoring a provided prototype is a spec compliance failure
 - CRITICAL: All visual artifacts (playground HTML, screenshots, mockups) MUST be saved to the spec's \`artifacts/\` folder — not to project root or playground/ directories. The artifacts/ folder is the single source of visual truth for the spec
-- CRITICAL: Phase 3.9 (Implementation Readiness Gate) fires on EVERY spec before Phase 4 — generates readiness-report.md, submits to dashboard for review. Three dashboard actions: Approve (proceed), Concerns (proceed with logged risks), Reject (fix and re-run). Verbal approval NOT accepted.
+- CRITICAL: Phase 4.9 (Implementation Readiness Gate) fires on EVERY spec before Phase 5 — generates readiness-report.md, submits to dashboard for review. Three dashboard actions: Approve (proceed), Concerns (proceed with logged risks), Reject (fix and re-run). Verbal approval NOT accepted.
 - CRITICAL: Verbal approval is NEVER accepted - dashboard or VS Code extension only
 - NEVER proceed on user saying "approved" - check system status only
 - Steering docs are optional - only create when explicitly requested
@@ -628,7 +631,7 @@ ${wr}/                               # DocVault/specflow/{project}/ (resolved vi
 │       ├── requirements.md
 │       ├── design.md
 │       ├── tasks.md
-│       ├── readiness-report.md      # Phase 3.9
+│       ├── readiness-report.md      # Phase 4.9
 │       ├── artifacts/               # Visual source of truth for UI specs
 │       │   ├── playground.html
 │       │   └── *.png

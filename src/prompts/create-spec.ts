@@ -2,7 +2,7 @@ import { Prompt, PromptMessage } from '@modelcontextprotocol/sdk/types.js';
 import { PromptDefinition } from './types.js';
 import { ToolContext } from '../types.js';
 import { PathUtils } from '../core/path-utils.js';
-import { access } from 'fs/promises';
+import { access, readFile } from 'fs/promises';
 import { join } from 'path';
 import { constants } from 'fs';
 
@@ -20,7 +20,7 @@ const prompt: Prompt = {
     },
     {
       name: 'documentType',
-      description: 'Type of document to create: requirements, design, or tasks',
+      description: 'Type of document to create: requirements, discovery, design, or tasks',
       required: true,
     },
     {
@@ -38,9 +38,21 @@ async function handler(args: Record<string, any>, context: ToolContext): Promise
     throw new Error('specName and documentType are required arguments');
   }
 
-  const validDocTypes = ['requirements', 'design', 'tasks'];
+  const validDocTypes = ['requirements', 'discovery', 'design', 'tasks'];
   if (!validDocTypes.includes(documentType)) {
     throw new Error(`documentType must be one of: ${validDocTypes.join(', ')}`);
+  }
+
+  // --- HARD GATE G1: Validate issue ID format for requirements ---
+  if (documentType === 'requirements') {
+    const issueIdPattern = /^[A-Z]+-\d+-/;
+    if (!issueIdPattern.test(specName)) {
+      throw new Error(
+        `PHASE GATE: Cannot create requirements — specName "${specName}" does not start with an issue ID.\n` +
+          `Expected format: {ISSUE-ID}-{kebab-title} (e.g., STAK-123-user-authentication).\n` +
+          `Create an issue first, then use its ID as the spec name prefix.`,
+      );
+    }
   }
 
   // Resolve paths through PathUtils (DocVault-aware)
@@ -48,56 +60,73 @@ async function handler(args: Record<string, any>, context: ToolContext): Promise
   const templatesDir = `${workflowRoot}/templates`;
   const specDir = `${workflowRoot}/specs/${specName}`;
 
-  // --- HARD GATE: Enforce phase ordering ---
-  // design requires approved requirements, tasks requires approved design
+  // --- HARD GATES G2-G4: Enforce phase ordering ---
+  // Phase ordering: Requirements → Discovery (optional) → Design → Tasks
+  // discovery requires approved requirements (G2)
+  // design requires approved discovery if it exists, else approved requirements (G3)
+  // tasks requires approved design (G4)
   const prerequisites: Record<string, { requires: string; label: string }> = {
+    discovery: { requires: 'requirements', label: 'Requirements' },
     design: { requires: 'requirements', label: 'Requirements' },
     tasks: { requires: 'design', label: 'Design' },
   };
 
   const prereq = prerequisites[documentType];
   if (prereq) {
-    const prereqPath = join(specDir, `${prereq.requires}.md`);
-    let prereqExists = false;
-    try {
-      await access(prereqPath, constants.F_OK);
-      prereqExists = true;
-    } catch {
-      // file doesn't exist
+    // Helper: check if a document exists and has an approved snapshot
+    const checkPrereq = async (
+      docName: string,
+    ): Promise<{ exists: boolean; approved: boolean }> => {
+      const docPath = join(specDir, `${docName}.md`);
+      let exists = false;
+      try {
+        await access(docPath, constants.F_OK);
+        exists = true;
+      } catch {
+        // file doesn't exist
+      }
+      if (!exists) return { exists: false, approved: false };
+
+      const snapshotDir = join(workflowRoot, 'approvals', specName, '.snapshots', `${docName}.md`);
+      let approved = false;
+      try {
+        await access(snapshotDir, constants.F_OK);
+        const metadataPath = join(snapshotDir, 'metadata.json');
+        const metadata = JSON.parse(await readFile(metadataPath, 'utf-8'));
+        const snapshots = metadata.snapshots || [];
+        const latest = snapshots[snapshots.length - 1];
+        approved = latest?.trigger === 'approved';
+      } catch {
+        // No snapshots found
+      }
+      return { exists, approved };
+    };
+
+    // Gate G3 special case: design checks discovery first (if it exists), then requirements
+    if (documentType === 'design') {
+      const discovery = await checkPrereq('discovery');
+      if (discovery.exists && !discovery.approved) {
+        throw new Error(
+          `PHASE GATE: Cannot create design — Discovery has not been approved yet.\n` +
+            `The discovery.md document exists but has no approval record.\n` +
+            `Submit it for approval first: use the approvals tool with action:"request" for discovery.md,\n` +
+            `then wait for approval before creating design.`,
+        );
+      }
     }
 
-    if (!prereqExists) {
+    // Standard prerequisite check (applies to all gated types)
+    const result = await checkPrereq(prereq.requires);
+
+    if (!result.exists) {
       throw new Error(
         `PHASE GATE: Cannot create ${documentType} — ${prereq.label} document does not exist yet.\n` +
-          `Expected: ${prereqPath}\n` +
+          `Expected: ${join(specDir, `${prereq.requires}.md`)}\n` +
           `You must create and get approval for ${prereq.requires}.md before proceeding to ${documentType}.`,
       );
     }
 
-    // Check if the prerequisite has been through the approval flow
-    // Look for approval snapshots with trigger:"approved" for the prerequisite doc
-    const snapshotDir = join(
-      workflowRoot,
-      'approvals',
-      specName,
-      '.snapshots',
-      `${prereq.requires}.md`,
-    );
-    let hasApprovedSnapshot = false;
-    try {
-      await access(snapshotDir, constants.F_OK);
-      // Snapshot dir exists — read metadata to check for approved trigger
-      const { readFile } = await import('fs/promises');
-      const metadataPath = join(snapshotDir, 'metadata.json');
-      const metadata = JSON.parse(await readFile(metadataPath, 'utf-8'));
-      // Check if any snapshot has trigger "approved"
-      hasApprovedSnapshot =
-        metadata.snapshots?.some((s: { trigger: string }) => s.trigger === 'approved') ?? false;
-    } catch {
-      // No snapshots found — prerequisite hasn't been through approval
-    }
-
-    if (!hasApprovedSnapshot) {
+    if (!result.approved) {
       throw new Error(
         `PHASE GATE: Cannot create ${documentType} — ${prereq.label} has not been approved yet.\n` +
           `The ${prereq.requires}.md document exists but has no approval record.\n` +

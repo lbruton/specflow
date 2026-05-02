@@ -31,7 +31,7 @@ Resuming a spec does NOT mean "wing it." It means:
 - Writing a `requirements.md` from scratch without reading the template → produces documents missing required sections (References, User Stories, Acceptance Criteria, Non-Functional Requirements)
 - Writing `tasks.md` without reading the resolved workflow template → produces tasks missing `_Prompt`, `_Leverage`, `_Requirements` fields, VERSION CHECKOUT GATE, and Standard Closing Tasks
 - Skipping `approvals` and asking the user "does this look good?" → verbal approval is never valid
-- Resuming Phase 4 without calling `spec-status` → leads to re-implementing completed tasks or missing in-progress state
+- Resuming Phase 5 without calling `spec-status` → leads to re-implementing completed tasks or missing in-progress state
 - Editing spec files directly without knowing the current approval state → overwrites pending approvals
 
 **Self-check before writing ANY spec document:**
@@ -173,7 +173,7 @@ spec-list query: "{ISSUE-ID}"
 - **MANDATORY before writing/editing any phase document:** Read the template for that phase from the resolved workflow root `templates/` directory. Do NOT write from memory.
 - If `--resume` flag was passed, jump directly to the current phase (but still load guide + template first)
 - Otherwise ask: "Resume at current phase, or restart from scratch?"
-- If Phase 4 in progress, jump to Step 5 (Implementation)
+- If Phase 5 in progress, jump to Step 5 (Implementation)
 
 **If no spec exists:**
 - Inform: "No existing spec found. Starting Phase 1 — Requirements."
@@ -184,9 +184,10 @@ spec-list query: "{ISSUE-ID}"
 | Resuming Phase | Required MCP calls before any edits |
 |---|---|
 | Phase 1 (Requirements) | `spec-workflow-guide` → `spec-status` → read `templates/requirements-template.md` from the resolved workflow root |
-| Phase 2 (Design) | `spec-workflow-guide` → `spec-status` → read `templates/design-template.md` from the resolved workflow root → read existing `requirements.md` |
-| Phase 3 (Tasks) | `spec-workflow-guide` → `spec-status` → read `templates/tasks-template.md` from the resolved workflow root → read existing `requirements.md` + `design.md` |
-| Phase 4 (Implementation) | `spec-workflow-guide` → `spec-status` → read existing `tasks.md` → check Implementation Logs directory |
+| Phase 2 (Discovery) — optional | `spec-workflow-guide` → `spec-status` → read `templates/discovery-template.md` from the resolved workflow root → read existing `requirements.md` |
+| Phase 3 (Design) | `spec-workflow-guide` → `spec-status` → read `templates/design-template.md` from the resolved workflow root → read existing `requirements.md` |
+| Phase 4 (Tasks) | `spec-workflow-guide` → `spec-status` → read `templates/tasks-template.md` from the resolved workflow root → read existing `requirements.md` + `design.md` |
+| Phase 5 (Implementation) | `spec-workflow-guide` → `spec-status` → read existing `tasks.md` → check Implementation Logs directory |
 
 Skipping any of these calls is a workflow violation.
 
@@ -247,13 +248,44 @@ Skipping any of these calls is a workflow violation.
    ```
    Check periodically until status is approved, rejected, or needs-revision.
 
-9. **On approved:** `approvals action:"delete"` → proceed to Step 3.
+9. **On approved:** `approvals action:"delete"` → proceed to Step 2.5 (or skip to Step 3 if the user chooses).
 10. **On needs-revision:** update the document per feedback, create a new approval request.
 11. **On rejected:** stop and inform the user.
 
 ---
 
-## Step 3: Phase 2 — Design
+## Step 2.5: Phase 2 — Discovery (optional)
+
+> **This phase is optional.** After requirements are approved, ask the user: "Would you like to run a Discovery phase to research the codebase and competing approaches before designing? You can skip directly to Phase 3." If the user skips, proceed to Step 3.
+
+> **SESSION BOUNDARY RULE:** If resuming this phase, you MUST call `spec-workflow-guide`, `spec-status`, read `templates/discovery-template.md`, and read the approved `requirements.md` before writing anything.
+
+1. **Load workflow guide (MANDATORY — every session):**
+   ```
+   spec-workflow-guide
+   ```
+
+2. **Read discovery template (MANDATORY — do NOT write from memory):**
+   ```bash
+   cat <workflowRoot>/templates/discovery-template.md
+   ```
+
+3. **Read approved requirements.md** to ground the research in what was approved.
+
+4. **Run research:** codebase-search skill → Context7 for framework/library docs → web search for competing approaches and prior art. Focus on questions raised by the requirements.
+
+5. **Write discovery.md:**
+   ```
+   <workflowRoot>/specs/{specName}/discovery.md
+   ```
+
+6. **Request dashboard approval** (same pattern as Step 2 — request → poll → delete on approval).
+
+7. On approved → proceed to Step 3.
+
+---
+
+## Step 3: Phase 3 — Design
 
 > **SESSION BOUNDARY RULE:** If you are entering this phase from a handoff or new session, you MUST: (1) call `spec-workflow-guide`, (2) call `spec-status`, (3) read the design template, (4) read the existing `requirements.md`. Do not write design.md from memory.
 
@@ -284,7 +316,7 @@ Skipping any of these calls is a workflow violation.
 
 ---
 
-## Step 4: Phase 3 — Tasks
+## Step 4: Phase 4 — Tasks
 
 > **SESSION BOUNDARY RULE:** If you are entering this phase from a handoff or new session, you MUST: (1) call `spec-workflow-guide`, (2) call `spec-status`, (3) read the tasks template from the resolved workflow root, (4) read the existing `requirements.md` + `design.md`. The tasks template contains critical project-specific patterns, gates, and prompt structures that CANNOT be improvised.
 
@@ -318,14 +350,14 @@ Skipping any of these calls is a workflow violation.
 
 ---
 
-## Step 5: Phase 4 — Implementation
+## Step 5: Phase 5 — Implementation
 
 > **SESSION BOUNDARY RULE:** If you are entering this phase from a handoff or new session, you MUST:
 > 1. Call `spec-workflow-guide`
 > 2. Call `spec-status` to see task progress
 > 3. Read the full `tasks.md`
 > 4. Check Implementation Logs to see what's already done
-> 5. **Ask the user how they want to execute** (step 4 below) — subagent dispatch, parallel terminals, or single task. Do NOT skip this question. Do NOT assume the previous session's choice carries over. **This question is MANDATORY every time Phase 4 is entered, even on resume.**
+> 5. **Ask the user how they want to execute** (step 4 below) — subagent dispatch, parallel terminals, or single task. Do NOT skip this question. Do NOT assume the previous session's choice carries over. **This question is MANDATORY every time Phase 5 is entered, even on resume.**
 
 1. **Load workflow guide (MANDATORY — every session):**
    ```
@@ -347,7 +379,7 @@ Skipping any of these calls is a workflow violation.
    </HARD-GATE>
 
    ```
-   Phase 4 — Implementation ready. X tasks pending, Y already complete.
+   Phase 5 — Implementation ready. X tasks pending, Y already complete.
 
    How do you want to execute?
 
