@@ -219,3 +219,78 @@ export function toMCPResponse(response: ToolResponse, isError: boolean = false):
     isError,
   };
 }
+
+// ── SFLW-13: TDD Test Checklist ──────────────────────────────────────────────
+
+export interface TestChecklistItem {
+  testName: string;
+  fileLocation: string;
+  status: 'pending' | 'passed' | 'failed';
+  failureReason?: string;
+}
+
+export interface TestFileRecord {
+  filePath: string;
+  contentHash: string; // SHA-256 hex
+  recordedAt: string; // ISO timestamp
+}
+
+export interface TestChecklistSection {
+  taskId: string;
+  taskTitle: string;
+  status: 'red' | 'awaiting-approval' | 'green-in-progress' | 'green-complete';
+  testFiles: TestFileRecord[];
+  items: TestChecklistItem[];
+}
+
+export interface TestChecklist {
+  specName: string;
+  sections: TestChecklistSection[];
+}
+
+export interface TestResult {
+  name: string; // full test name including describe blocks
+  fileLocation: string; // relative file path + line number
+  status: 'fail' | 'pass';
+  failureMessage?: string;
+}
+
+export interface TestRunnerOutput {
+  framework: string; // 'vitest' | 'jest' | 'pytest' | 'go-test' | 'other'
+  tests: TestResult[];
+  totalTests: number;
+  totalFailed: number;
+}
+
+export interface GenerateOptions {
+  specName: string;
+  taskId: string;
+  taskTitle: string;
+  testOutput: TestRunnerOutput;
+  testFilePaths: string[];
+  checklistPath: string;
+}
+
+export interface ValidationResult {
+  valid: boolean;
+  taskId: string;
+  totalItems: number;
+  completedItems: number;
+  incompleteItems: TestChecklistItem[];
+  message: string;
+}
+
+export interface ModificationResult {
+  modified: boolean;
+  files: Array<{
+    filePath: string;
+    originalHash: string;
+    currentHash: string;
+  }>;
+  message: string;
+}
+
+export interface UpdateResult {
+  allPassed: boolean;
+  updatedItems: number;
+}

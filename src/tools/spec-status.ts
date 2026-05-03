@@ -326,6 +326,64 @@ export async function specStatusHandler(args: any, context: ToolContext): Promis
       );
     }
 
+    // TDD progress — derive per-task state from test-checklist.md
+    let tddProgress:
+      | Array<{ taskId: string; state: string; testsTotal: number; testsPassed: number }>
+      | undefined;
+    try {
+      const { parseChecklist } = await import('../core/test-checklist.js');
+      const checklistPath = `${PathUtils.getSpecPath(translatedPath, specName)}/test-checklist.md`;
+
+      const { promises: fsForTdd } = await import('fs');
+      let checklistExists = false;
+      try {
+        await fsForTdd.access(checklistPath);
+        checklistExists = true;
+      } catch {
+        // no checklist
+      }
+
+      if (checklistExists) {
+        const checklist = await parseChecklist(checklistPath);
+
+        // Check approval status once (file-level, not per-section)
+        const { checkApprovalStatus } = await import('../core/phase-gates.js');
+        const workflowRootForTdd = PathUtils.getWorkflowRoot(translatedPath);
+
+        const checklistApproval = await checkApprovalStatus(
+          workflowRootForTdd,
+          specName,
+          'test-checklist',
+        );
+
+        tddProgress = checklist.sections.map((section) => {
+          const approval = checklistApproval;
+          const testsTotal = section.items.length;
+          const testsPassed = section.items.filter((i) => i.status === 'passed').length;
+
+          let state: string;
+          if (!approval.exists) {
+            state = 'red';
+          } else if (!approval.approved) {
+            state = 'awaiting-approval';
+          } else if (testsPassed === testsTotal && testsTotal > 0) {
+            state = 'green-complete';
+          } else {
+            state = 'green-in-progress';
+          }
+
+          return { taskId: section.taskId, state, testsTotal, testsPassed };
+        });
+      }
+    } catch (tddError) {
+      // TDD reporting is best-effort — log warning but don't break spec-status
+      console.warn(
+        'TDD progress reporting failed:',
+        tddError instanceof Error ? tddError.message : String(tddError),
+      );
+      tddProgress = undefined;
+    }
+
     return {
       success: true,
       message: `Specification '${specName}' status: ${overallStatus}`,
@@ -343,6 +401,7 @@ export async function specStatusHandler(args: any, context: ToolContext): Promis
           pending: 0,
         },
         unloggedTasks: unloggedTasks.length > 0 ? unloggedTasks : undefined,
+        tddProgress,
       },
       nextSteps,
       projectContext: {
