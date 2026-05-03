@@ -673,6 +673,36 @@ updated: 2026-01-01
     expect(result.sections).toHaveLength(0);
   });
 
+  it('parses a dotted task ID section (e.g. 0.4) correctly', async () => {
+    const checklist = `---
+spec: SFLW-99-example
+created: 2026-01-01
+updated: 2026-01-01
+---
+
+# Test Checklist
+
+## Task 0.4: Dotted Title
+
+**Status:** green-in-progress
+**Test Files:** \`my.test.ts\`
+**File Hashes:**
+- \`my.test.ts\`: \`sha256:abc123\`
+
+- [ ] dot test one (\`my.test.ts:5\`)
+- [ ] dot test two (\`my.test.ts:10\`)
+`;
+    writeFileSync(checklistPath, checklist);
+
+    const result = await parseChecklist(checklistPath);
+
+    expect(result.sections).toHaveLength(1);
+    const section = result.sections[0];
+    expect(section.taskId).toBe('0.4');
+    expect(section.taskTitle).toBe('Dotted Title');
+    expect(section.items).toHaveLength(2);
+  });
+
   it('extracts taskId, taskTitle, and item statuses for each section', async () => {
     const checklist = `---
 spec: SFLW-99-example
@@ -709,5 +739,160 @@ updated: 2026-01-01
 
     expect(passedItem?.status).toBe('passed');
     expect(failedItem?.status).toBe('pending');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Dotted task IDs (e.g. '0.4', '1.2') — the TDD format used in real specs
+// ---------------------------------------------------------------------------
+
+describe('dotted task IDs', () => {
+  let tempDir: string;
+  let checklistPath: string;
+  let testFilePath: string;
+
+  beforeEach(() => {
+    tempDir = mkdtempSync(join(tmpdir(), 'specflow-dotted-'));
+    checklistPath = join(tempDir, 'test-checklist.md');
+    testFilePath = join(tempDir, 'my.test.ts');
+    writeFileSync(testFilePath, '// test file content');
+  });
+
+  afterEach(() => {
+    rmSync(tempDir, { recursive: true, force: true });
+  });
+
+  it('generateTaskSection creates a section with a dotted task ID header', async () => {
+    const options = {
+      specName: 'SFLW-99-example',
+      taskId: '0.4',
+      taskTitle: 'Dotted Task',
+      testOutput: {
+        framework: 'vitest',
+        tests: [{ name: 'dot test', fileLocation: 'my.test.ts:5', status: 'fail' as const }],
+        totalTests: 1,
+        totalFailed: 1,
+      },
+      testFilePaths: [testFilePath],
+      checklistPath,
+    };
+
+    await generateTaskSection(options);
+
+    const { readFileSync } = await import('fs');
+    const content = readFileSync(checklistPath, 'utf-8');
+
+    expect(content).toContain('## Task 0.4: Dotted Task');
+  });
+
+  it('parseChecklist correctly finds items under a dotted task ID section', async () => {
+    const checklist = `---
+spec: SFLW-99-example
+created: 2026-01-01
+updated: 2026-01-01
+---
+
+# Test Checklist
+
+## Task 1.2: Dotted Parse Title
+
+**Status:** green-in-progress
+**Test Files:** \`my.test.ts\`
+**File Hashes:**
+- \`my.test.ts\`: \`sha256:abc123\`
+
+- [ ] dotted item one (\`my.test.ts:7\`)
+- [ ] dotted item two (\`my.test.ts:14\`)
+`;
+    writeFileSync(checklistPath, checklist);
+
+    const result = await parseChecklist(checklistPath);
+
+    expect(result.sections).toHaveLength(1);
+    const section = result.sections[0];
+    expect(section.taskId).toBe('1.2');
+    expect(section.taskTitle).toBe('Dotted Parse Title');
+    expect(section.items).toHaveLength(2);
+  });
+
+  it('updateChecklistProgress marks items in a dotted task ID section', async () => {
+    const checklist = `---
+spec: SFLW-99-example
+created: 2026-01-01
+updated: 2026-01-01
+---
+
+# Test Checklist
+
+## Task 0.5: Dotted Update Title
+
+**Status:** green-in-progress
+**Test Files:** \`my.test.ts\`
+**File Hashes:**
+- \`my.test.ts\`: \`sha256:abc123\`
+
+- [ ] update item one (\`my.test.ts:3\`)
+- [ ] update item two (\`my.test.ts:9\`)
+`;
+    writeFileSync(checklistPath, checklist);
+
+    const testResults = [
+      { name: 'update item one', fileLocation: 'my.test.ts:3', status: 'pass' as const },
+      { name: 'update item two', fileLocation: 'my.test.ts:9', status: 'fail' as const },
+    ];
+
+    await updateChecklistProgress(checklistPath, '0.5', testResults);
+
+    const { readFileSync } = await import('fs');
+    const content = readFileSync(checklistPath, 'utf-8');
+
+    expect(content).toContain('[x] update item one');
+    expect(content).toContain('[ ] update item two');
+  });
+
+  it('round-trip: generate section with ID 1.2, parse it back, update progress, verify state', async () => {
+    const options = {
+      specName: 'SFLW-99-example',
+      taskId: '1.2',
+      taskTitle: 'Round Trip',
+      testOutput: {
+        framework: 'vitest',
+        tests: [
+          { name: 'rt test alpha', fileLocation: 'my.test.ts:1', status: 'fail' as const },
+          { name: 'rt test beta', fileLocation: 'my.test.ts:2', status: 'fail' as const },
+        ],
+        totalTests: 2,
+        totalFailed: 2,
+      },
+      testFilePaths: [testFilePath],
+      checklistPath,
+    };
+
+    // Step 1: generate
+    await generateTaskSection(options);
+
+    const { readFileSync } = await import('fs');
+    const generated = readFileSync(checklistPath, 'utf-8');
+    expect(generated).toContain('## Task 1.2: Round Trip');
+
+    // Step 2: parse back
+    const parsed = await parseChecklist(checklistPath);
+    expect(parsed.sections).toHaveLength(1);
+    expect(parsed.sections[0].taskId).toBe('1.2');
+    expect(parsed.sections[0].items).toHaveLength(2);
+
+    // Step 3: update progress — alpha passes, beta still fails
+    const testResults = [
+      { name: 'rt test alpha', fileLocation: 'my.test.ts:1', status: 'pass' as const },
+      { name: 'rt test beta', fileLocation: 'my.test.ts:2', status: 'fail' as const },
+    ];
+
+    const updateResult = await updateChecklistProgress(checklistPath, '1.2', testResults);
+
+    expect(updateResult.allPassed).toBe(false);
+
+    const updated = readFileSync(checklistPath, 'utf-8');
+    expect(updated).toContain('[x] rt test alpha');
+    expect(updated).toContain('[ ] rt test beta');
   });
 });

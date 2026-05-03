@@ -1,11 +1,12 @@
 import { access, readFile } from 'fs/promises';
-import { resolve } from 'path';
+import path, { resolve } from 'path';
 import { constants } from 'fs';
 
 function resolveWithin(root: string, ...segments: string[]): string {
   const resolved = resolve(root, ...segments);
-  if (!resolved.startsWith(root)) {
-    throw new Error(`Path traversal detected: resolved path escapes workflow root`);
+  const rel = path.relative(root, resolved);
+  if (rel.startsWith('..') || path.isAbsolute(rel)) {
+    throw new Error(`Path escapes root: ${segments.join('/')}`);
   }
   return resolved;
 }
@@ -253,7 +254,7 @@ export async function checkTestChecklistGate(
   // Validate all checklist items for this task are [x].
   // Pass through when the task has no section in the checklist (non-TDD tasks).
   const validation = await validateTaskComplete(checklistPath, taskId);
-  if (!validation.valid && validation.incompleteItems.length > 0) {
+  if (!validation.valid) {
     return {
       passed: false,
       gate: 'TEST_CHECKLIST',

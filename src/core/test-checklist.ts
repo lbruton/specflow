@@ -17,7 +17,8 @@ import type {
 function validateFilePath(p: string): void {
   if (!p || typeof p !== 'string') throw new Error(`Invalid path: expected non-empty string`);
   const normalized = p.replace(/\\/g, '/');
-  if (normalized.includes('../') || normalized.includes('/..')) {
+  // T1: check for bare '..' components, not just '../' or '/..'
+  if (normalized.split('/').some((part) => part === '..')) {
     throw new Error(`Path traversal detected: "${p}" contains ".."`);
   }
 }
@@ -51,13 +52,13 @@ export async function generateTaskSection(options: GenerateOptions): Promise<str
   const today = todayString();
 
   // Build hash block
+  // T6/T10: store full path instead of basename to avoid collisions
   const hashLines: string[] = [];
-  const fileBasenames: string[] = [];
+  const fileLabels: string[] = [];
   for (const filePath of testFilePaths) {
     const hash = await sha256File(filePath);
-    const name = basename(filePath);
-    fileBasenames.push(name);
-    hashLines.push('- `' + name + '`: `sha256:' + hash + '`');
+    fileLabels.push(filePath);
+    hashLines.push('- `' + filePath + '`: `sha256:' + hash + '`');
   }
 
   // Build checklist items — all [ ] in red phase
@@ -67,7 +68,7 @@ export async function generateTaskSection(options: GenerateOptions): Promise<str
   }
 
   // Build new section text
-  const testFilesLabel = fileBasenames.length > 0 ? fileBasenames[0] : '';
+  const testFilesLabel = fileLabels.length > 0 ? fileLabels[0] : '';
   const sectionLines = [
     '## Task ' + taskId + ': ' + taskTitle,
     '',
@@ -97,8 +98,13 @@ export async function generateTaskSection(options: GenerateOptions): Promise<str
     ].join('\n');
     await writeFile(checklistPath, frontmatter + sectionText, 'utf-8');
   } else {
-    // Append to existing file
+    // T4: check if a section for this taskId already exists; if so, return unchanged
     const existing = await readFile(checklistPath, 'utf-8');
+    const escapedId = taskId.replace(/\./g, '\\.');
+    const duplicateCheck = new RegExp('^## Task ' + escapedId + ':', 'm');
+    if (duplicateCheck.test(existing)) {
+      return checklistPath;
+    }
     const separator = existing.endsWith('\n') ? '' : '\n';
     await writeFile(checklistPath, existing + separator + sectionText, 'utf-8');
   }
@@ -120,8 +126,9 @@ export async function parseChecklist(checklistPath: string): Promise<TestCheckli
   if (!content.trim()) return empty;
 
   // Extract specName from YAML frontmatter
+  // T5: support CRLF line endings
   let specName = '';
-  const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
+  const frontmatterMatch = content.match(/^---\r?\n([\s\S]*?)\r?\n---/);
   if (frontmatterMatch) {
     const fmBody = frontmatterMatch[1];
     const specMatch = fmBody.match(/^spec:\s*(.+)$/m);
@@ -130,9 +137,9 @@ export async function parseChecklist(checklistPath: string): Promise<TestCheckli
     }
   }
 
-  // Split into task sections by ## Task N: Title
-  const sectionHeaderRegex = /^## Task (\d+): (.+)$/m;
-  const parts = content.split(/(?=^## Task \d+:)/m);
+  // T11: Split into task sections by ## Task N.N: Title (dotted IDs supported)
+  const sectionHeaderRegex = /^## Task ([\d.]+): (.+)$/m;
+  const parts = content.split(/(?=^## Task [\d.]+:)/m);
 
   const sections: TestChecklistSection[] = [];
 
@@ -144,8 +151,9 @@ export async function parseChecklist(checklistPath: string): Promise<TestCheckli
     const taskTitle = headerMatch[2].trim();
 
     // Parse checklist items
+    // T2/T3: use greedy (.+) to avoid truncating test names containing '('
     const items: TestChecklistItem[] = [];
-    const itemRegex = /^- (\[x\]|\[ \]) (.+?) \(`([^`]+)`\)/gm;
+    const itemRegex = /^- (\[x\]|\[ \]) (.+) \(`([^`]+)`\)/gm;
     let itemMatch: RegExpExecArray | null;
     while ((itemMatch = itemRegex.exec(part)) !== null) {
       const checked = itemMatch[1] === '[x]';
@@ -203,9 +211,11 @@ export async function updateChecklistProgress(
 
   const content = await readFile(checklistPath, 'utf-8');
 
+  // T12: use composite key (name@@fileLocation) to avoid same-named tests in different files colliding
   const resultMap = new Map<string, TestResult>();
   for (const r of testResults) {
-    resultMap.set(r.name, r);
+    const key = r.name + '@@' + (r.fileLocation || '');
+    resultMap.set(key, r);
   }
 
   let updatedItems = 0;
@@ -214,8 +224,10 @@ export async function updateChecklistProgress(
   // Process line by line to update the correct task section
   const lines = content.split('\n');
   let inTargetSection = false;
-  const sectionHeaderRegex = /^## Task (\d+):/;
-  const itemRegex = /^(- )(\[x\]|\[ \]) (.+?) \(`([^`]+)`\)(.*)/;
+  // T11: support dotted task IDs in section header regex
+  const sectionHeaderRegex = /^## Task ([\d.]+):/;
+  // T2/T3: use greedy (.+) for test names containing '('
+  const itemRegex = /^(- )(\[x\]|\[ \]) (.+) \(`([^`]+)`\)(.*)/;
 
   const newLines = lines.map((line) => {
     const headerMatch = line.match(sectionHeaderRegex);
@@ -230,17 +242,20 @@ export async function updateChecklistProgress(
     if (!itemMatch) return line;
 
     const testName = itemMatch[3].trim();
-    const result = resultMap.get(testName);
+    const fileLocation = itemMatch[4];
+    // T12: look up by composite key; fall back to name-only (empty fileLocation) for backward compat
+    const compositeKey = testName + '@@' + fileLocation;
+    const result = resultMap.get(compositeKey) ?? resultMap.get(testName + '@@');
 
     if (result) {
       if (result.status === 'pass') {
         updatedItems++;
-        return '- [x] ' + testName + ' (`' + itemMatch[4] + '`)';
+        return '- [x] ' + testName + ' (`' + fileLocation + '`)';
       } else {
         // fail — keep [ ] but append failure reason
         const failureNote = result.failureMessage ? ' — `' + result.failureMessage + '`' : '';
         allPassed = false;
-        return '- [ ] ' + testName + ' (`' + itemMatch[4] + '`)' + failureNote;
+        return '- [ ] ' + testName + ' (`' + fileLocation + '`)' + failureNote;
       }
     }
 
@@ -277,6 +292,8 @@ export async function detectTestFileModification(
   const modifiedFiles: ModificationResult['files'] = [];
 
   for (const filePath of testFilePaths) {
+    // T6/T10: match on full path first (as stored by updated generateTaskSection);
+    // fall back to basename for legacy checklists that stored basename only
     const name = basename(filePath);
     const record = section.testFiles.find((tf) => tf.filePath === filePath || tf.filePath === name);
     const originalHash = record?.contentHash ?? '';
