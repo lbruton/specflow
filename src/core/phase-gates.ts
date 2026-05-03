@@ -254,7 +254,7 @@ export async function checkTestChecklistGate(
   // Validate all checklist items for this task are [x].
   // Pass through when the task has no section in the checklist (non-TDD tasks).
   const validation = await validateTaskComplete(checklistPath, taskId);
-  if (!validation.valid) {
+  if (!validation.valid && validation.incompleteItems.length > 0) {
     return {
       passed: false,
       gate: 'TEST_CHECKLIST',
