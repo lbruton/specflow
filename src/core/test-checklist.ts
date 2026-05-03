@@ -14,6 +14,14 @@ import type {
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
+function validateFilePath(p: string): void {
+  if (!p || typeof p !== 'string') throw new Error(`Invalid path: expected non-empty string`);
+  const normalized = p.replace(/\\/g, '/');
+  if (normalized.includes('../') || normalized.includes('/..')) {
+    throw new Error(`Path traversal detected: "${p}" contains ".."`);
+  }
+}
+
 async function fileExists(filePath: string): Promise<boolean> {
   try {
     await access(filePath);
@@ -36,6 +44,9 @@ function todayString(): string {
 
 export async function generateTaskSection(options: GenerateOptions): Promise<string> {
   const { specName, taskId, taskTitle, testOutput, testFilePaths, checklistPath } = options;
+
+  validateFilePath(checklistPath);
+  testFilePaths.forEach(validateFilePath);
 
   const today = todayString();
 
@@ -98,6 +109,8 @@ export async function generateTaskSection(options: GenerateOptions): Promise<str
 // ── REQ-6: parseChecklist ─────────────────────────────────────────────────────
 
 export async function parseChecklist(checklistPath: string): Promise<TestChecklist> {
+  validateFilePath(checklistPath);
+
   const empty: TestChecklist = { specName: '', sections: [] };
 
   const exists = await fileExists(checklistPath);
@@ -180,6 +193,14 @@ export async function updateChecklistProgress(
   taskId: string,
   testResults: TestResult[],
 ): Promise<UpdateResult> {
+  validateFilePath(checklistPath);
+
+  try {
+    await access(checklistPath);
+  } catch {
+    return { allPassed: false, updatedItems: 0 };
+  }
+
   const content = await readFile(checklistPath, 'utf-8');
 
   const resultMap = new Map<string, TestResult>();
@@ -243,6 +264,9 @@ export async function detectTestFileModification(
   taskId: string,
   testFilePaths: string[],
 ): Promise<ModificationResult> {
+  validateFilePath(checklistPath);
+  testFilePaths.forEach(validateFilePath);
+
   const checklist = await parseChecklist(checklistPath);
   const section = checklist.sections.find((s) => s.taskId === taskId);
 
@@ -254,7 +278,7 @@ export async function detectTestFileModification(
 
   for (const filePath of testFilePaths) {
     const name = basename(filePath);
-    const record = section.testFiles.find((tf) => tf.filePath === name);
+    const record = section.testFiles.find((tf) => tf.filePath === filePath || tf.filePath === name);
     const originalHash = record?.contentHash ?? '';
 
     const exists = await fileExists(filePath);
@@ -285,6 +309,8 @@ export async function validateTaskComplete(
   checklistPath: string,
   taskId: string,
 ): Promise<ValidationResult> {
+  validateFilePath(checklistPath);
+
   const exists = await fileExists(checklistPath);
   if (!exists) {
     return {

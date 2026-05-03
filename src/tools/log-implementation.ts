@@ -425,7 +425,6 @@ export async function logImplementationHandler(
     // TDD checklist validation gate
     {
       const { validateTaskComplete } = await import('../core/test-checklist.js');
-      const { parseTasksFromMarkdown } = await import('../core/task-parser.js');
       const { promises: fs } = await import('fs');
 
       const checklistPath = `${specTasksPath}/test-checklist.md`;

@@ -332,7 +332,7 @@ export async function specStatusHandler(args: any, context: ToolContext): Promis
       | undefined;
     try {
       const { parseChecklist } = await import('../core/test-checklist.js');
-      const checklistPath = `${PathUtils.getSpecPath(projectPath, specName)}/test-checklist.md`;
+      const checklistPath = `${PathUtils.getSpecPath(translatedPath, specName)}/test-checklist.md`;
 
       const { promises: fsForTdd } = await import('fs');
       let checklistExists = false;
@@ -346,40 +346,34 @@ export async function specStatusHandler(args: any, context: ToolContext): Promis
       if (checklistExists) {
         const checklist = await parseChecklist(checklistPath);
 
-        // Check approval status for each section to derive full state
+        // Check approval status once (file-level, not per-section)
         const { checkApprovalStatus } = await import('../core/phase-gates.js');
-        const workflowRootForTdd = PathUtils.getWorkflowRoot(projectPath);
+        const workflowRootForTdd = PathUtils.getWorkflowRoot(translatedPath);
 
-        tddProgress = await Promise.all(
-          checklist.sections.map(async (section) => {
-            const approval = await checkApprovalStatus(
-              workflowRootForTdd,
-              specName,
-              'test-checklist',
-            );
-
-            const testsTotal = section.items.length;
-            const testsPassed = section.items.filter((i) => i.status === 'passed').length;
-
-            let state: string;
-            if (!approval.exists) {
-              state = 'red';
-            } else if (!approval.approved) {
-              state = 'awaiting-approval';
-            } else if (testsPassed === testsTotal && testsTotal > 0) {
-              state = 'green-complete';
-            } else {
-              state = 'green-in-progress';
-            }
-
-            return {
-              taskId: section.taskId,
-              state,
-              testsTotal,
-              testsPassed,
-            };
-          }),
+        const checklistApproval = await checkApprovalStatus(
+          workflowRootForTdd,
+          specName,
+          'test-checklist',
         );
+
+        tddProgress = checklist.sections.map((section) => {
+          const approval = checklistApproval;
+          const testsTotal = section.items.length;
+          const testsPassed = section.items.filter((i) => i.status === 'passed').length;
+
+          let state: string;
+          if (!approval.exists) {
+            state = 'red';
+          } else if (!approval.approved) {
+            state = 'awaiting-approval';
+          } else if (testsPassed === testsTotal && testsTotal > 0) {
+            state = 'green-complete';
+          } else {
+            state = 'green-in-progress';
+          }
+
+          return { taskId: section.taskId, state, testsTotal, testsPassed };
+        });
       }
     } catch (tddError) {
       // TDD reporting is best-effort — log warning but don't break spec-status
