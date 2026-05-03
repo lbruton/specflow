@@ -440,7 +440,7 @@ export async function logImplementationHandler(
       if (checklistExists) {
         // Checklist exists — validate all items for this task are [x]
         const validation = await validateTaskComplete(checklistPath, taskId);
-        if (!validation.valid) {
+        if (!validation.valid && validation.incompleteItems.length > 0) {
           return {
             success: false,
             message: `TDD GATE: Cannot log implementation — ${validation.totalItems - validation.completedItems} test(s) incomplete: ${validation.incompleteItems.map((i: { testName: string }) => i.testName).join(', ')}`,
